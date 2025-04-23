@@ -1,0 +1,40 @@
+# Website Documentation
+
+## Overview
+
+Our main website is built with Next.js 15 and uses Tailwind CSS v4 for styling. It serves as the primary marketing platform for BetterMade Technology.
+
+## Technology Stack
+
+- **Next.js 15**: For server-side rendering and static site generation
+- **React 19**: For component-based UI development
+- **Tailwind CSS v4**: For styling
+- **Directus CMS**: For content management
+
+## Project Structure
+
+The website code is located in `apps/nextjs/` and follows standard Next.js conventions:
+
+```
+nextjs/
+├── public/            # Static assets
+├── src/
+│   ├── app/           # App Router pages and layouts
+│   ├── components/     # Reusable UI components
+│   ├── lib/           # Utility functions and libraries
+│   └── types/         # TypeScript type definitions
+```
+
+## Development
+
+To start the development server:
+
+```bash
+npm run dev:web
+```
+
+This will start the Next.js development server, typically at http://localhost:3000.
+
+## Deployment
+
+The website is automatically deployed through CI/CD pipelines. Push to the `main` branch to trigger a deployment.

@@ -1,0 +1,27 @@
+{
+  "index": {
+    "title": "Home",
+    "type": "page",
+    "display": "hidden"
+  },
+  "getting-started": {
+    "title": "Getting Started",
+    "type": "page"
+  },
+  "website": {
+    "title": "Website",
+    "type": "page"
+  },
+  "cms": {
+    "title": "CMS",
+    "type": "page"
+  },
+  "ui": {
+    "title": "UI Components",
+    "type": "page"
+  },
+  "contributing": {
+    "title": "Contributing",
+    "type": "page"
+  }
+}

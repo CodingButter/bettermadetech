@@ -1,0 +1,64 @@
+# UI Components Documentation
+
+## Overview
+
+Our shared UI component library ensures consistent design and user experience across all our applications.
+
+## Technology Stack
+
+- **React 19**: For component-based UI development
+- **Tailwind CSS v4**: For styling
+- **TypeScript**: For type safety
+
+## Project Structure
+
+The UI component library is located in `packages/ui/` with the following structure:
+
+```
+ui/
+├── src/
+│   ├── components/    # UI components
+│   └── index.ts       # Entry point
+```
+
+## Components
+
+### Button
+
+The Button component provides a consistent button style across applications.
+
+```tsx
+import { Button } from '@bettermade/ui';
+
+<Button variant="primary">Click me</Button>
+<Button variant="secondary">Cancel</Button>
+```
+
+### Card
+
+The Card component provides a consistent card style for content display.
+
+```tsx
+import { Card } from '@bettermade/ui';
+
+<Card>
+  <Card.Header>Title</Card.Header>
+  <Card.Body>Content goes here</Card.Body>
+  <Card.Footer>Footer content</Card.Footer>
+</Card>
+```
+
+## Styling
+
+Components use our shared Tailwind CSS configuration from `@bettermade/tailwind-config`.
+
+## Development
+
+To develop the UI components:
+
+```bash
+cd packages/ui
+npm run dev
+```
+
+This will start the build process in watch mode.
