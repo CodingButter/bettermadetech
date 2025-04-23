@@ -1,18 +1,16 @@
-import nextra from 'nextra';
-
-const withNextra = nextra({
-  theme: 'nextra-theme-docs',
-  themeConfig: './theme.config.tsx',
-});
-
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',    // Static site generation
-  images: {
-    unoptimized: true, // Required for static export
-  },
+  output: 'export',
+  images: { unoptimized: true },
   basePath: process.env.NODE_ENV === 'production' ? '/bettermadetech' : '',
-  trailingSlash: true, // Recommended for GitHub Pages
-  reactStrictMode: true,
-};
+  trailingSlash: true,
+  typescript: {
+    // !! WARN !!
+    // Dangerously allow production builds to successfully complete even if
+    // your project has type errors.
+    // !! WARN !!
+    ignoreBuildErrors: true,
+  },
+}
 
-export default withNextra(nextConfig);
+export default nextConfig

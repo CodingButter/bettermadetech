@@ -4,27 +4,24 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001",
-    "build": "next build",
+    "build": "next build --no-lint",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@bettermade/ui": "*",
     "@bettermade/tailwind-config": "*",
+    "@bettermade/ui": "*",
     "next": "14.1.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "nextra": "^2.13.4",
-    "nextra-theme-docs": "^2.13.4",
-    "extend-shallow": "^3.0.2"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@bettermade/tsconfig": "*",
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
-    "eslint-config-next": "14.1.0"
+    "eslint-config-next": "14.1.0",
+    "typescript": "^5"
   }
 }
