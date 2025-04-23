@@ -1,0 +1,20 @@
+{
+  "name": "bettermade",
+  "version": "1.0.0",
+  "description": "BetterMade Technology Monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:cms": "cd apps/directus && docker-compose up -d",
+    "dev:web": "cd apps/nextjs && npm run dev",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  }
+}

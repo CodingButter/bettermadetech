@@ -1,0 +1,12 @@
+/* Import shared Tailwind CSS configuration */
+@import "@bettermade/tailwind-config/src/styles.css";
+
+/* You can override theme variables here if needed */
+:root {
+  /* Example of overriding a color for this specific app */
+  --color-primary-500: #0891b2;
+  --color-primary-600: #0e7490;
+  --color-primary-700: #155e75;
+}
+
+/* Add app-specific styles below */
