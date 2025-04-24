@@ -11,6 +11,12 @@ on:
       - '.github/workflows/deploy-docs.yml'
   workflow_dispatch: # Allows manual triggering
 
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -30,7 +36,7 @@ jobs:
       - name: Build Simple Documentation HTML
         run: |
           mkdir -p ./apps/docs/out
-          cp -r ./apps/docs/src/assets ./apps/docs/out/ || true
+          mkdir -p ./apps/docs/out/assets
           cat > ./apps/docs/out/index.html << 'EOF'
           <!DOCTYPE html>
           <html lang="en">
@@ -85,9 +91,26 @@ jobs:
           </html>
           EOF
       
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+          
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./apps/docs/out
-          cname: docs.bettermade.tech
+          folder: ./apps/docs/out
+          branch: gh-pages
+          clean: true
+          clean-exclude: |
+            .nojekyll
+            CNAME
+          
+      - name: Add CNAME file
+        run: |
+          echo "docs.bettermade.tech" > ./apps/docs/out/CNAME
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git checkout -f gh-pages || git checkout --orphan gh-pages
+          cp ./apps/docs/out/CNAME ./CNAME || true
+          git add CNAME
+          git commit -m "Add CNAME file" || true
+          git push origin gh-pages || true
