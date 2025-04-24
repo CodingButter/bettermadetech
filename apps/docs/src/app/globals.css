@@ -1,0 +1,12 @@
+/* Import shared Tailwind CSS configuration */
+@import "@bettermade/tailwind-config/src/styles.css";
+
+/* You can override theme variables here if needed */
+:root {
+  /* Example of overriding a color for docs */
+  --color-primary-500: #2563eb;
+  --color-primary-600: #1d4ed8;
+  --color-primary-700: #1e40af;
+}
+
+/* Add docs-specific styles below */

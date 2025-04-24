@@ -10,11 +10,15 @@
   "scripts": {
     "dev:cms": "cd apps/directus && docker-compose up -d",
     "dev:web": "cd apps/nextjs && npm run dev",
+    "dev:docs": "cd apps/docs && npm run dev",
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "lint": "turbo run lint"
+    "build:docs": "cd apps/docs && npm run build",
+    "lint": "turbo run lint",
+    "deploy:docs": "gh-pages -d apps/docs/out"
   },
   "devDependencies": {
-    "turbo": "^2.0.0"
+    "turbo": "^2.0.0",
+    "gh-pages": "^6.1.1"
   }
 }
