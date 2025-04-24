@@ -1,5 +1,5 @@
 {
-  "name": "ls -la",
+  "name": "tech",
   "private": true,
   "scripts": {
     "build": "turbo run build",
