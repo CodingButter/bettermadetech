@@ -1,56 +1,28 @@
-# Directus Specific
-apps/directus/data/
-apps/directus/uploads/
-apps/directus/extensions/.registry
+# deps
+/node_modules
 
-# Dependencies
-node_modules/
+# generated content
+.contentlayer
+.content-collections
+.source
 
-# Turborepo
-.turbo/
+# test & build
+/coverage
+/.next/
+/out/
+/build
+*.tsbuildinfo
 
-# Build outputs
-dist/
-.next/
-out/
-
-# General Logs
-logs/
-*.log
+# misc
+.DS_Store
+*.pem
+/.pnp
+.pnp.js
 npm-debug.log*
-pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment Variables
-.env
-.env.*
-!.env.example
-!.env.test
-# Note: .env.*.local (from Next.js) is covered by .env.*
-
-# Build Output (General)
-# Framework specific build outputs (like .next/, .nuxt/, dist/, .output/, .svelte-kit/, build/) should be in their respective framework .gitignore files.
-
-# Deployment Platforms
-.netlify/
-.vercel/
-.wrangler/
-
-# Testing Output
-coverage/
-
-# Cache / Temporary
-.eslintcache
-.stylelintcache
-
-# Certificates
-certificates/
-
-# Operating System Files
-.DS_Store
-Thumbs.db
-
-# IDE / Editor Configs
-.idea
-.vscode
+# others
+.env*.local
+.vercel
+next-env.d.ts

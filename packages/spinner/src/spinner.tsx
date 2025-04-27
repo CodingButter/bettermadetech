@@ -58,23 +58,7 @@ export const Spinner = memo(function Spinner({
     };
   }, []);
   
-  // Reset animation state when isSpinning becomes false
-  useEffect(() => {
-    if (!isSpinning) {
-      setIsAnimating(false);
-    }
-  }, [isSpinning]);
-
-  // Start spinning animation when isSpinning becomes true
-  useEffect(() => {
-    if (isSpinning && !isAnimating) {
-      const cleanupFn = spin();
-      return () => {
-        if (cleanupFn) cleanupFn();
-      };
-    }
-  }, [isSpinning, isAnimating, spin]);
-
+  // Define the spin function before using it in useEffect
   /**
    * Initiates the spinning animation and selects a random winner.
    * The spinning effect is created by applying a CSS rotation transform
@@ -149,7 +133,24 @@ export const Spinner = memo(function Spinner({
       animationRef.current.isActive = false;
     };
   }, [segments, segmentAngle, rotation, duration, isAnimating, onSpinEnd]);
-  
+
+  // Reset animation state when isSpinning becomes false
+  useEffect(() => {
+    if (!isSpinning) {
+      setIsAnimating(false);
+    }
+  }, [isSpinning]);
+
+  // Start spinning animation when isSpinning becomes true
+  useEffect(() => {
+    if (isSpinning && !isAnimating) {
+      const cleanupFn = spin();
+      return () => {
+        if (cleanupFn) cleanupFn();
+      };
+    }
+  }, [isSpinning, isAnimating, spin]);
+
   // Use the imported cubicBezier function from utils
 
   // Memoize segments list for better performance

@@ -1,35 +1,31 @@
 {
   "name": "docs",
-  "version": "0.1.0",
-  "type": "module",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3001",
     "build": "next build",
+    "dev": "next dev --turbo -p 3001",
     "start": "next start",
-    "lint": "next lint --max-warnings 0",
-    "check-types": "tsc --noEmit",
-    "sync-assets": "pnpm --filter @repo/assets copy:apps"
+    "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
-    "@repo/ui": "workspace:*",
-    "@repo/assets": "workspace:*",
-    "@tailwindcss/postcss": "^4.1.4",
-    "autoprefixer": "^10.4.21",
-    "next": "^15.3.0",
-    "postcss": "^8.5.3",
+    "next": "15.3.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tailwindcss": "4.1.0"
+    "fumadocs-ui": "15.2.11",
+    "fumadocs-core": "15.2.11",
+    "fumadocs-mdx": "11.6.1"
   },
   "devDependencies": {
-    "@repo/eslint-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
-    "@tailwindcss/vite": "^4.1.4",
-    "@types/node": "^22.14.0",
-    "@types/react": "19.1.0",
-    "@types/react-dom": "19.1.1",
-    "eslint": "^9.25.0",
-    "typescript": "5.8.2"
+    "@types/node": "22.15.2",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "typescript": "^5.8.3",
+    "@types/mdx": "^2.0.13",
+    "@tailwindcss/postcss": "^4.1.4",
+    "tailwindcss": "^4.1.4",
+    "postcss": "^8.5.3",
+    "eslint": "^8",
+    "eslint-config-next": "15.3.1"
   }
 }
