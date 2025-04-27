@@ -1,6 +1,7 @@
 /**
  * Performance utility functions for the spinner component
  */
+import { isDevelopment } from './environment';
 
 /**
  * Measures the performance of a function
@@ -10,16 +11,16 @@
  * @returns The result of the function
  */
 export function measurePerformance<T>(label: string, fn: () => T): T {
-  if (typeof performance !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  if (typeof performance !== 'undefined') {
     performance.mark(`${label}-start`);
     const result = fn();
     performance.mark(`${label}-end`);
     performance.measure(label, `${label}-start`, `${label}-end`);
     
     // Log performance in development only
-    if (process.env.NODE_ENV === 'development') {
+    if (isDevelopment()) {
       const measurements = performance.getEntriesByName(label);
-      if (measurements.length > 0) {
+      if (measurements && measurements.length > 0 && measurements[0]) {
         console.log(`${label}: ${measurements[0].duration.toFixed(2)}ms`);
       }
     }
@@ -56,10 +57,10 @@ export function throttle<T extends (...args: any[]) => any>(fn: T, delay: number
  * @returns The debounced function
  */
 export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {
-  let timeoutId: NodeJS.Timeout;
+  let timeoutId: number;
   return (...args: Parameters<T>) => {
     clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
+    timeoutId = setTimeout(() => fn(...args), delay) as unknown as number;
   };
 }
 

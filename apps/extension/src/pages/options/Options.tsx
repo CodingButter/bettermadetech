@@ -36,7 +36,9 @@ const LoginPanel: React.FC<LoginPanelProps> = ({
   const { auth, client } = useSpinner();
   
   const handleLogout = async () => {
-    await client.logout();
+    if (client) {
+      await client.logout();
+    }
   };
   
   if (auth?.isAuthenticated) {
@@ -396,7 +398,6 @@ const Options: React.FC = () => {
       </SpinnerProvider>
     </ThemeProvider>
   )
-}
 }
 
 export default Options

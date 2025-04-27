@@ -3,10 +3,23 @@ import { RootProvider } from 'fumadocs-ui/provider';
 import { Inter } from 'next/font/google';
 import type { ReactNode } from 'react';
 import { Metadata } from 'next';
+import fs from 'fs';
+import path from 'path';
 
 const inter = Inter({
   subsets: ['latin'],
 });
+
+// Read the favicon snippet if it exists
+let faviconSnippet = '';
+try {
+  faviconSnippet = fs.readFileSync(
+    path.join(process.cwd(), 'public/favicon-snippet.html'),
+    'utf8'
+  );
+} catch {
+  console.warn('Favicon snippet not found');
+}
 
 export const metadata: Metadata = {
   title: {
@@ -15,8 +28,8 @@ export const metadata: Metadata = {
   },
   description: 'Documentation for the Winner Spinner project',
   icons: {
-    icon: '/favicon.svg',
-    apple: '/favicon.svg',
+    icon: '/favicon.ico',
+    apple: '/icons/icon192.png',
   },
 };
 
@@ -24,8 +37,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={inter.className} suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/favicon.svg" />
+        {/* Include favicons from the assets package */}
+        <div dangerouslySetInnerHTML={{ __html: faviconSnippet }} />
       </head>
       <body className="flex flex-col min-h-screen">
         <RootProvider>{children}</RootProvider>

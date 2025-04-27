@@ -117,6 +117,7 @@ add_status_field() {
 add_issue_to_project() {
     local project_id="$1"
     local issue_number="$2"
+    local default_status="${3:-todo}"  # Default to "todo" if not specified
     
     echo "Adding issue #$issue_number to project $project_id"
     
@@ -147,6 +148,30 @@ add_issue_to_project() {
     item_id=$(echo "$response" | grep -o '"id":"PVTI_[^"]*"' | grep -o 'PVTI_[^"]*' | head -1)
     
     echo "Issue #$issue_number added to project with item ID: $item_id"
+    
+    # Set default status
+    if [ "$project_id" = "$PROJECT_ID" ]; then
+        # Get option ID based on status
+        local option_id
+        case "$default_status" in
+            todo)
+                option_id="$TODO_OPTION_ID"
+                ;;
+            in-progress)
+                option_id="$IN_PROGRESS_OPTION_ID"
+                ;;
+            done)
+                option_id="$DONE_OPTION_ID"
+                ;;
+            *)
+                option_id="$TODO_OPTION_ID"  # Default to Todo
+                ;;
+        esac
+        
+        # Update status
+        update_issue_status "$PROJECT_ID" "$item_id" "$STATUS_FIELD_ID" "$option_id"
+        echo "Issue #$issue_number status set to $default_status"
+    fi
     
     # Return the item ID
     echo "$item_id"
@@ -228,6 +253,7 @@ list_project_issues() {
 # Get issue item ID in BetterMadeTech project
 get_issue_item_id() {
     local issue_number="$1"
+    local default_status="${2:-todo}"  # Default to "todo" if not specified
     
     echo "Getting item ID for issue #$issue_number in BetterMadeTech project"
     
@@ -267,14 +293,14 @@ get_issue_item_id() {
     echo "Issue #$issue_number not found in project, adding it now..."
     
     # If not found, add it to the project
-    item_id=$(add_issue_to_project "$PROJECT_ID" "$issue_number")
+    item_id=$(add_issue_to_project "$PROJECT_ID" "$issue_number" "$default_status")
     echo "$item_id"
 }
 
 # Set issue status in BetterMadeTech project
 set_issue_status() {
     local issue_number="$1"
-    local status="$2"  # "todo", "in-progress", or "done"
+    local status="$2"  # "todo", "in-progress", "done", or "archived"
     
     # Convert status string to option ID
     local option_id
@@ -288,14 +314,19 @@ set_issue_status() {
         done)
             option_id="$DONE_OPTION_ID"
             ;;
+        archived)
+            # For now, using DONE_OPTION_ID since we don't have an archived ID defined
+            # You may want to add a proper ARCHIVED_OPTION_ID constant
+            option_id="$DONE_OPTION_ID"
+            ;;
         *)
-            echo "Invalid status: $status. Use 'todo', 'in-progress', or 'done'"
+            echo "Invalid status: $status. Use 'todo', 'in-progress', 'done', or 'archived'"
             return 1
             ;;
     esac
     
-    # Get item ID for the issue
-    item_id=$(get_issue_item_id "$issue_number")
+    # Get item ID for the issue, passing the status in case the issue needs to be added
+    item_id=$(get_issue_item_id "$issue_number" "$status")
     if [ -z "$item_id" ]; then
         echo "Failed to get item ID for issue #$issue_number"
         return 1
@@ -317,10 +348,14 @@ main() {
             ;;
         add-issue)
             if [ -z "$3" ]; then
-                # Use BetterMadeTech project by default
-                add_issue_to_project "$PROJECT_ID" "$2"
+                # Use BetterMadeTech project by default with 'todo' status
+                add_issue_to_project "$PROJECT_ID" "$2" "todo"
+            elif [ -z "$4" ]; then
+                # Use BetterMadeTech project with provided status
+                add_issue_to_project "$PROJECT_ID" "$2" "$3"
             else
-                add_issue_to_project "$2" "$3"
+                # Custom project and issue number (status as 4th param)
+                add_issue_to_project "$2" "$3" "$4"
             fi
             ;;
         update-status)
@@ -362,9 +397,9 @@ main() {
         *)
             echo "Usage: $0 [command] [options]"
             echo "Commands:"
-            echo "  set-status <issue-number> <status>         Set issue status (todo, in-progress, done)"
+            echo "  set-status <issue-number> <status>         Set issue status (todo, in-progress, done, archived)"
             echo "  list-bettertech-issues                     List all issues in BetterMadeTech project"
-            echo "  add-issue <issue-number>                   Add issue to BetterMadeTech project"
+            echo "  add-issue <issue-number> [status]          Add issue to BetterMadeTech project with optional status (defaults to todo)"
             echo ""
             echo "Advanced commands:"
             echo "  create-project <title>                     Create a new project"

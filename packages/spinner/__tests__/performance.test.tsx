@@ -94,8 +94,13 @@ describe('Spinner Performance', () => {
       // Simulate multiple animation frames
       for (let i = 0; i < 60; i++) {
         jest.advanceTimersByTime(16); // Roughly 60fps
-        const callback = mockRAF.mock.calls[mockRAF.mock.calls.length - 1][0];
-        callback(performance.now());
+        if (mockRAF.mock.calls.length > 0) {
+          const lastCall = mockRAF.mock.calls[mockRAF.mock.calls.length - 1];
+          if (lastCall && lastCall[0]) {
+            const callback = lastCall[0];
+            callback(performance.now());
+          }
+        }
       }
     });
     

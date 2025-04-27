@@ -347,8 +347,9 @@ describe('Cross-Platform Integration Tests', () => {
     
     // Verify setting details
     const loadedSettings = loadResult.settings || [];
-    expect(loadedSettings[0].name).toBe('Setting 1');
-    expect(loadedSettings[1].name).toBe('Setting 2');
+    expect(loadedSettings.length).toBeGreaterThanOrEqual(2);
+    expect(loadedSettings[0]?.name).toBe('Setting 1');
+    expect(loadedSettings[1]?.name).toBe('Setting 2');
     
     // Load individual setting by ID
     const individualSetting = await webClient.loadSpinnerSettingById(setting1.id!);
@@ -366,7 +367,8 @@ describe('Cross-Platform Integration Tests', () => {
     
     // Verify deletion
     const afterDeleteLoad = await webClient.loadSpinnerSettings();
+    expect(afterDeleteLoad.settings).toBeTruthy();
     expect(afterDeleteLoad.settings).toHaveLength(1);
-    expect(afterDeleteLoad.settings?.[0].id).toBe(setting2.id);
+    expect(afterDeleteLoad.settings?.[0]?.id).toBe(setting2.id);
   });
 });
