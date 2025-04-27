@@ -56,11 +56,13 @@ export function Spinner3D({
       const randomSegment = Math.floor(Math.random() * segments.length);
       const winningSegment = segments[randomSegment];
       
-      setWinner(winningSegment);
-      setIsAnimating(false);
-      
-      if (onSpinEnd && winningSegment) {
-        onSpinEnd(winningSegment);
+      if (winningSegment) {
+        setWinner(winningSegment);
+        setIsAnimating(false);
+        
+        if (onSpinEnd) {
+          onSpinEnd(winningSegment);
+        }
       }
     }, duration * 1000);
   };

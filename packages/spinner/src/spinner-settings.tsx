@@ -33,8 +33,22 @@ function SegmentEditor({ segments, onChange }: SegmentEditorProps) {
 
   const updateSegment = (index: number, field: keyof SpinnerSegment, value: string) => {
     const newSegments = [...segments];
-    newSegments[index] = { ...newSegments[index], [field]: value };
-    onChange(newSegments);
+    if (newSegments[index]) {
+      // Ensure required fields are present
+      const segmentId = newSegments[index].id || `segment-${Date.now()}-${Math.random()}`;
+      const segmentLabel = newSegments[index].label || `Option ${index + 1}`;
+      const segmentValue = newSegments[index].value || `${index + 1}`;
+      
+      const updatedSegment: SpinnerSegment = { 
+        ...newSegments[index],
+        id: segmentId,
+        label: segmentLabel,
+        value: segmentValue,
+        [field]: value 
+      };
+      newSegments[index] = updatedSegment;
+      onChange(newSegments);
+    }
   };
 
   const removeSegment = (index: number) => {
@@ -273,6 +287,8 @@ export function SpinnerSettingsManager() {
   }, [refreshSettings]);
 
   const handleSaveSettings = async (settings: SpinnerSettings) => {
+    if (!client) return;
+    
     try {
       setIsSaving(true);
       const result = await client.saveSpinnerSettings(settings);
@@ -298,7 +314,7 @@ export function SpinnerSettingsManager() {
   };
 
   const handleDeleteSettings = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this spinner?')) {
+    if (!confirm('Are you sure you want to delete this spinner?') || !client) {
       return;
     }
     
@@ -310,8 +326,9 @@ export function SpinnerSettingsManager() {
         // If deleting the active spinner, set a new active one if available
         if (id === activeSpinnerId && spinnerSettings && spinnerSettings.length > 1) {
           const remainingSpinners = spinnerSettings.filter(s => s.id !== id);
-          if (remainingSpinners.length > 0) {
-            await setActiveSpinner(remainingSpinners[0].id!);
+          const firstSpinner = remainingSpinners.length > 0 ? remainingSpinners[0] : null;
+          if (firstSpinner && firstSpinner.id) {
+            await setActiveSpinner(firstSpinner.id);
           }
         }
         
