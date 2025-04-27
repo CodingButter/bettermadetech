@@ -25,7 +25,10 @@ coverage
 .next/
 out/
 build
-dist
+dist/
+**/dist/
+**/build/
+**/.next/
 
 
 # Debug
@@ -36,3 +39,9 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Chrome Extension specific
+*.crx
+*.pem
+*.zip
+web-ext-artifacts/
