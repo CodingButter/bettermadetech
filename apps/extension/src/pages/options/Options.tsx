@@ -4,9 +4,101 @@ import { useEffect, useState } from "react"
 import { getUserSettings, updateUserSettings, type UserSettings } from "../../utils/storage"
 import { ThemeProvider } from "@repo/ui/theme-provider"
 import { Card } from "@repo/ui/card"
-import { Spinner } from "@repo/spinner"
+import { Spinner, SpinnerSettingsManager, SpinnerProvider, useSpinner } from "@repo/spinner"
 import type { SpinnerSegment } from "@repo/spinner"
-import { loginToDirectus, fetchUserSpinners } from "../../utils/directus"
+import { ExtensionSpinnerClient } from "../../utils/extension-spinner-client"
+
+/**
+ * Props for the login panel component
+ */
+interface LoginPanelProps {
+  email: string;
+  setEmail: (email: string) => void;
+  password: string;
+  setPassword: (password: string) => void;
+  handleLogin: (e: React.FormEvent) => Promise<void>;
+  isLoggingIn: boolean;
+  loginError: string;
+}
+
+/**
+ * Login panel component that displays login form or user info
+ */
+const LoginPanel: React.FC<LoginPanelProps> = ({
+  email,
+  setEmail,
+  password,
+  setPassword,
+  handleLogin,
+  isLoggingIn,
+  loginError,
+}) => {
+  const { auth, client } = useSpinner();
+  
+  const handleLogout = async () => {
+    await client.logout();
+  };
+  
+  if (auth?.isAuthenticated) {
+    return (
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-green-500">
+            <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+            Logged in as {auth.email}
+          </p>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            Log Out
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div>
+      <p className="mb-4 text-muted-foreground">
+        Log in to your account to access and manage your spinners.
+      </p>
+      <form onSubmit={handleLogin} className="space-y-4">
+        <div>
+          <label htmlFor="email" className="block mb-2 text-sm font-medium">
+            Email
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-2 rounded border bg-background"
+            placeholder="Enter your email"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="block mb-2 text-sm font-medium">
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 rounded border bg-background"
+            placeholder="Enter your password"
+            required
+          />
+        </div>
+
+        {loginError && <div className="text-red-500 text-sm">{loginError}</div>}
+
+        <Button type="submit" disabled={isLoggingIn} className="w-full">
+          {isLoggingIn ? "Logging in..." : "Log In"}
+        </Button>
+      </form>
+    </div>
+  );
+};
 
 // Sample spinner data for preview
 const PREVIEW_SEGMENTS: SpinnerSegment[] = [
@@ -16,6 +108,9 @@ const PREVIEW_SEGMENTS: SpinnerSegment[] = [
   { id: "4", label: "Sample 4", value: "004" },
 ]
 
+// Create a singleton instance of the spinner client
+const spinnerClient = new ExtensionSpinnerClient();
+
 const Options: React.FC = () => {
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -23,12 +118,8 @@ const Options: React.FC = () => {
   const [saveMessage, setSaveMessage] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loginError, setLoginError] = useState("")
   const [isLoggingIn, setIsLoggingIn] = useState(false)
-  const [userToken, setUserToken] = useState("")
-  const [userSpinners, setUserSpinners] = useState<any[]>([])
-  const [isLoadingSpinners, setIsLoadingSpinners] = useState(false)
 
   // Load settings on mount
   useEffect(() => {
@@ -46,59 +137,16 @@ const Options: React.FC = () => {
     loadSettings()
   }, [])
 
-  // Check if user is logged in from storage
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      const { userData } = await chrome.storage.local.get("userData")
-      if (userData?.loggedIn && userData?.token) {
-        setIsLoggedIn(true)
-        setUserToken(userData.token)
-
-        // Load user's spinners
-        loadUserSpinners(userData.token)
-      }
-    }
-
-    checkLoginStatus()
-  }, [])
-
-  // Load user's spinners
-  const loadUserSpinners = async (token: string) => {
-    setIsLoadingSpinners(true)
-    try {
-      const spinners = await fetchUserSpinners(token)
-      setUserSpinners(spinners)
-    } catch (error) {
-      console.error("Failed to load spinners:", error)
-    } finally {
-      setIsLoadingSpinners(false)
-    }
-  }
-
   // Handle login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoginError("")
+    setIsLoggingIn(true)
 
     try {
-      const token = await loginToDirectus(email, password)
+      const authResult = await spinnerClient.authenticate(email, password)
 
-      if (token) {
-        setUserToken(token)
-        setIsLoggedIn(true)
-
-        // Save login state
-        await chrome.storage.local.set({
-          userData: {
-            email,
-            loggedIn: true,
-            token,
-          },
-        })
-
-        // Load user's spinners
-        await loadUserSpinners(token)
-      } else {
+      if (!authResult.isAuthenticated) {
         setLoginError("Invalid email or password. Please try again.")
       }
     } catch (error) {
@@ -107,21 +155,6 @@ const Options: React.FC = () => {
     } finally {
       setIsLoggingIn(false)
     }
-  }
-
-  // Handle logout
-  const handleLogout = async () => {
-    setIsLoggedIn(false)
-    setUserToken("")
-    setUserSpinners([])
-
-    // Clear login state
-    await chrome.storage.local.set({
-      userData: {
-        loggedIn: false,
-        token: "",
-      },
-    })
   }
 
   // Handle form submissions
@@ -192,189 +225,152 @@ const Options: React.FC = () => {
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="bmt-theme">
-      <div className="min-h-screen bg-background p-8">
-        <header className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Winner Spinner Settings</h1>
-          <ThemeToggle />
-        </header>
+      <SpinnerProvider client={spinnerClient}>
+        <div className="min-h-screen bg-background p-8">
+          <header className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold">Winner Spinner Settings</h1>
+            <ThemeToggle />
+          </header>
 
-        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="md:col-span-2 space-y-6">
+              {/* Authentication Section */}
               <section className="bg-card rounded-lg p-6 shadow">
                 <h2 className="text-xl font-semibold mb-4">User Account</h2>
-
-                {!isLoggedIn ? (
-                  <div>
-                    <p className="mb-4 text-muted-foreground">
-                      Log in to your account to access and manage your spinners.
-                    </p>
-                    <form onSubmit={handleLogin} className="space-y-4">
-                      <div>
-                        <label htmlFor="email" className="block mb-2 text-sm font-medium">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          id="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="w-full p-2 rounded border bg-background"
-                          placeholder="Enter your email"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="password" className="block mb-2 text-sm font-medium">
-                          Password
-                        </label>
-                        <input
-                          type="password"
-                          id="password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="w-full p-2 rounded border bg-background"
-                          placeholder="Enter your password"
-                          required
-                        />
-                      </div>
-
-                      {loginError && <div className="text-red-500 text-sm">{loginError}</div>}
-
-                      <Button type="submit" disabled={isLoggingIn} className="w-full">
-                        {isLoggingIn ? "Logging in..." : "Log In"}
-                      </Button>
-                    </form>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <p className="text-green-500">
-                        <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-2"></span>
-                        Logged in as {email}
-                      </p>
-                      <Button variant="outline" size="sm" onClick={handleLogout}>
-                        Log Out
-                      </Button>
-                    </div>
-
-                    <div className="border-t pt-4 mt-4">
-                      <h3 className="text-lg font-medium mb-2">Your Spinners</h3>
-
-                      {isLoadingSpinners ? (
-                        <p>Loading your spinners...</p>
-                      ) : userSpinners.length > 0 ? (
-                        <div className="space-y-2">
-                          {userSpinners.map((spinner) => (
-                            <div
-                              key={spinner.id}
-                              className="p-3 border rounded bg-muted/30 flex justify-between items-center"
-                            >
-                              <div>
-                                <div className="font-medium">{spinner.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {spinner.segments?.length || 0} segments
-                                </div>
-                              </div>
-                              <Button variant="outline" size="sm">
-                                Select
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground">
-                          You don't have any spinners yet. Create one from the dashboard.
-                        </p>
-                      )}
-
-                      <div className="mt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => window.open(settings.directusUrl, "_blank")}
-                        >
-                          Open Dashboard
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                <LoginPanel 
+                  email={email}
+                  setEmail={setEmail}
+                  password={password}
+                  setPassword={setPassword}
+                  handleLogin={handleLogin}
+                  isLoggingIn={isLoggingIn}
+                  loginError={loginError}
+                />
               </section>
 
+              {/* Spinner Settings Manager */}
               <section className="bg-card rounded-lg p-6 shadow">
-                <h2 className="text-xl font-semibold mb-4">Spinner Configuration</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="spinDuration" className="block mb-2 text-sm font-medium">
-                      Spin Duration (seconds)
-                    </label>
-                    <input
-                      type="number"
-                      id="spinDuration"
-                      min="1"
-                      max="30"
-                      value={settings.spinner.spinDuration}
-                      onChange={(e) => handleInputChange(e, "spinner", "spinDuration")}
-                      className="w-full p-2 rounded border bg-background"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="primaryColor" className="block mb-2 text-sm font-medium">
-                      Primary Color
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="color"
-                        id="primaryColor"
-                        value={settings.spinner.primaryColor}
-                        onChange={(e) => handleInputChange(e, "spinner", "primaryColor")}
-                        className="w-12 h-10 rounded border"
-                      />
-                      <input
-                        type="text"
-                        value={settings.spinner.primaryColor}
-                        onChange={(e) => handleInputChange(e, "spinner", "primaryColor")}
-                        className="w-32 p-2 rounded border bg-background"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="secondaryColor" className="block mb-2 text-sm font-medium">
-                      Secondary Color
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="color"
-                        id="secondaryColor"
-                        value={settings.spinner.secondaryColor}
-                        onChange={(e) => handleInputChange(e, "spinner", "secondaryColor")}
-                        className="w-12 h-10 rounded border"
-                      />
-                      <input
-                        type="text"
-                        value={settings.spinner.secondaryColor}
-                        onChange={(e) => handleInputChange(e, "spinner", "secondaryColor")}
-                        className="w-32 p-2 rounded border bg-background"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="showConfetti"
-                      checked={settings.spinner.showConfetti}
-                      onChange={(e) => handleInputChange(e, "spinner", "showConfetti")}
-                      className="mr-2 h-4 w-4"
-                    />
-                    <label htmlFor="showConfetti" className="text-sm font-medium">
-                      Show confetti effect when winner is revealed
-                    </label>
-                  </div>
-                </div>
+                <h2 className="text-xl font-semibold mb-4">Your Spinners</h2>
+                <SpinnerSettingsManager />
               </section>
+
+              {/* Extension Settings */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <section className="bg-card rounded-lg p-6 shadow">
+                  <h2 className="text-xl font-semibold mb-4">Extension Settings</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="directusUrl" className="block mb-2 text-sm font-medium">
+                        Directus URL
+                      </label>
+                      <input
+                        type="url"
+                        id="directusUrl"
+                        value={settings.directusUrl}
+                        onChange={handleDirectusChange}
+                        className="w-full p-2 rounded border bg-background"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="directusToken" className="block mb-2 text-sm font-medium">
+                        Directus Admin Token (optional)
+                      </label>
+                      <input
+                        type="password"
+                        id="directusToken"
+                        value={settings.directusToken}
+                        onChange={handleDirectusChange}
+                        className="w-full p-2 rounded border bg-background"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="spinDuration" className="block mb-2 text-sm font-medium">
+                        Default Spin Duration (seconds)
+                      </label>
+                      <input
+                        type="number"
+                        id="spinDuration"
+                        min="1"
+                        max="30"
+                        value={settings.spinner.spinDuration}
+                        onChange={(e) => handleInputChange(e, "spinner", "spinDuration")}
+                        className="w-full p-2 rounded border bg-background"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="primaryColor" className="block mb-2 text-sm font-medium">
+                        Default Primary Color
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="color"
+                          id="primaryColor"
+                          value={settings.spinner.primaryColor}
+                          onChange={(e) => handleInputChange(e, "spinner", "primaryColor")}
+                          className="w-12 h-10 rounded border"
+                        />
+                        <input
+                          type="text"
+                          value={settings.spinner.primaryColor}
+                          onChange={(e) => handleInputChange(e, "spinner", "primaryColor")}
+                          className="w-32 p-2 rounded border bg-background"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label htmlFor="secondaryColor" className="block mb-2 text-sm font-medium">
+                        Default Secondary Color
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="color"
+                          id="secondaryColor"
+                          value={settings.spinner.secondaryColor}
+                          onChange={(e) => handleInputChange(e, "spinner", "secondaryColor")}
+                          className="w-12 h-10 rounded border"
+                        />
+                        <input
+                          type="text"
+                          value={settings.spinner.secondaryColor}
+                          onChange={(e) => handleInputChange(e, "spinner", "secondaryColor")}
+                          className="w-32 p-2 rounded border bg-background"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="showConfetti"
+                        checked={settings.spinner.showConfetti}
+                        onChange={(e) => handleInputChange(e, "spinner", "showConfetti")}
+                        className="mr-2 h-4 w-4"
+                      />
+                      <label htmlFor="showConfetti" className="text-sm font-medium">
+                        Show confetti effect when winner is revealed
+                      </label>
+                    </div>
+
+                    <Button type="submit" disabled={isSaving} className="w-full mt-4">
+                      {isSaving ? "Saving..." : "Save Extension Settings"}
+                    </Button>
+
+                    {saveMessage && (
+                      <p
+                        className={`mt-2 text-sm ${
+                          saveMessage.includes("Failed") ? "text-red-500" : "text-green-500"
+                        }`}
+                      >
+                        {saveMessage}
+                      </p>
+                    )}
+                  </div>
+                </section>
+              </form>
             </div>
 
             <div className="space-y-6">
@@ -388,32 +384,19 @@ const Options: React.FC = () => {
                     duration={settings.spinner.spinDuration}
                   />
                 </div>
-
-                <Button type="submit" disabled={isSaving} className="w-full">
-                  {isSaving ? "Saving..." : "Save Settings"}
-                </Button>
-
-                {saveMessage && (
-                  <p
-                    className={`mt-2 text-sm ${
-                      saveMessage.includes("Failed") ? "text-red-500" : "text-green-500"
-                    }`}
-                  >
-                    {saveMessage}
-                  </p>
-                )}
               </section>
             </div>
           </div>
-        </form>
 
-        <div className="text-center text-sm text-muted-foreground mt-8">
-          <p>Better Made Tech Extension v1.0.0</p>
-          <p>© {new Date().getFullYear()} Better Made Tech</p>
+          <div className="text-center text-sm text-muted-foreground mt-8">
+            <p>Better Made Tech Extension v1.0.0</p>
+            <p>© {new Date().getFullYear()} Better Made Tech</p>
+          </div>
         </div>
-      </div>
+      </SpinnerProvider>
     </ThemeProvider>
   )
+}
 }
 
 export default Options
