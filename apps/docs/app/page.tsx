@@ -1,143 +1,195 @@
-import Image, { type ImageProps } from "next/image";
-import { Button, Card, CardTitle, CardContent, Code } from "@repo/ui";
+import Image from "next/image";
+import Link from "next/link";
+import { Button, Card, CardTitle, CardContent } from "@repo/ui";
 import styles from "./page.module.css";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
+/**
+ * DocCard component for displaying documentation section links
+ */
+interface DocCardProps {
+  title: string;
+  description: string;
+  href: string;
+  icon?: string;
+}
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, className, ...rest } = props;
-
+const DocCard = ({ title, description, href, icon }: DocCardProps) => {
   return (
-    <>
-      <Image 
-        {...rest} 
-        src={srcLight} 
-        className={`imgLight ${className || ""}`} 
-        data-theme-image
-      />
-      <Image 
-        {...rest} 
-        src={srcDark} 
-        className={`imgDark ${className || ""}`} 
-        data-theme-image
-      />
-    </>
+    <Link href={href} className="block no-underline">
+      <Card hoverable className="p-6 h-full transition-all hover:shadow-md">
+        <div className="flex items-start">
+          {icon && (
+            <div className="mr-4">
+              <Image 
+                src={icon} 
+                alt={`${title} icon`} 
+                width={24} 
+                height={24} 
+                className="opacity-80"
+              />
+            </div>
+          )}
+          <div>
+            <CardTitle className="mb-2">{title}</CardTitle>
+            <CardContent className="pt-0">
+              <p className="text-muted-foreground">{description}</p>
+            </CardContent>
+          </div>
+        </div>
+      </Card>
+    </Link>
   );
 };
 
+/**
+ * Main documentation landing page providing navigation to all documentation sections
+ */
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/docs/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="container mx-auto px-4 py-12">
+      <div className="text-center mb-16">
+        <h1 className="text-5xl font-bold mb-4">Better Made Tech Documentation</h1>
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          Comprehensive documentation for the Better Made Tech platform,
+          including UI components, extension, and backend integration.
+        </p>
+      </div>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.com/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-        <div className="flex flex-col gap-6 mt-8 max-w-xl">
-          <div className="flex flex-wrap gap-4">
-            <Button variant="default">
-              Default Button
-            </Button>
-            <Button variant="destructive">
-              Destructive Button
-            </Button>
-            <Button variant="outline">
-              Outline Button
-            </Button>
-            <Button variant="accent" size="xl">
-              Accent Button
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card hoverable className="p-6">
-              <CardTitle>Card Title</CardTitle>
-              <CardContent className="pt-4">
-                This is a hoverable card using Tailwind CSS v4.1 features.
-              </CardContent>
-            </Card>
-            
-            <Card className="p-6">
-              <CardTitle>Code Example</CardTitle>
-              <CardContent className="pt-4">
-                <Code variant="block">{`function hello() {
-  console.log("Hello world!");
-}`}</Code>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold mb-8">Getting Started</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <DocCard
+            title="Introduction"
+            description="Overview of the Better Made Tech platform and its components."
+            href="/introduction"
+            icon="/file-text.svg"
           />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.com?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+          <DocCard
+            title="Installation"
+            description="Step-by-step guide to install and set up the development environment."
+            href="/installation"
+            icon="/file-text.svg"
           />
-          Go to turborepo.com →
-        </a>
-      </footer>
+          <DocCard
+            title="Architecture"
+            description="Learn about the platform architecture and technology stack."
+            href="/architecture"
+            icon="/file-text.svg"
+          />
+        </div>
+      </section>
+
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold mb-8">UI Components</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <DocCard
+            title="Component Library"
+            description="Explore the reusable UI components available in the platform."
+            href="/components"
+            icon="/file-text.svg"
+          />
+          <DocCard
+            title="Spinner Component"
+            description="Detailed documentation for the customizable spinner wheel."
+            href="/components#spinner"
+            icon="/file-text.svg"
+          />
+          <DocCard
+            title="Theming"
+            description="Learn how to customize the appearance of components."
+            href="/components#theme"
+            icon="/file-text.svg"
+          />
+        </div>
+      </section>
+      
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold mb-8">Chrome Extension</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <DocCard
+            title="Extension Overview"
+            description="Introduction to the Better Made Tech Chrome extension."
+            href="/extension#overview"
+            icon="/file-text.svg"
+          />
+          <DocCard
+            title="Installation & Usage"
+            description="How to install and use the Chrome extension."
+            href="/extension#installation"
+            icon="/file-text.svg"
+          />
+          <DocCard
+            title="Development Guide"
+            description="Guide for developers working on the extension."
+            href="/extension#development"
+            icon="/file-text.svg"
+          />
+        </div>
+      </section>
+
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold mb-8">Backend Integration</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <DocCard
+            title="Directus Integration"
+            description="How to connect and use the Directus backend."
+            href="/extension#directus"
+            icon="/file-text.svg"
+          />
+          <DocCard
+            title="API Reference"
+            description="Complete API documentation for backend integration."
+            href="/api-reference"
+            icon="/file-text.svg"
+          />
+          <DocCard
+            title="Authentication"
+            description="Implement authentication in your application."
+            href="/authentication"
+            icon="/file-text.svg"
+          />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-3xl font-bold mb-8">Additional Resources</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <DocCard
+            title="Tutorials"
+            description="Step-by-step tutorials for common tasks."
+            href="/tutorials"
+            icon="/file-text.svg"
+          />
+          <DocCard
+            title="FAQ"
+            description="Frequently asked questions about the platform."
+            href="/faq"
+            icon="/file-text.svg"
+          />
+          <DocCard
+            title="Troubleshooting"
+            description="Solutions for common issues and problems."
+            href="/troubleshooting"
+            icon="/file-text.svg"
+          />
+        </div>
+      </section>
+
+      <div className="text-center mt-16">
+        <p className="text-muted-foreground mb-4">Need more help?</p>
+        <div className="flex justify-center gap-4">
+          <Button asChild variant="outline">
+            <a href="https://github.com/CodingButter/bettermadetech" target="_blank" rel="noopener noreferrer">
+              GitHub Repository
+            </a>
+          </Button>
+          <Button asChild>
+            <a href="mailto:support@bettermade.tech">
+              Contact Support
+            </a>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

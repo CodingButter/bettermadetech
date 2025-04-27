@@ -1,6 +1,21 @@
+/**
+ * Spinner component that allows for random selection from a set of options.
+ * 
+ * This component renders a wheel with customizable segments that can be spun
+ * to randomly select a winner. The spinning animation is controlled via props
+ * and provides callbacks when the selection is complete.
+ * 
+ * @component
+ */
 import { useState, useRef, useEffect } from 'react';
 import { SpinnerProps, SpinnerSegment } from './types';
 
+/**
+ * Spinner wheel component with configurable segments and animation.
+ * 
+ * @param {SpinnerProps} props - Component props
+ * @returns {JSX.Element} - Rendered spinner component
+ */
 export function Spinner({
   segments,
   duration = 5,
@@ -16,30 +31,38 @@ export function Spinner({
   const [winner, setWinner] = useState<SpinnerSegment | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Calculate the rotation for each segment
+  // Calculate the rotation angle for each segment
   const segmentAngle = 360 / segments.length;
   
-  // Reset rotation when not spinning
+  // Reset animation state when isSpinning becomes false
   useEffect(() => {
     if (!isSpinning) {
       setIsAnimating(false);
     }
   }, [isSpinning]);
 
-  // Start spinning animation when isSpinning changes to true
+  // Start spinning animation when isSpinning becomes true
   useEffect(() => {
     if (isSpinning && !isAnimating) {
       spin();
     }
   }, [isSpinning]);
 
+  /**
+   * Initiates the spinning animation and selects a random winner.
+   * The spinning effect is created by applying a CSS rotation transform
+   * with appropriate timing functions.
+   */
   const spin = () => {
     if (isAnimating) return;
     
     setIsAnimating(true);
     setWinner(null);
     
-    // Calculate a random number of full rotations (3-10) plus the winner segment
+    // Calculate random rotations:
+    // 1. Select a random segment as winner
+    // 2. Calculate angle to that segment
+    // 3. Add 3-10 full rotations for dramatic effect
     const randomSegment = Math.floor(Math.random() * segments.length);
     const segmentRotation = 360 - (randomSegment * segmentAngle);
     const fullRotations = 3 + Math.floor(Math.random() * 7) * 360;
@@ -47,7 +70,7 @@ export function Spinner({
     
     setRotation(targetRotation);
     
-    // Determine the winner after the spin ends
+    // Set the winner and trigger callback after spinning animation completes
     setTimeout(() => {
       const winningSegment = segments[randomSegment];
       setWinner(winningSegment);
@@ -60,7 +83,7 @@ export function Spinner({
 
   return (
     <div className={className ? `relative ${className}` : 'relative'}>
-      {/* The main wheel */}
+      {/* The main wheel container */}
       <div
         ref={wheelRef}
         className="relative w-full aspect-square rounded-full overflow-hidden transition-transform border-4"
@@ -72,10 +95,9 @@ export function Spinner({
           borderColor: secondaryColor,
         }}
       >
-        {/* Render each segment */}
+        {/* Render each segment as a pie slice */}
         {segments.map((segment, index) => {
           const startAngle = index * segmentAngle;
-          const endAngle = (index + 1) * segmentAngle;
           const isEvenSegment = index % 2 === 0;
           
           return (
@@ -88,6 +110,7 @@ export function Spinner({
                 clipPath: `polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%)`,
               }}
             >
+              {/* Segment label positioned in the middle of each segment */}
               <div 
                 className="absolute transform -translate-x-1/2 text-sm font-medium"
                 style={{
@@ -107,13 +130,13 @@ export function Spinner({
         })}
       </div>
       
-      {/* The center point/arrow */}
+      {/* The center point/indicator arrow */}
       <div 
         className="absolute top-1/2 left-1/2 w-4 h-4 transform -translate-x-1/2 -translate-y-1/2 rotate-45 z-10"
         style={{ backgroundColor: secondaryColor }}
       />
       
-      {/* Winner display */}
+      {/* Winner display overlay */}
       {showWinner && winner && !isAnimating && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 rounded-full">
           <div className="text-center p-4">
