@@ -1,0 +1,27 @@
+{
+  "name": "@repo/assets",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "images",
+    "icons",
+    "favicons",
+    "scripts",
+    "index.js",
+    "index.d.ts"
+  ],
+  "scripts": {
+    "generate:icons": "node scripts/generate-icons.js",
+    "generate:favicon": "node scripts/generate-favicon.js",
+    "copy:extension": "node scripts/copy-to-extension.js",
+    "copy:apps": "node scripts/copy-to-apps.js",
+    "build": "npm run generate:icons && npm run generate:favicon",
+    "deploy": "npm run build && npm run copy:extension && npm run copy:apps"
+  },
+  "devDependencies": {
+    "favicons": "^7.2.0",
+    "sharp": "^0.33.5"
+  }
+}

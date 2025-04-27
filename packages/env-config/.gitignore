@@ -1,0 +1,23 @@
+# Ignore .env files with secrets
+.env
+
+# Ignore built files
+/dist
+
+# Dependencies
+/node_modules
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+/.vscode
+/.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

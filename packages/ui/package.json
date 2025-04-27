@@ -1,0 +1,42 @@
+{
+  "name": "@repo/ui",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./styles.css": "./src/globals.css",
+    "./*": "./src/*.tsx"
+  },
+  "scripts": {
+    "lint": "eslint src --max-warnings 0",
+    "generate:component": "turbo gen react-component",
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/tailwind-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@tailwindcss/vite": "^4.1.4",
+    "@turbo/gen": "^2.5.0",
+    "@types/node": "^22.14.0",
+    "@types/react": "19.1.0",
+    "@types/react-dom": "19.1.1",
+    "eslint": "^9.25.0",
+    "typescript": "5.8.2"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.2.0",
+    "@repo/assets": "workspace:*",
+    "@tailwindcss/postcss": "^4.1.4",
+    "autoprefixer": "^10.4.21",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.503.0",
+    "postcss": "^8.5.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "tailwind-merge": "^3.2.0",
+    "tailwindcss": "~4.1.0"
+  }
+}

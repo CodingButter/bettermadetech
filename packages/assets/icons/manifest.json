@@ -1,0 +1,68 @@
+{
+  "extension": [
+    {
+      "size": 16,
+      "path": "icons/extension/icon16.png"
+    },
+    {
+      "size": 32,
+      "path": "icons/extension/icon32.png"
+    },
+    {
+      "size": 48,
+      "path": "icons/extension/icon48.png"
+    },
+    {
+      "size": 128,
+      "path": "icons/extension/icon128.png"
+    }
+  ],
+  "webapp": [
+    {
+      "size": 32,
+      "path": "icons/webapp/icon32.png"
+    },
+    {
+      "size": 64,
+      "path": "icons/webapp/icon64.png"
+    },
+    {
+      "size": 128,
+      "path": "icons/webapp/icon128.png"
+    },
+    {
+      "size": 192,
+      "path": "icons/webapp/icon192.png"
+    },
+    {
+      "size": 256,
+      "path": "icons/webapp/icon256.png"
+    },
+    {
+      "size": 512,
+      "path": "icons/webapp/icon512.png"
+    }
+  ],
+  "social": [
+    {
+      "size": 200,
+      "path": "icons/social/icon200.png"
+    },
+    {
+      "size": 400,
+      "path": "icons/social/icon400.png"
+    },
+    {
+      "size": 600,
+      "path": "icons/social/icon600.png"
+    },
+    {
+      "size": 800,
+      "path": "icons/social/icon800.png"
+    },
+    {
+      "size": 1200,
+      "path": "icons/social/icon1200.png"
+    }
+  ]
+}

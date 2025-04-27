@@ -1,0 +1,5 @@
+{
+  "faviconFiles": ["favicon.ico"],
+  "htmlCode": ["<link rel=\"icon\" href=\"/assets/favicons/favicon.ico\" sizes=\"any\">"],
+  "metaFiles": []
+}

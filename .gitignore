@@ -1,56 +1,38 @@
-# Directus Specific
-apps/directus/data/
-apps/directus/uploads/
-apps/directus/extensions/.registry
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # Dependencies
-node_modules/
+node_modules
+.pnp
+.pnp.js
 
-# Turborepo
-.turbo/
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Build outputs
-dist/
+# Testing
+coverage
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Build Outputs
 .next/
 out/
+build
+dist
 
-# General Logs
-logs/
-*.log
+
+# Debug
 npm-debug.log*
-pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment Variables
-.env
-.env.*
-!.env.example
-!.env.test
-# Note: .env.*.local (from Next.js) is covered by .env.*
-
-# Build Output (General)
-# Framework specific build outputs (like .next/, .nuxt/, dist/, .output/, .svelte-kit/, build/) should be in their respective framework .gitignore files.
-
-# Deployment Platforms
-.netlify/
-.vercel/
-.wrangler/
-
-# Testing Output
-coverage/
-
-# Cache / Temporary
-.eslintcache
-.stylelintcache
-
-# Certificates
-certificates/
-
-# Operating System Files
+# Misc
 .DS_Store
-Thumbs.db
-
-# IDE / Editor Configs
-.idea
-.vscode
+*.pem
