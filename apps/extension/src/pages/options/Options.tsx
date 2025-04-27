@@ -397,6 +397,5 @@ const Options: React.FC = () => {
     </ThemeProvider>
   )
 }
-}
 
 export default Options
