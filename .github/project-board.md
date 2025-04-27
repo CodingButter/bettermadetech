@@ -5,7 +5,7 @@
 - #10 Improve spinner accessibility
 
 ## In Progress
-- #8 Improve spinner package documentation
 
 ## Done
 - #7 Create test suite and integration tests for spinner package
+- #8 Improve spinner package documentation
