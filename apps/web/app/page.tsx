@@ -1,6 +1,14 @@
 import Image, { type ImageProps } from "next/image";
 import { Button, Card, CardTitle, CardContent, Code } from "@repo/ui";
 import styles from "./page.module.css";
+import dynamic from 'next/dynamic';
+
+// Import the SpinnerDemo component with dynamic import to prevent SSR issues
+// since it uses browser APIs like localStorage
+const SpinnerDemo = dynamic(() => import('./spinner-demo').then(mod => mod.SpinnerDemo), {
+  ssr: false,
+  loading: () => <div className="p-8 text-center">Loading Spinner Demo...</div>
+});
 
 type Props = Omit<ImageProps, "src"> & {
   srcLight: string;
@@ -41,76 +49,88 @@ export default function Home() {
           height={38}
           priority
         />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+        
+        <h1 className="text-3xl font-bold mt-6 mb-2">Better Made Tech</h1>
+        <p className="text-xl text-muted-foreground mb-8">
+          Welcome to the Better Made Tech demo site
+        </p>
 
+        <section className="mb-16 w-full max-w-5xl">
+          <h2 className="text-2xl font-bold mb-6">Winner Spinner Demo</h2>
+          <Card className="p-6">
+            <CardContent className="p-0">
+              <SpinnerDemo />
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="mb-16 w-full max-w-5xl">
+          <h2 className="text-2xl font-bold mb-6">UI Components</h2>
+          
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-wrap gap-4">
+              <Button variant="default">
+                Default Button
+              </Button>
+              <Button variant="destructive">
+                Destructive Button
+              </Button>
+              <Button variant="outline">
+                Outline Button
+              </Button>
+              <Button variant="accent" size="xl">
+                Accent Button
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card hoverable className="p-6">
+                <CardTitle>Card Title</CardTitle>
+                <CardContent className="pt-4">
+                  This is a hoverable card using Tailwind CSS v4.1 features.
+                </CardContent>
+              </Card>
+              
+              <Card className="p-6">
+                <CardTitle>Code Example</CardTitle>
+                <CardContent className="pt-4">
+                  <Code variant="block">{`function hello() {
+  console.log("Hello world!");
+}`}</Code>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+        
         <div className={styles.ctas}>
           <a
+            href="/docs"
             className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
           >
             <Image
               className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
+              src="/file-text.svg"
+              alt="Docs icon"
               width={20}
               height={20}
             />
-            Deploy now
+            View Documentation
           </a>
           <a
-            href="https://turborepo.com/docs?utm_source"
+            href="https://github.com/CodingButter/bettermadetech"
             target="_blank"
             rel="noopener noreferrer"
             className={styles.secondary}
           >
-            Read our docs
+            GitHub Repository
           </a>
         </div>
-        <div className="flex flex-col gap-6 mt-8 max-w-xl">
-          <div className="flex flex-wrap gap-4">
-            <Button variant="default">
-              Default Button
-            </Button>
-            <Button variant="destructive">
-              Destructive Button
-            </Button>
-            <Button variant="outline">
-              Outline Button
-            </Button>
-            <Button variant="accent" size="xl">
-              Accent Button
-            </Button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card hoverable className="p-6">
-              <CardTitle>Card Title</CardTitle>
-              <CardContent className="pt-4">
-                This is a hoverable card using Tailwind CSS v4.1 features.
-              </CardContent>
-            </Card>
-            
-            <Card className="p-6">
-              <CardTitle>Code Example</CardTitle>
-              <CardContent className="pt-4">
-                <Code variant="block">{`function hello() {
-  console.log("Hello world!");
-}`}</Code>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
       </main>
+      
       <footer className={styles.footer}>
         <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
+          href="https://github.com/CodingButter/bettermadetech"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -121,22 +141,11 @@ export default function Home() {
             width={16}
             height={16}
           />
-          Examples
+          GitHub
         </a>
-        <a
-          href="https://turborepo.com?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.com →
-        </a>
+        <p>
+          © {new Date().getFullYear()} Better Made Tech
+        </p>
       </footer>
     </div>
   );
