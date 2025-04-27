@@ -62,3 +62,70 @@ export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number
     timeoutId = setTimeout(() => fn(...args), delay);
   };
 }
+
+/**
+ * Optimized cubic bezier function for animation
+ * Smoother than the CSS transition for complex animations
+ * 
+ * @param x1 First control point x coordinate
+ * @param y1 First control point y coordinate
+ * @param x2 Second control point x coordinate
+ * @param y2 Second control point y coordinate
+ * @param t Animation progress (0 to 1)
+ * @returns Calculated point on the bezier curve
+ */
+export function cubicBezier(x1: number, y1: number, x2: number, y2: number, t: number): number {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  
+  // Precalculate powers of t
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const mt = 1 - t;
+  const mt2 = mt * mt;
+  const mt3 = mt2 * mt;
+  
+  // Bezier formula
+  return 3 * mt2 * t * y1 + 3 * mt * t2 * y2 + t3;
+}
+
+/**
+ * Check if the current browser supports hardware acceleration
+ * 
+ * @returns True if hardware acceleration is supported
+ */
+export function supportsHardwareAcceleration(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  // Feature detection for hardware acceleration
+  const testEl = document.createElement('div');
+  const prefixes = ['', 'webkit', 'moz', 'ms', 'o'];
+  
+  // Test for transform and other hardware acceleration properties
+  for (const prefix of prefixes) {
+    const propName = prefix ? `${prefix}Transform` : 'transform';
+    if (testEl.style[propName as any] !== undefined) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Get hardware acceleration style properties based on browser support
+ * 
+ * @returns CSS style properties to enable hardware acceleration
+ */
+export function getHardwareAccelerationStyles(): Record<string, string> {
+  const supported = typeof window !== 'undefined' && supportsHardwareAcceleration();
+  
+  return supported
+    ? {
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        perspective: '1000px',
+        willChange: 'transform',
+      }
+    : {};
+}
