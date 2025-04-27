@@ -56,16 +56,6 @@ export const Spinner3D = memo(function Spinner3D({
     }
   }, [isSpinning]);
 
-  // Start spinning animation when isSpinning becomes true
-  useEffect(() => {
-    if (isSpinning && !isAnimating) {
-      const cleanupFn = spin();
-      return () => {
-        if (cleanupFn) cleanupFn();
-      };
-    }
-  }, [isSpinning, isAnimating, spin]);
-
   /**
    * Initiates the spinning animation and selects a random winner.
    * Optimized with useCallback and requestAnimationFrame.
@@ -128,6 +118,16 @@ export const Spinner3D = memo(function Spinner3D({
       animationRef.current.isActive = false;
     };
   }, [segments, duration, isAnimating, onSpinEnd]);
+
+  // Start spinning animation when isSpinning becomes true
+  useEffect(() => {
+    if (isSpinning && !isAnimating) {
+      const cleanupFn = spin();
+      return () => {
+        if (cleanupFn) cleanupFn();
+      };
+    }
+  }, [isSpinning, isAnimating, spin]);
 
   // Memoize the spinner content to prevent unnecessary re-renders
   const spinnerContent = useMemo(() => {

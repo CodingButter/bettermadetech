@@ -52,7 +52,13 @@ global.performance = {
   ...global.performance,
   mark: jest.fn(),
   measure: jest.fn(),
-  getEntriesByName: jest.fn(() => [{ duration: 100 }]),
+  getEntriesByName: jest.fn(() => [{
+    name: 'test-measurement',
+    entryType: 'measure',
+    startTime: 0,
+    duration: 100,
+    toJSON: () => ({}),
+  }]),
 };
 
 // Mock window's CSS properties

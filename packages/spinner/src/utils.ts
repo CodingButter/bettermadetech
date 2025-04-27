@@ -19,7 +19,7 @@ export function measurePerformance<T>(label: string, fn: () => T): T {
     // Log performance in development only
     if (process.env.NODE_ENV === 'development') {
       const measurements = performance.getEntriesByName(label);
-      if (measurements.length > 0) {
+      if (measurements && measurements.length > 0 && measurements[0]) {
         console.log(`${label}: ${measurements[0].duration.toFixed(2)}ms`);
       }
     }

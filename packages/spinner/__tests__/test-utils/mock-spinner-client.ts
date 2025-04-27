@@ -4,10 +4,11 @@ import { SpinnerBase, SpinnerSettings, LoadSpinnerResult, AuthInfo } from '../..
  * Mock implementation of SpinnerBase for testing
  */
 export class MockSpinnerClient extends SpinnerBase {
-  private isAuthenticated = false;
-  private email: string = '';
-  private activeSpinnerId: string | null = null;
-  private spinnerSettings: SpinnerSettings[] = [];
+  // Changed from private to protected to allow access in subclasses
+  protected isAuthenticated = false;
+  protected email: string = '';
+  protected activeSpinnerId: string | null = null;
+  protected spinnerSettings: SpinnerSettings[] = [];
 
   async getAuthInfo(): Promise<AuthInfo> {
     return { 
