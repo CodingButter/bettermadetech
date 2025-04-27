@@ -1,4 +1,8 @@
 import '@testing-library/jest-dom';
+import { toHaveNoViolations } from 'jest-axe';
+
+// Add jest-axe matcher
+expect.extend(toHaveNoViolations);
 
 // Mock localStorage for tests
 class LocalStorageMock implements Storage {
@@ -32,6 +36,31 @@ class LocalStorageMock implements Storage {
 
 // Set up localStorage mock
 global.localStorage = new LocalStorageMock();
+
+// Mock window.requestAnimationFrame
+global.requestAnimationFrame = (callback) => {
+  return setTimeout(callback, 0);
+};
+
+// Mock window.cancelAnimationFrame
+global.cancelAnimationFrame = (id) => {
+  clearTimeout(id);
+};
+
+// Mock performance API
+global.performance = {
+  ...global.performance,
+  mark: jest.fn(),
+  measure: jest.fn(),
+  getEntriesByName: jest.fn(() => [{ duration: 100 }]),
+};
+
+// Mock window's CSS properties
+Object.defineProperty(window, 'getComputedStyle', {
+  value: () => ({
+    getPropertyValue: () => '',
+  }),
+});
 
 // Silence React 18 console errors/warnings for tests
 const originalConsoleError = console.error;
