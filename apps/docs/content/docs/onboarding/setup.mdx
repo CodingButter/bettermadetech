@@ -1,0 +1,192 @@
+---
+title: Project Setup
+description: Detailed setup instructions for the Winner Spinner development environment
+---
+
+# Project Setup
+
+This guide provides detailed instructions for setting up your development environment for the Winner Spinner project.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js**: Version 18+ (avoid Node.js 23.1 for production builds)
+- **pnpm**: Version 8+
+- **Git**: Latest stable version
+- **Chrome**: For extension development and testing
+- **Docker**: (Optional) For running Directus locally
+
+## Repository Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/CodingButter/bettermadetech.git
+   cd bettermadetech
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   pnpm install
+   ```
+
+   This will install all dependencies for all workspaces in the monorepo.
+
+## Development Environment Configuration
+
+### Environment Variables
+
+Create any necessary `.env` files:
+
+1. For the web application:
+   ```bash
+   cp apps/web/.env.example apps/web/.env.local
+   ```
+
+2. For the documentation site:
+   ```bash
+   cp apps/docs/.env.example apps/docs/.env.local
+   ```
+
+3. For Directus (if needed):
+   ```bash
+   cp apps/directus/.env.example apps/directus/.env
+   ```
+
+### Chrome Extension Development
+
+To develop the extension locally:
+
+1. Start the development server:
+   ```bash
+   cd apps/extension
+   pnpm dev
+   ```
+
+   This opens a browser window with a development version of the extension where:
+   - Chrome APIs are mocked
+   - You can navigate between different pages of the extension
+   - Hot reloading works for rapid development
+
+2. Build the extension for Chrome:
+   ```bash
+   cd apps/extension
+   pnpm build:extension
+   ```
+
+   This creates a distributable Chrome extension in the `dist` directory.
+
+3. Load the extension in Chrome:
+   - Open Chrome and navigate to `chrome://extensions/`
+   - Enable "Developer mode" (toggle in the top-right corner)
+   - Click "Load unpacked" and select the `apps/extension/dist` directory
+
+### Web Application Development
+
+To run the marketing website:
+
+```bash
+cd apps/web
+pnpm dev
+```
+
+The website will be available at [http://localhost:3000](http://localhost:3000).
+
+### Documentation Site Development
+
+To run the documentation site:
+
+```bash
+cd apps/docs
+pnpm dev
+```
+
+The documentation will be available at [http://localhost:3001](http://localhost:3001).
+
+### Directus Setup (Optional)
+
+If you need to work with Directus:
+
+1. Start the Directus instance:
+   ```bash
+   cd apps/directus
+   docker-compose up -d
+   ```
+
+2. Access the Directus admin panel at [http://localhost:8055](http://localhost:8055)
+   - Default admin email: `admin@example.com`
+   - Default password: `admin`
+
+## Troubleshooting
+
+### Common Issues
+
+#### Port Conflicts
+
+If you see "address already in use" errors:
+
+```bash
+# Check what's using a specific port (e.g., 3000)
+lsof -i :3000
+
+# Kill the process using that port
+kill -9 <PID>
+```
+
+#### Node Version Issues
+
+If you encounter compatibility issues:
+
+```bash
+# Use nvm to switch Node versions
+nvm use 18
+```
+
+#### pnpm Workspace Issues
+
+If packages aren't linking correctly:
+
+```bash
+# Clean and reinstall dependencies
+pnpm clean
+pnpm install
+```
+
+#### Extension Development Issues
+
+If the extension doesn't load properly:
+
+1. Check for errors in Chrome's extension page (`chrome://extensions/`)
+2. Look at the extension's background script console by clicking "background page" in the extension details
+3. Verify that all permissions are configured correctly in `manifest.json`
+
+## IDE Configuration
+
+### VS Code Setup
+
+We recommend using VS Code with the following extensions:
+
+- ESLint
+- Prettier
+- Tailwind CSS IntelliSense
+- Chrome Debugger
+- GitHub Copilot (optional)
+
+A `.vscode` directory with recommended settings is included in the repository.
+
+### WebStorm/IntelliJ Setup
+
+Configure your IDE to:
+
+- Use the TypeScript version from `node_modules`
+- Enable ESLint and Prettier integrations
+- Set up file watchers for lint-on-save functionality
+
+## Next Steps
+
+Once your environment is set up:
+
+- Review the [Architecture Overview](/docs/onboarding/architecture)
+- Read the [Contribution Guidelines](/docs/onboarding/contributing)
+- Look at the [Development Process](/docs/workflow/process)
+- Check out current [issues](https://github.com/CodingButter/bettermadetech/issues) to start contributing

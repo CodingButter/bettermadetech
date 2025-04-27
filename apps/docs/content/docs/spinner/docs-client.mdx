@@ -1,0 +1,135 @@
+---
+title: Docs Spinner Client
+description: Documentation for the DocsSpinnerClient implementation
+---
+
+# Docs Spinner Client
+
+The `DocsSpinnerClient` is a specialized implementation of the spinner component designed for documentation sites. It provides a simplified interface with focus on demonstration and code examples.
+
+## Installation
+
+```bash
+pnpm add @repo/spinner
+```
+
+## Usage
+
+```tsx
+import { DocsSpinnerClient } from '@repo/spinner';
+
+function DocsExample() {
+  return (
+    <DocsSpinnerClient 
+      items={['Example 1', 'Example 2', 'Example 3']}
+      showCode={true}
+    />
+  );
+}
+```
+
+## Properties
+
+| Property | Type | Description | Default |
+| --- | --- | --- | --- |
+| `items` | `string[]` | Array of items to display in the spinner | Required |
+| `duration` | `number` | Duration of spin in milliseconds | `3000` |
+| `showCode` | `boolean` | Whether to display example code | `false` |
+| `interactive` | `boolean` | Allow user to trigger spins | `true` |
+| `colorScheme` | `ColorScheme` | Color scheme for the spinner | `default` |
+| `size` | `'sm' \| 'md' \| 'lg'` | Size of the spinner | `'md'` |
+
+## Example
+
+Here's an example of using the `DocsSpinnerClient` in a documentation page:
+
+```tsx
+import { DocsSpinnerClient } from '@repo/spinner';
+
+function SpinnerDocs() {
+  return (
+    <div className="docs-container">
+      <h1>Spinner Component</h1>
+      
+      <h2>Basic Example</h2>
+      <DocsSpinnerClient 
+        items={['React', 'Vue', 'Angular', 'Svelte']}
+        showCode={true}
+      />
+      
+      <h2>Custom Colors</h2>
+      <DocsSpinnerClient 
+        items={['Red', 'Green', 'Blue', 'Yellow']}
+        colorScheme={{
+          primary: '#6366f1',
+          secondary: '#a855f7',
+          text: '#ffffff'
+        }}
+        showCode={true}
+      />
+      
+      <h2>Non-interactive Demo</h2>
+      <DocsSpinnerClient 
+        items={['Option A', 'Option B', 'Option C']}
+        interactive={false}
+        duration={10000} // Longer duration for demonstration
+        showCode={true}
+      />
+    </div>
+  );
+}
+```
+
+## Integration with Documentation Frameworks
+
+The `DocsSpinnerClient` works well with various documentation frameworks:
+
+### Next.js + MDX
+
+```mdx
+---
+title: Spinner Component
+---
+
+import { DocsSpinnerClient } from '@repo/spinner';
+
+# Spinner Component Documentation
+
+<DocsSpinnerClient 
+  items={['MDX', 'Next.js', 'React']}
+  showCode={true}
+/>
+```
+
+### Code Display Feature
+
+When `showCode={true}` is set, the component displays the corresponding code needed to implement the spinner with the current configuration:
+
+```tsx
+<DocsSpinnerClient 
+  items={['React', 'Vue', 'Angular']}
+  colorScheme={{
+    primary: '#3b82f6',
+    secondary: '#8b5cf6', 
+  }}
+  size="lg"
+  showCode={true}
+/>
+```
+
+This will render both the spinner and a code block showing:
+
+```tsx
+import { Spinner } from '@repo/spinner';
+
+<Spinner
+  items={['React', 'Vue', 'Angular']}
+  colorScheme={{
+    primary: '#3b82f6',
+    secondary: '#8b5cf6',
+  }}
+  size="lg"
+/>
+```
+
+This feature makes it easier for documentation readers to understand how to implement the spinner with the exact configuration being displayed.

@@ -25,6 +25,12 @@
 - [x] Implemented settings management
 - [x] Connected UI components to storage
 
+### 4. Documentation
+- [x] Set up Fumadocs-based documentation site running on port 3001
+- [x] Created spinner package documentation with component API references
+- [ ] Create migration guide for spinner refactor
+- [ ] Clean up unused code from previous spinner implementation
+
 ## Next Steps
 
 ### 1. CSV Upload and Parsing (April 29)

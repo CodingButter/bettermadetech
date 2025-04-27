@@ -1,0 +1,221 @@
+---
+title: API Reference
+description: Detailed API reference for the spinner package
+---
+
+# API Reference
+
+This document provides a comprehensive API reference for the spinner package.
+
+## Core Components
+
+### `Spinner`
+
+The base Spinner component that provides core functionality.
+
+```tsx
+import { Spinner } from '@repo/spinner';
+
+<Spinner 
+  items={['Item 1', 'Item 2']}
+  duration={3000}
+  onComplete={(winner) => console.log(winner)}
+/>
+```
+
+#### Props
+
+| Prop | Type | Description | Default |
+|------|------|-------------|---------|
+| `items` | `string[]` | Array of items to display in the spinner | Required |
+| `duration` | `number` | Duration of spin in milliseconds | `3000` |
+| `onComplete` | `(winner: string) => void` | Callback when spin completes | Optional |
+| `colorScheme` | `ColorScheme` | Custom colors for the spinner | See ColorScheme |
+| `size` | `'sm' \| 'md' \| 'lg'` | Size of the spinner | `'md'` |
+| `initialRotation` | `number` | Initial rotation in degrees | `0` |
+| `className` | `string` | Additional CSS classes | `''` |
+| `ariaLabel` | `string` | Accessible label | `'Spinner'` |
+| `autoSpin` | `boolean` | Whether to spin automatically on mount | `false` |
+
+### `SpinnerBase`
+
+The abstract base class that all spinner implementations extend.
+
+```tsx
+import { SpinnerBase } from '@repo/spinner';
+
+class CustomSpinner extends SpinnerBase {
+  // Custom implementation
+}
+```
+
+#### Methods
+
+| Method | Type | Description |
+|--------|------|-------------|
+| `spin()` | `() => Promise<string>` | Trigger a spin and return the winner |
+| `reset()` | `() => void` | Reset the spinner to initial state |
+| `setItems()` | `(items: string[]) => void` | Update the spinner items |
+| `getConfig()` | `() => SpinnerConfig` | Get current configuration |
+
+## Client Implementations
+
+### `WebSpinnerClient`
+
+```tsx
+import { WebSpinnerClient } from '@repo/spinner';
+
+<WebSpinnerClient 
+  items={['Web Item 1', 'Web Item 2']}
+/>
+```
+
+#### Additional Props
+
+| Prop | Type | Description | Default |
+|------|------|-------------|---------|
+| `animationStyle` | `'smooth' \| 'bounce'` | Type of animation | `'smooth'` |
+| `responsive` | `boolean` | Enable responsive sizing | `true` |
+| `theme` | `'light' \| 'dark' \| 'auto'` | Theme preference | `'auto'` |
+
+### `ExtensionSpinnerClient`
+
+```tsx
+import { ExtensionSpinnerClient } from '@repo/spinner';
+
+<ExtensionSpinnerClient 
+  items={['Ext Item 1', 'Ext Item 2']}
+  storage="chrome"
+/>
+```
+
+#### Additional Props
+
+| Prop | Type | Description | Default |
+|------|------|-------------|---------|
+| `storage` | `'chrome' \| 'memory'` | Storage type | `'chrome'` |
+| `persistResults` | `boolean` | Save results between sessions | `false` |
+| `storageKey` | `string` | Key for storing preferences | `'spinner_prefs'` |
+
+### `DocsSpinnerClient`
+
+```tsx
+import { DocsSpinnerClient } from '@repo/spinner';
+
+<DocsSpinnerClient 
+  items={['Docs Item 1', 'Docs Item 2']}
+  showCode={true}
+/>
+```
+
+#### Additional Props
+
+| Prop | Type | Description | Default |
+|------|------|-------------|---------|
+| `showCode` | `boolean` | Display example code | `false` |
+| `interactive` | `boolean` | Allow user interaction | `true` |
+| `codeLanguage` | `'tsx' \| 'jsx'` | Language for code example | `'tsx'` |
+
+## Types
+
+### `ColorScheme`
+
+```typescript
+interface ColorScheme {
+  primary: string;    // Main color
+  secondary: string;  // Secondary color
+  text: string;       // Text color
+  background?: string; // Optional background color
+}
+```
+
+Default values:
+```typescript
+{
+  primary: '#3b82f6',    // Blue
+  secondary: '#10b981',  // Green
+  text: '#ffffff',       // White
+  background: 'transparent'
+}
+```
+
+### `SpinnerConfig`
+
+```typescript
+interface SpinnerConfig {
+  items: string[];
+  duration: number;
+  colorScheme: ColorScheme;
+  size: 'sm' | 'md' | 'lg';
+  initialRotation: number;
+  ariaLabel: string;
+  autoSpin: boolean;
+}
+```
+
+### `SpinnerResult`
+
+```typescript
+interface SpinnerResult {
+  winner: string;
+  timestamp: number;
+  duration: number;
+  items: string[];
+}
+```
+
+## Events
+
+The spinner components emit the following events:
+
+| Event | Description |
+|-------|-------------|
+| `spin-start` | Fired when a spin begins |
+| `spin-complete` | Fired when a spin completes |
+| `item-change` | Fired when items are updated |
+
+## Accessibility
+
+All spinner components include the following accessibility features:
+
+- Proper ARIA attributes
+- Keyboard navigation support
+- Animation respects reduced motion preferences
+- Screen reader announcements for spin results
+
+## Customization
+
+The spinner can be customized in various ways:
+
+### Custom Styling
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2']}
+  className="custom-spinner"
+  colorScheme={{
+    primary: '#f59e0b',
+    secondary: '#ef4444',
+    text: '#ffffff',
+    background: '#1f2937'
+  }}
+/>
+```
+
+### Custom Size
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2']}
+  size="lg" // 'sm', 'md', or 'lg'
+/>
+```
+
+### Custom Duration
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2']}
+  duration={5000} // milliseconds
+/>
+```

@@ -1,0 +1,166 @@
+---
+title: Contribution Guidelines
+description: How to contribute effectively to the Winner Spinner project
+---
+
+# Contribution Guidelines
+
+Thank you for your interest in contributing to the Winner Spinner project! This guide outlines the process for making contributions and ensuring they meet our quality standards.
+
+## Code of Conduct
+
+We expect all contributors to adhere to our code of conduct:
+
+- Treat all project participants with respect and kindness
+- Provide constructive feedback
+- Focus on the best possible outcome for the project
+- Be inclusive and considerate of different viewpoints
+
+## Getting Started
+
+1. **Find an Issue**: Start by looking at open issues in the [GitHub issue tracker](https://github.com/CodingButter/bettermadetech/issues)
+2. **Claim an Issue**: Comment on the issue to let others know you're working on it
+3. **Fork and Clone**: Fork the repository and clone it locally
+4. **Create a Branch**: Create a new branch for your feature or fix
+
+## Development Workflow
+
+### Branch Naming
+
+Follow this branch naming convention:
+
+- `feature/issue-number-short-description` for new features
+- `fix/issue-number-short-description` for bug fixes
+- `refactor/issue-number-short-description` for refactoring
+- `docs/issue-number-short-description` for documentation changes
+
+Example: `feature/42-add-color-picker`
+
+### Commit Messages
+
+Write clear, concise commit messages that explain the "why" behind your changes:
+
+- Start with a verb in present tense (Add, Fix, Update, etc.)
+- Keep the first line under 72 characters
+- Reference the issue number in the message
+- Add more details in the commit body if necessary
+
+Example:
+```
+Add color picker component for spinner customization
+
+- Implements color wheel selection UI
+- Adds color preview functionality
+- Connects to spinner theming system
+
+Fixes #42
+```
+
+### Pull Request Process
+
+1. **Keep PRs Focused**: Each PR should address a single issue or feature
+2. **Update Documentation**: Include updates to relevant documentation
+3. **Add Tests**: Write tests for new features or bug fixes
+4. **Check Compatibility**: Ensure changes work across browsers and devices
+5. **Run Linters**: Make sure your code passes all linting checks
+6. **Request Review**: Assign reviewers when your PR is ready
+
+### Code Review Process
+
+All code is reviewed before merging:
+
+1. Automated checks must pass (linting, tests, etc.)
+2. At least one approval from a maintainer is required
+3. Feedback should be addressed with code changes or discussion
+4. Once approved, a maintainer will merge your PR
+
+## Coding Standards
+
+### General Guidelines
+
+- Write clean, readable, and maintainable code
+- Follow the existing code style and patterns
+- Keep functions small and focused on a single responsibility
+- Add comments for complex logic, but prefer self-documenting code
+- Use consistent naming conventions
+
+### JavaScript/TypeScript Standards
+
+- Use TypeScript for all new code
+- Define proper types for functions, variables, and components
+- Prefer functional components with hooks for React code
+- Use async/await for asynchronous operations
+- Use ESM import/export syntax
+
+### CSS Guidelines
+
+- Use Tailwind CSS for styling where possible
+- Keep custom CSS to a minimum
+- Follow the BEM methodology for custom CSS classes
+- Use CSS variables for theming and consistency
+
+### Testing Standards
+
+- Write unit tests for utility functions
+- Add component tests for UI elements
+- Include integration tests for key workflows
+- Test edge cases and error scenarios
+- Aim for meaningful test coverage, not just high percentages
+
+## Documentation Standards
+
+All features should be documented:
+
+- **Code Documentation**: Add JSDoc comments for functions and components
+- **User Documentation**: Update user guides for new features
+- **Architectural Documentation**: Update architecture docs for significant changes
+
+## Project Management Process
+
+We track progress using GitHub Projects:
+
+1. **Todo**: Issues ready to be worked on
+2. **In Progress**: Issues currently being worked on
+3. **Review**: Pull requests under review
+4. **Done**: Completed and merged work
+
+### Issue Management
+
+Before creating a new issue:
+
+1. Check if a similar issue already exists
+2. Use the appropriate issue template
+3. Provide clear steps to reproduce for bugs
+4. Include expected and actual behavior
+5. Add screenshots or videos if relevant
+
+## Release Process
+
+Releases follow this process:
+
+1. Features are merged to the `main` branch
+2. Release candidates are created from `main`
+3. Release candidates are tested thoroughly
+4. Release notes are prepared with all changes
+5. New version is published to the Chrome Web Store
+6. Documentation is updated with release information
+
+## Getting Help
+
+If you need assistance:
+
+- Ask questions in relevant issue discussions
+- Reach out to project maintainers
+- Check existing documentation for answers
+
+## Recognition
+
+All contributors are recognized for their work:
+
+- Contributors are listed in our documentation
+- Significant contributions are highlighted in release notes
+- All merged PRs appear in the GitHub contribution graph
+
+## Thank You!
+
+Your contributions help make Winner Spinner better for everyone. We appreciate your time and effort!

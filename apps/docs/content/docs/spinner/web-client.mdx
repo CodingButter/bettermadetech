@@ -1,0 +1,108 @@
+---
+title: Web Spinner Client
+description: Documentation for the WebSpinnerClient implementation
+---
+
+# Web Spinner Client
+
+The `WebSpinnerClient` is a specialized implementation of the spinner component for web applications.
+
+## Installation
+
+```bash
+pnpm add @repo/spinner
+```
+
+## Usage
+
+```tsx
+import { WebSpinnerClient } from '@repo/spinner';
+
+function MySpinner() {
+  return (
+    <WebSpinnerClient 
+      items={['Option 1', 'Option 2', 'Option 3']}
+      duration={5000}
+      onComplete={(winner) => alert(`Winner: ${winner}`)}
+    />
+  );
+}
+```
+
+## Properties
+
+| Property | Type | Description | Default |
+| --- | --- | --- | --- |
+| `items` | `string[]` | Array of items to display in the spinner | Required |
+| `duration` | `number` | Duration of spin in milliseconds | `3000` |
+| `onComplete` | `(winner: string) => void` | Callback when spin is complete | Optional |
+| `colorScheme` | `ColorScheme` | Color scheme for the spinner | `default` |
+| `size` | `'sm' \| 'md' \| 'lg'` | Size of the spinner | `'md'` |
+
+## Example
+
+Here's a complete example of using the `WebSpinnerClient` with customizations:
+
+```tsx
+import { WebSpinnerClient } from '@repo/spinner';
+import { useState } from 'react';
+
+function SpinnerDemo() {
+  const [winner, setWinner] = useState<string | null>(null);
+  const items = ['Apple', 'Banana', 'Cherry', 'Date', 'Elderberry'];
+  
+  return (
+    <div className="spinner-container">
+      <WebSpinnerClient 
+        items={items}
+        duration={4000}
+        colorScheme={{
+          primary: '#3b82f6',
+          secondary: '#f59e0b',
+          text: '#ffffff'
+        }}
+        size="lg"
+        onComplete={setWinner}
+      />
+      
+      {winner && (
+        <div className="winner-display">
+          The winner is: <strong>{winner}</strong>
+        </div>
+      )}
+      
+      <button 
+        onClick={() => {
+          // Trigger a new spin
+          setWinner(null);
+          // The spinner will automatically start a new spin
+          // when it detects a state change
+        }}
+      >
+        Spin Again
+      </button>
+    </div>
+  );
+}
+```
+
+## Integration with Next.js
+
+The `WebSpinnerClient` is fully compatible with Next.js applications and supports both client and server components:
+
+```tsx
+'use client';
+
+import { WebSpinnerClient } from '@repo/spinner';
+
+export default function SpinnerPage() {
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Spinner Demo</h1>
+      <WebSpinnerClient 
+        items={['Next.js', 'React', 'TypeScript', 'Tailwind CSS']}
+      />
+    </div>
+  );
+}
+```

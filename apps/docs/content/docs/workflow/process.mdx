@@ -1,0 +1,301 @@
+---
+title: Development Process
+description: The development workflow used for the Winner Spinner project
+---
+
+# Development Process
+
+This document outlines our development process from planning to deployment. Following these guidelines ensures consistent quality and maintainable code.
+
+## Development Lifecycle
+
+Our development follows this cycle:
+
+1. **Planning**: Issues are created and prioritized
+2. **Development**: Code is written and tested
+3. **Review**: Changes are reviewed and improved
+4. **Deployment**: Approved changes are released
+5. **Feedback**: User feedback guides future improvements
+
+## Issue Management
+
+### Creating Issues
+
+All work begins with a GitHub issue:
+
+- Use the appropriate issue template
+- Add detailed descriptions
+- Include acceptance criteria
+- Assign appropriate labels
+- Link to related issues or documentation
+
+### Issue Workflow
+
+Issues follow this lifecycle:
+
+1. **Triage**: Issues are validated and classified
+2. **Backlog**: Prioritized and ready for development
+3. **In Progress**: Actively being worked on
+4. **Review**: Code is completed and under review
+5. **Done**: Issue is resolved and closed
+
+### Issue Tracking
+
+We use GitHub Projects to track issues:
+
+```bash
+# Update an issue status using our management tools
+./dev-tools/github-project-manager.sh set-status <issue-number> <status>
+
+# Example:
+./dev-tools/github-project-manager.sh set-status 42 in-progress
+```
+
+## Git Workflow
+
+We follow a feature branch workflow:
+
+1. **Main Branch**: Always contains stable, production-ready code
+2. **Feature Branches**: Created for new features, fixes, or improvements
+3. **Pull Requests**: Merging changes back to the main branch
+
+### Branch Creation
+
+Create a new branch for each issue:
+
+```bash
+# Create a new branch from main
+git checkout main
+git pull
+git checkout -b feature/42-spinner-color-customization
+```
+
+### Committing Changes
+
+Commit your changes frequently with clear messages:
+
+```bash
+# Stage your changes
+git add .
+
+# Commit with a descriptive message
+git commit -m "Add color customization to spinner component
+
+- Implement color picker UI
+- Connect to spinner theme system
+- Add color preview functionality
+
+Fixes #42"
+```
+
+### Keeping Branches Updated
+
+Keep your branch up to date with main:
+
+```bash
+# Update your branch with the latest changes from main
+git checkout main
+git pull
+git checkout feature/42-spinner-color-customization
+git merge main
+```
+
+### Creating Pull Requests
+
+When your changes are ready:
+
+1. Push your branch to GitHub
+   ```bash
+   git push -u origin feature/42-spinner-color-customization
+   ```
+
+2. Create a pull request
+   - Use the PR template
+   - Link to the related issue
+   - Add a clear description
+   - Request reviewers
+
+### Code Review Process
+
+All PRs undergo thorough review:
+
+1. **Automated Checks**: CI pipeline verifies build, tests, and linting
+2. **Peer Review**: At least one team member reviews the code
+3. **Feedback Loop**: Address any comments or requests for changes
+4. **Approval**: Reviewers approve when changes are satisfactory
+5. **Merge**: PR is merged to the main branch
+
+## Testing Strategy
+
+We employ a comprehensive testing approach:
+
+### Unit Testing
+
+- Test individual functions and components
+- Focus on isolated functionality
+- Aim for high coverage of core logic
+
+### Integration Testing
+
+- Test interactions between components
+- Verify correct data flow
+- Ensure components work together properly
+
+### End-to-End Testing
+
+- Test complete user workflows
+- Validate the entire application
+- Simulate real user behavior
+
+### Manual Testing
+
+- Test edge cases and complex interactions
+- Verify visual and UX elements
+- Check cross-browser compatibility
+
+## Documentation
+
+Documentation is a crucial part of our process:
+
+### Code Documentation
+
+- Use JSDoc comments for functions and classes
+- Add inline comments for complex logic
+- Keep READMEs updated with relevant information
+
+### User Documentation
+
+- Update user guides for new features
+- Add examples and screenshots
+- Create tutorials for complex workflows
+
+### API Documentation
+
+- Document all public APIs
+- Include types, parameters, and return values
+- Provide usage examples
+
+## Continuous Integration/Continuous Deployment
+
+Our CI/CD pipeline automates checks and deployments:
+
+### CI Checks
+
+For every PR:
+- Build verification
+- Linting checks
+- Unit and integration tests
+- Bundle size analysis
+
+### Deployment Process
+
+1. **Development**: Automatic deployment to development environment
+2. **Staging**: Manual promotion to staging environment
+3. **Production**: Manual promotion to production after approval
+
+## Release Process
+
+We follow a structured release process:
+
+### Version Numbering
+
+We use semantic versioning (MAJOR.MINOR.PATCH):
+- MAJOR: Incompatible API changes
+- MINOR: New features (backward compatible)
+- PATCH: Bug fixes (backward compatible)
+
+### Release Preparation
+
+1. Update version numbers
+2. Compile release notes
+3. Create a release branch
+
+### Release Verification
+
+1. Deploy to staging environment
+2. Conduct final testing
+3. Verify all features work as expected
+
+### Release Publication
+
+1. Tag the release in Git
+2. Deploy to production
+3. Publish to Chrome Web Store (for extension)
+4. Announce the release
+
+## Monitoring and Feedback
+
+After deployment, we monitor performance and gather feedback:
+
+### Performance Monitoring
+
+- Track key performance metrics
+- Monitor for errors or issues
+- Analyze usage patterns
+
+### User Feedback
+
+- Collect feedback through designated channels
+- Prioritize feedback for future improvements
+- Address critical issues promptly
+
+### Continuous Improvement
+
+- Conduct regular retrospectives
+- Identify process improvements
+- Implement changes in subsequent iterations
+
+## Project Management Tools
+
+We use these tools to facilitate our process:
+
+- **GitHub**: Issues, PRs, and code hosting
+- **GitHub Projects**: Project and sprint tracking
+- **Custom Scripts**: Automation for common tasks
+
+```bash
+# List all scripts available
+ls -la dev-tools/
+
+# View all issues in our project
+./dev-tools/github-project-manager.sh list-bettertech-issues
+```
+
+## Troubleshooting Common Issues
+
+If you encounter problems in the development process:
+
+### Git Issues
+
+```bash
+# Reset uncommitted changes
+git reset --hard
+
+# Undo last commit (keeping changes)
+git reset HEAD~1
+```
+
+### Dependency Issues
+
+```bash
+# Clean and reinstall all dependencies
+pnpm clean
+pnpm install
+```
+
+### Build Issues
+
+```bash
+# Clean build caches
+rm -rf .turbo
+pnpm clean
+
+# Rebuild all packages
+pnpm build
+```
+
+## Next Steps
+
+- [Code Standards](/docs/workflow/standards): Coding conventions and best practices
+- [Testing Guidelines](/docs/workflow/testing): How to write effective tests
+- [Issue Management](/docs/workflow/issues): Detailed issue workflow

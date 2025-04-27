@@ -1,0 +1,42 @@
+---
+title: Spinner Package
+description: Documentation for the custom spinner package
+---
+
+# Spinner Package
+
+The spinner package provides a reusable and customizable spinner component for various applications including web applications, browser extensions, and documentation sites.
+
+## Overview
+
+The spinner component is designed to be:
+
+- Highly customizable
+- Accessible
+- Performance optimized
+- Easy to integrate across different platforms
+
+## Getting Started
+
+To use the spinner in your application:
+
+```tsx
+import { Spinner } from '@repo/spinner';
+
+function MyComponent() {
+  return (
+    <Spinner 
+      items={['Item 1', 'Item 2', 'Item 3']}
+      onSpinComplete={(winner) => console.log(`Winner: ${winner}`)}
+    />
+  );
+}
+```
+
+## Available Clients
+
+The spinner package provides specialized clients for different environments:
+
+- [Web Spinner Client](/docs/spinner/web-client) - For web applications
+- [Extension Spinner Client](/docs/spinner/extension-client) - For browser extensions
+- [Docs Spinner Client](/docs/spinner/docs-client) - For documentation sites

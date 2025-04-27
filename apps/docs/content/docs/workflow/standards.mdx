@@ -1,0 +1,400 @@
+---
+title: Code Standards
+description: Coding conventions and best practices for the Winner Spinner project
+---
+
+# Code Standards
+
+This document outlines our coding standards and best practices to ensure consistency, maintainability, and quality across the Winner Spinner codebase.
+
+## General Principles
+
+- **Readability**: Write clear, self-documenting code that others can easily understand
+- **Simplicity**: Keep solutions as simple as possible, avoiding unnecessary complexity
+- **DRY (Don't Repeat Yourself)**: Avoid duplicating code; extract reusable patterns
+- **Consistency**: Follow established patterns and conventions
+- **Testability**: Write code that can be easily tested
+
+## TypeScript Standards
+
+We use TypeScript throughout the project to ensure type safety and improve development experience.
+
+### Types and Interfaces
+
+- Use `interface` for defining object shapes that may be extended
+- Use `type` for unions, intersections, or when you don't need extension
+- Define proper types for all variables, parameters, and return values
+- Avoid using `any` unless absolutely necessary
+- Use generics for reusable components and functions
+
+```typescript
+// Good
+interface SpinnerProps {
+  items: string[];
+  duration: number;
+  onComplete?: (winner: string) => void;
+}
+
+// Good
+type SpinnerSize = 'sm' | 'md' | 'lg';
+
+// Avoid
+const handleItems = (items: any) => { /* ... */ };
+
+// Better
+const handleItems = (items: string[]) => { /* ... */ };
+```
+
+### Type Guards and Assertions
+
+- Use type guards to narrow types when necessary
+- Avoid type assertions (`as`) when possible
+- If using assertions, add comments explaining why they're needed
+
+```typescript
+// Good
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(item => typeof item === 'string');
+}
+
+// Avoid unless necessary
+const items = someValue as string[];
+
+// Better with explanation if needed
+// We know this is a string[] because it's validated by the API
+const items = someValue as string[];
+```
+
+## React Standards
+
+### Components
+
+- Use functional components with hooks
+- Keep components focused on a single responsibility
+- Extract complex logic into custom hooks
+- Split large components into smaller, reusable ones
+
+```tsx
+// Good: Focused functional component
+function SpinnerControls({ onSpin, isSpinning }: SpinnerControlsProps) {
+  return (
+    <div className="controls">
+      <button 
+        onClick={onSpin} 
+        disabled={isSpinning}
+      >
+        {isSpinning ? 'Spinning...' : 'Spin'}
+      </button>
+    </div>
+  );
+}
+```
+
+### Hooks
+
+- Follow the Rules of Hooks (only call at top level, etc.)
+- Create custom hooks for reusable logic
+- Use appropriate dependency arrays for `useEffect` and `useCallback`
+- Keep effects focused on a single concern
+
+```tsx
+// Good: Custom hook for spinner logic
+function useSpinner(items: string[], duration: number) {
+  const [winner, setWinner] = useState<string | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  const spin = useCallback(() => {
+    setIsSpinning(true);
+    
+    // Spinner logic
+    setTimeout(() => {
+      const randomIndex = Math.floor(Math.random() * items.length);
+      setWinner(items[randomIndex]);
+      setIsSpinning(false);
+    }, duration);
+  }, [items, duration]);
+
+  return { winner, isSpinning, spin };
+}
+```
+
+### Props
+
+- Define prop types with interfaces
+- Use destructuring for accessing props
+- Provide default values where appropriate
+- Document complex props or requirements
+
+```tsx
+interface ButtonProps {
+  /** The text to display in the button */
+  label: string;
+  /** Called when the button is clicked */
+  onClick: () => void;
+  /** Optional visual style variant */
+  variant?: 'primary' | 'secondary' | 'danger';
+  /** Whether the button is in a disabled state */
+  disabled?: boolean;
+}
+
+// Good: Destructured props with defaults
+function Button({ 
+  label, 
+  onClick, 
+  variant = 'primary', 
+  disabled = false 
+}: ButtonProps) {
+  // Component implementation
+}
+```
+
+## CSS and Styling
+
+We use Tailwind CSS for styling with these conventions:
+
+### Tailwind Classes
+
+- Use Tailwind utility classes directly in components where possible
+- Group related utilities together (layout, typography, colors, etc.)
+- Extract common patterns to components or apply utility-first approach
+
+```tsx
+// Good: Organized utility classes
+<button 
+  className="
+    px-4 py-2 
+    rounded-md 
+    bg-blue-500 hover:bg-blue-600 
+    text-white font-medium
+    transition-colors
+    disabled:opacity-50 disabled:pointer-events-none
+  "
+  disabled={isDisabled}
+>
+  {label}
+</button>
+```
+
+### Custom CSS
+
+When custom CSS is needed:
+
+- Use CSS modules or styled-components
+- Follow BEM naming convention for class names
+- Use CSS variables for theming and consistent values
+- Minimize specificity issues with flat selectors
+
+```css
+/* Good: BEM naming and variables */
+.spinner {
+  --spinner-size: 300px;
+  width: var(--spinner-size);
+  height: var(--spinner-size);
+}
+
+.spinner__segment {
+  border-radius: 4px;
+}
+
+.spinner__segment--active {
+  opacity: 1;
+}
+```
+
+## Testing Standards
+
+### Unit Tests
+
+- Test one thing at a time
+- Use descriptive test names that explain the expected behavior
+- Follow the Arrange-Act-Assert pattern
+- Mock dependencies appropriately
+
+```typescript
+// Good: Clear, focused test
+describe('Spinner', () => {
+  it('should call onComplete with the winner when spin completes', async () => {
+    // Arrange
+    const items = ['Item 1', 'Item 2', 'Item 3'];
+    const onComplete = jest.fn();
+    const { result } = renderHook(() => useSpinner(items, 100, onComplete));
+    
+    // Act
+    act(() => {
+      result.current.spin();
+    });
+    
+    // Wait for animation to complete
+    await waitFor(() => {
+      expect(result.current.isSpinning).toBe(false);
+    });
+    
+    // Assert
+    expect(onComplete).toHaveBeenCalledWith(expect.any(String));
+    expect(items).toContain(onComplete.mock.calls[0][0]);
+  });
+});
+```
+
+### Component Tests
+
+- Test component rendering and user interactions
+- Verify component states and UI updates
+- Use testing-library's user-centric queries
+- Test accessibility where appropriate
+
+```typescript
+// Good: Testing component interaction
+test('clicking the spin button starts the spinner', async () => {
+  // Arrange
+  const user = userEvent.setup();
+  const { getByRole, getByText } = render(<SpinnerDemo />);
+  const spinButton = getByRole('button', { name: /spin/i });
+  
+  // Act
+  await user.click(spinButton);
+  
+  // Assert
+  expect(getByText(/spinning.../i)).toBeInTheDocument();
+  expect(spinButton).toBeDisabled();
+});
+```
+
+## File Organization
+
+### Directory Structure
+
+- Group files by feature or domain, not by type
+- Keep related files close to each other
+- Use consistent naming conventions
+
+```
+components/
+  Spinner/
+    index.tsx       # Main component export
+    Spinner.tsx     # Component implementation
+    Spinner.test.tsx # Component tests
+    types.ts        # Component-specific types
+    hooks.ts        # Component-specific hooks
+    utils.ts        # Component-specific utilities
+```
+
+### File Naming
+
+- Use PascalCase for React components: `Spinner.tsx`
+- Use camelCase for utilities and hooks: `useSpinner.ts`
+- Use kebab-case for CSS modules: `spinner-styles.module.css`
+- Use descriptive, specific names
+
+## Imports and Exports
+
+- Use named exports for most items
+- Use default exports sparingly, typically for main components
+- Group imports by source (external libraries first, then internal)
+- Avoid circular dependencies
+- Use aliased imports for better organization
+
+```typescript
+// Good: Organized imports
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+
+import { SpinnerProps } from './types';
+import { useSpinnerAnimation } from './hooks';
+import { generateSegments } from './utils';
+
+// Component implementation
+```
+
+## Comments and Documentation
+
+- Write self-documenting code when possible
+- Add JSDoc comments for functions, components, and types
+- Include explanations for complex logic or workarounds
+- Document important decisions and non-obvious behavior
+
+```typescript
+/**
+ * Calculates the rotation angle for each segment in the spinner.
+ * 
+ * @param segmentCount - The total number of segments
+ * @returns An array of rotation angles in degrees
+ */
+function calculateSegmentAngles(segmentCount: number): number[] {
+  // Implementation
+}
+
+// Explanation for complex logic
+// We're using GSAP for animations because the native CSS transitions
+// had issues with precision timing in certain browsers
+```
+
+## Error Handling
+
+- Handle errors at appropriate levels
+- Provide meaningful error messages
+- Use try/catch blocks for operations that might fail
+- Implement fallbacks or graceful degradation
+
+```typescript
+// Good: Proper error handling
+async function fetchSpinnerData() {
+  try {
+    const response = await api.get('/spinner-config');
+    return response.data;
+  } catch (error) {
+    // Log the error for debugging
+    console.error('Failed to fetch spinner configuration:', error);
+    
+    // Return a default configuration as fallback
+    return DEFAULT_SPINNER_CONFIG;
+  }
+}
+```
+
+## Performance Considerations
+
+- Memoize expensive calculations with `useMemo`
+- Optimize re-renders with `React.memo` and `useCallback`
+- Use virtualization for long lists (react-window or similar)
+- Lazy load components when appropriate
+- Measure performance impacts of changes
+
+```typescript
+// Good: Optimized component
+const SpinnerSegment = React.memo(function SpinnerSegment({ 
+  label, 
+  color, 
+  angle 
+}: SpinnerSegmentProps) {
+  // Implementation
+});
+```
+
+## Code Review Checklist
+
+Use this checklist when reviewing code:
+
+- [ ] Code follows project standards and conventions
+- [ ] Types are properly defined and used
+- [ ] Component responsibilities are clear and focused
+- [ ] Tests cover the functionality adequately
+- [ ] Error cases are handled appropriately
+- [ ] Performance considerations are addressed
+- [ ] Documentation is clear and up-to-date
+- [ ] No security vulnerabilities introduced
+- [ ] Accessibility requirements are met
+
+## Linting and Formatting
+
+We use ESLint and Prettier to enforce code standards:
+
+- Run linting before committing: `pnpm lint`
+- Format code with Prettier: `pnpm format`
+- Use the provided configurations without modifications
+
+## Next Steps
+
+- [Development Process](/docs/workflow/process): Our overall development workflow
+- [Testing Guidelines](/docs/workflow/testing): How to write effective tests
+- [Issue Management](/docs/workflow/issues): How we track and manage issues

@@ -1,0 +1,167 @@
+---
+title: Architecture Overview
+description: Detailed explanation of the Winner Spinner project architecture
+---
+
+# Architecture Overview
+
+This document provides a comprehensive overview of the Winner Spinner project architecture, explaining how different components work together.
+
+## System Architecture
+
+Winner Spinner follows a modern frontend architecture with shared components and a microservices-inspired approach:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    User Interfaces                       │
+├───────────────┬───────────────────┬────────────────────┤
+│  Chrome       │  Marketing        │  Documentation     │
+│  Extension    │  Website          │  Site              │
+└───────┬───────┴─────────┬─────────┴──────────┬─────────┘
+        │                 │                    │
+        │                 │                    │
+┌───────▼─────────────────▼────────────────────▼─────────┐
+│                    Shared Packages                      │
+├─────────────────────────┬─────────────────────────────┤
+│     @repo/spinner       │     Other Packages          │
+└─────────────┬───────────┴─────────────────────────────┘
+              │
+              │
+┌─────────────▼───────────┐
+│     Backend Services     │
+├─────────────────────────┤
+│     Directus CMS        │
+└─────────────────────────┘
+```
+
+## Core Components
+
+### 1. Chrome Extension
+
+The extension is a standalone application that provides the spinner interface within Chrome. It consists of:
+
+- **Background Scripts**: Manage the extension's lifecycle and events
+- **Side Panel**: Houses the main spinner interface
+- **Popup**: Quick access to controls and information
+- **Options Page**: Configuration settings for the spinner
+
+The extension uses Chrome Storage API for persistence and communicates with Directus for additional data storage.
+
+### 2. Shared Spinner Package
+
+The `@repo/spinner` package is the heart of the project, providing a reusable spinner component with specialized clients:
+
+- **SpinnerBase**: Abstract class with core functionality
+- **WebSpinnerClient**: Implementation for standard web use
+- **ExtensionSpinnerClient**: Implementation for Chrome extension
+- **DocsSpinnerClient**: Implementation for documentation examples
+
+This shared package ensures consistency across all platforms and reduces code duplication.
+
+### 3. Marketing Website
+
+The marketing site showcases the spinner extension with:
+
+- **Landing Page**: Main promotional content
+- **Feature Highlights**: Detailed feature explanations
+- **Documentation Links**: References to the docs site
+- **Integration Examples**: How to use the spinner in various contexts
+
+### 4. Documentation Site
+
+The documentation site (what you're reading now) provides:
+
+- **User Documentation**: How to use the extension
+- **Developer Guides**: How to contribute to the project
+- **API References**: Detailed technical documentation
+- **Interactive Examples**: Live demonstrations
+
+### 5. Directus Backend
+
+Directus serves as a headless CMS and data storage system with:
+
+- **User Data**: Stores user preferences and settings
+- **Spinner Configurations**: Saved spinner setups
+- **CSV Data**: Optional storage for imported CSV data
+
+## Technical Architecture
+
+### Monorepo Structure
+
+We use Turborepo to manage our monorepo, which provides:
+
+- Shared build configurations
+- Optimized dependency management
+- Parallel task execution
+- Intelligent caching
+
+The main workspaces are:
+
+```
+apps/              # Applications
+  directus/        # Directus backend configuration
+  docs/            # Documentation site
+  extension/       # Chrome extension
+  web/             # Marketing website
+packages/          # Shared packages
+  spinner/         # Core spinner component
+```
+
+### State Management
+
+- **Chrome Extension**: Uses Chrome Storage API + React Context
+- **Web Application**: React hooks + Context API
+- **Docs Site**: Minimal state, primarily static content
+
+### API Architecture
+
+The spinner package exposes a clean API that:
+
+1. Provides a consistent interface across platforms
+2. Handles platform-specific implementation details internally
+3. Supports different storage mechanisms (browser storage, memory, etc.)
+4. Offers typed interfaces for TypeScript safety
+
+### Build System
+
+- **Chrome Extension**: Vite for fast development and optimized builds
+- **Web & Docs**: Next.js for server-side rendering and static generation
+- **Shared Packages**: TypeScript with tsup for efficient bundling
+
+## Data Flow
+
+1. **User Input**: Configuration through UI or CSV import
+2. **State Management**: Local state tracked in React components
+3. **Persistence**: Data saved to Chrome Storage or Directus
+4. **Rendering**: Spinner UI rendered based on current state
+5. **Results Processing**: Spin results processed and displayed
+
+## Security Considerations
+
+- **Chrome Extension**: Follows Chrome's security model with minimal permissions
+- **Data Storage**: User data stored securely in Chrome Storage or Directus
+- **API Authentication**: Secure token-based auth for Directus API
+
+## Performance Optimizations
+
+- **Bundle Size**: Optimized bundles for faster loading
+- **Lazy Loading**: Components loaded only when needed
+- **Caching**: Intelligent caching through Turborepo
+- **Animation Performance**: Optimized spinner animations
+
+## Deployment Architecture
+
+- **Chrome Extension**: Deployed to Chrome Web Store
+- **Web & Docs**: Deployed to Vercel or similar platforms
+- **Directus**: Self-hosted or deployed to cloud provider
+
+## Future Architectural Considerations
+
+- **Mobile Applications**: Potential expansion to mobile platforms
+- **Additional Browser Support**: Firefox, Safari extensions
+- **API Expansion**: Enhanced APIs for third-party integration
+
+## Next Steps
+
+- [Spinner Package Documentation](/docs/spinner): Detailed spinner implementation
+- [Contribution Guidelines](/docs/onboarding/contributing): How to contribute effectively

@@ -1,0 +1,254 @@
+---
+title: Migration Guide
+description: Guide for migrating from legacy spinner implementations to the new spinner package
+---
+
+# Migration Guide
+
+This guide helps you migrate from legacy spinner implementations to the new centralized spinner package.
+
+## Overview of Changes
+
+The spinner implementation has been refactored to:
+
+1. Move from app-specific implementations to a shared package
+2. Improve performance and accessibility
+3. Standardize the API across all applications
+4. Provide specialized clients for different environments
+
+## Migration Steps
+
+### Step 1: Update Dependencies
+
+First, ensure you have the latest spinner package in your project:
+
+```bash
+pnpm add @repo/spinner@latest
+```
+
+### Step 2: Replace Imports
+
+#### Before:
+
+```tsx
+// Web Application
+import { Spinner } from '../components/Spinner';
+
+// Chrome Extension
+import { Spinner } from '../components/Spinner';
+
+// Documentation
+import { Spinner } from '../components/docs/Spinner';
+```
+
+#### After:
+
+```tsx
+// Web Application
+import { WebSpinnerClient } from '@repo/spinner';
+
+// Chrome Extension
+import { ExtensionSpinnerClient } from '@repo/spinner';
+
+// Documentation
+import { DocsSpinnerClient } from '@repo/spinner';
+```
+
+### Step 3: Update Component Usage
+
+#### Before:
+
+```tsx
+// Web Application
+<Spinner 
+  options={['Item 1', 'Item 2']}
+  spinTime={3}
+  onSpinEnd={(result) => handleResult(result)}
+  colors={{
+    main: '#3b82f6',
+    accent: '#10b981',
+  }}
+/>
+
+// Chrome Extension
+<Spinner 
+  options={['Item 1', 'Item 2']}
+  saveToStorage={true}
+  spinDuration={3000}
+  onComplete={(result) => handleResult(result)}
+/>
+```
+
+#### After:
+
+```tsx
+// Web Application
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  duration={3000}
+  onComplete={(winner) => handleResult(winner)}
+  colorScheme={{
+    primary: '#3b82f6',
+    secondary: '#10b981',
+    text: '#ffffff'
+  }}
+/>
+
+// Chrome Extension
+<ExtensionSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  duration={3000}
+  onComplete={(winner) => handleResult(winner)}
+  storage="chrome"
+  persistResults={true}
+/>
+```
+
+### Step 4: Update Event Handlers
+
+#### Before:
+
+```tsx
+function handleSpinResult(result) {
+  const { selectedOption, spinTime } = result;
+  console.log(`Selected: ${selectedOption} after ${spinTime}s`);
+}
+```
+
+#### After:
+
+```tsx
+function handleSpinResult(winner: string) {
+  console.log(`Winner: ${winner}`);
+}
+```
+
+## Property Mapping
+
+| Old Property | New Property | Notes |
+|--------------|--------------|-------|
+| `options` | `items` | Array of strings to display |
+| `spinTime` / `spinDuration` | `duration` | Now always in milliseconds |
+| `onSpinEnd` / `onComplete` | `onComplete` | Now receives just the winner string |
+| `colors` | `colorScheme` | New structure with primary/secondary/text |
+| `saveToStorage` | `storage="chrome" & persistResults=true` | Only for ExtensionSpinnerClient |
+| `theme` | `theme` | Same values (light/dark/auto) |
+| Custom CSS classes | `className` | Pass className directly |
+
+## Client-Specific Migration Notes
+
+### Web Application
+
+Additional migration steps for web applications:
+
+1. If using custom animations, use the `animationStyle` prop
+2. For custom responsive behavior, use the `responsive` prop
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  animationStyle="bounce"
+  responsive={true}
+/>
+```
+
+### Chrome Extension
+
+Additional migration steps for extensions:
+
+1. For storage preferences, use the `storage` and `persistResults` props
+2. For custom storage keys, use the `storageKey` prop
+
+```tsx
+<ExtensionSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  storage="chrome"
+  persistResults={true}
+  storageKey="my_custom_storage_key"
+/>
+```
+
+### Documentation Site
+
+Additional migration steps for documentation:
+
+1. For interactive examples, use the `interactive` prop
+2. To show code examples, use the `showCode` prop
+
+```tsx
+<DocsSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  interactive={true}
+  showCode={true}
+/>
+```
+
+## TypeScript Types
+
+If you were using TypeScript with the old implementation, update your types:
+
+```tsx
+// Before
+interface SpinnerProps {
+  options: string[];
+  spinTime?: number;
+  onSpinEnd?: (result: { selectedOption: string, spinTime: number }) => void;
+  // ...
+}
+
+// After
+import { WebSpinnerClientProps } from '@repo/spinner';
+
+// WebSpinnerClientProps, ExtensionSpinnerClientProps, or DocsSpinnerClientProps
+```
+
+## Troubleshooting
+
+Here are solutions to common migration issues:
+
+### Problem: Spinner doesn't start automatically
+
+Solution: Add the `autoSpin` prop:
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  autoSpin={true}
+/>
+```
+
+### Problem: Colors don't match previous implementation
+
+Solution: Fine-tune your colorScheme:
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  colorScheme={{
+    primary: '#yourPrimaryColor',
+    secondary: '#yourSecondaryColor',
+    text: '#yourTextColor',
+    background: '#yourBackgroundColor'  // Optional
+  }}
+/>
+```
+
+### Problem: Extension storage not working
+
+Solution: Make sure to use the correct storage options:
+
+```tsx
+<ExtensionSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  storage="chrome" // Use "memory" for testing outside Chrome
+  persistResults={true}
+/>
+```
+
+## Need Help?
+
+If you encounter issues during migration:
+
+1. Check the [API Reference](/docs/spinner/api-reference) for detailed information
+2. File an issue in the repository with details about your problem
+3. Refer to the example implementations in the web, extension, and docs applications

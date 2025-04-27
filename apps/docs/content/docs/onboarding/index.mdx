@@ -1,0 +1,119 @@
+---
+title: Developer Onboarding
+description: Comprehensive guide for new developers joining the Winner Spinner project
+---
+
+# Developer Onboarding
+
+Welcome to the Winner Spinner project! This guide will help you get started with development and understand our project structure, workflows, and best practices.
+
+## Getting Started Checklist
+
+- [ ] Read the project overview and architecture documentation
+- [ ] Set up your local development environment
+- [ ] Understand the monorepo structure
+- [ ] Familiarize yourself with our development workflow
+- [ ] Review existing code and components
+- [ ] Read our contribution guidelines
+- [ ] Join our communication channels (if applicable)
+
+## Project Overview
+
+Winner Spinner is a Chrome extension for raffle companies that provides a customizable spinner mechanism. The project consists of:
+
+- A Chrome extension (core product)
+- A shared spinner package (reusable component)
+- A marketing website
+- A documentation site (what you're reading now)
+- Directus backend integration for data storage
+
+## Repository Structure
+
+We use a monorepo structure with Turborepo to manage our codebase:
+
+```
+bettermadetech/
+├── apps/                  # Applications
+│   ├── directus/          # Directus backend setup
+│   ├── docs/              # Documentation site (this site)
+│   ├── extension/         # Chrome extension
+│   └── web/               # Marketing website
+├── packages/              # Shared packages
+│   └── spinner/           # Core spinner component
+├── dev-tools/             # Development helper scripts
+├── turbo.json             # Turborepo configuration
+└── package.json           # Workspace root
+```
+
+## Key Technologies
+
+- **TypeScript**: For type safety across the codebase
+- **React**: UI library for all front-end components
+- **Next.js**: Powers our web and documentation sites
+- **Tailwind CSS**: Styling system used across all apps
+- **Turborepo**: Manages our monorepo structure
+- **Directus**: Headless CMS for backend functionality
+- **Chrome Extensions API**: For browser extension features
+
+## Set Up Your Development Environment
+
+Follow these steps to set up your local development environment:
+
+1. **Prerequisites**:
+   - Node.js 18+ (avoid Node.js 23.1 for production builds)
+   - pnpm 8+
+   - Git
+
+2. **Clone the repository**:
+   ```bash
+   git clone https://github.com/CodingButter/bettermadetech.git
+   cd bettermadetech
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   pnpm install
+   ```
+
+4. **Run development servers**:
+
+   For the documentation site:
+   ```bash
+   cd apps/docs
+   pnpm dev
+   ```
+   
+   For the marketing site:
+   ```bash
+   cd apps/web
+   pnpm dev
+   ```
+   
+   For the extension:
+   ```bash
+   cd apps/extension
+   pnpm dev
+   ```
+
+## Development Workflow
+
+Our development workflow follows these principles:
+
+1. **Issue tracking**: All work starts with a GitHub issue
+2. **Branch strategy**: Create feature branches named after the issue
+3. **Pull requests**: All changes must go through PR reviews
+4. **CI/CD**: Automated checks run on all PRs
+
+The detailed workflow is documented in the [Development Process](/docs/workflow/process) section.
+
+## Communication Channels
+
+- **GitHub Issues**: Primary method for task tracking and discussions
+- **Pull Requests**: For code review and feedback
+- **Project Board**: For high-level project status tracking
+
+## Next Steps
+
+- [Project Setup](/docs/onboarding/setup): Detailed setup instructions
+- [Architecture Overview](/docs/onboarding/architecture): In-depth architecture explanation
+- [Contribution Guidelines](/docs/onboarding/contributing): How to contribute effectively

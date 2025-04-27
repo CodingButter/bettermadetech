@@ -1,0 +1,133 @@
+---
+title: Extension Spinner Client
+description: Documentation for the ExtensionSpinnerClient implementation
+---
+
+# Extension Spinner Client
+
+The `ExtensionSpinnerClient` is a specialized implementation of the spinner component designed for Chrome extensions, particularly for the side panel context.
+
+## Installation
+
+```bash
+pnpm add @repo/spinner
+```
+
+## Usage
+
+```tsx
+import { ExtensionSpinnerClient } from '@repo/spinner';
+
+function ExtensionSidePanel() {
+  return (
+    <div className="side-panel-container">
+      <ExtensionSpinnerClient 
+        items={['Option 1', 'Option 2', 'Option 3']}
+        storage="chrome"
+        persistResults={true}
+      />
+    </div>
+  );
+}
+```
+
+## Properties
+
+| Property | Type | Description | Default |
+| --- | --- | --- | --- |
+| `items` | `string[]` | Array of items to display in the spinner | Required |
+| `duration` | `number` | Duration of spin in milliseconds | `3000` |
+| `onComplete` | `(winner: string) => void` | Callback when spin is complete | Optional |
+| `storage` | `'chrome' \| 'memory'` | Storage type for preferences | `'chrome'` |
+| `persistResults` | `boolean` | Whether to persist results between sessions | `false` |
+| `colorScheme` | `ColorScheme` | Color scheme for the spinner | `default` |
+| `size` | `'sm' \| 'md' \| 'lg'` | Size of the spinner | `'md'` |
+
+## Chrome Extension Integration
+
+The `ExtensionSpinnerClient` is designed to work seamlessly in Chrome extensions with the following features:
+
+1. **Chrome Storage Integration**: The client can store user preferences and history in Chrome's storage system
+2. **Responsive Design**: Adapts to the side panel dimensions automatically
+3. **Mock Mode**: Supports development outside of Chrome with mocked Chrome APIs
+
+## Example: Side Panel Implementation
+
+Here's how to implement the spinner in a Chrome extension side panel:
+
+```tsx
+// src/pages/sidepanel/SidePanel.tsx
+import { ExtensionSpinnerClient } from '@repo/spinner';
+import { useState, useEffect } from 'react';
+import { getStoredOptions } from '../../utils/storage';
+
+export default function SidePanel() {
+  const [options, setOptions] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    // Load options from storage
+    getStoredOptions().then(data => {
+      setOptions(data.spinnerOptions || ['Default Option 1', 'Default Option 2']);
+      setIsLoading(false);
+    });
+  }, []);
+  
+  if (isLoading) {
+    return <div>Loading spinner options...</div>;
+  }
+  
+  return (
+    <div className="side-panel">
+      <h1 className="text-xl font-bold mb-4">Winner Spinner</h1>
+      
+      <ExtensionSpinnerClient 
+        items={options}
+        storage="chrome"
+        persistResults={true}
+        onComplete={(winner) => {
+          // Send message to background script if needed
+          chrome.runtime.sendMessage({
+            type: 'SPIN_COMPLETE',
+            winner
+          });
+        }}
+      />
+      
+      <div className="mt-4">
+        <button 
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+          onClick={() => {
+            // Open options page
+            chrome.runtime.openOptionsPage();
+          }}
+        >
+          Configure Options
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+## Development Mode
+
+When developing outside of the Chrome extension environment, the client automatically detects this and uses mocked Chrome APIs:
+
+```tsx
+// In development mode (e.g., running with Vite dev server)
+import { ExtensionSpinnerClient } from '@repo/spinner';
+
+function DevModeDemo() {
+  return (
+    <div className="container p-4">
+      <h2>Extension Spinner (Dev Mode)</h2>
+      <ExtensionSpinnerClient 
+        items={['Dev Item 1', 'Dev Item 2', 'Dev Item 3']}
+        // Storage automatically falls back to memory in dev mode
+        storage="chrome" 
+      />
+    </div>
+  );
+}
+```

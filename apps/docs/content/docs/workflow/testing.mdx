@@ -1,0 +1,477 @@
+---
+title: Testing Guidelines
+description: How to write effective tests for the Winner Spinner project
+---
+
+# Testing Guidelines
+
+This document outlines our approach to testing for the Winner Spinner project, including testing strategies, best practices, and tools.
+
+## Testing Philosophy
+
+We believe in a balanced testing approach that:
+
+- Focuses on testing behavior, not implementation details
+- Provides confidence in key functionality
+- Enables refactoring without breaking tests
+- Catches critical issues early
+- Serves as living documentation
+
+## Testing Pyramid
+
+We follow the testing pyramid approach:
+
+```
+    ▲
+   ╱ ╲   E2E
+  ╱───╲  Integration
+ ╱─────╲ Unit
+```
+
+- **Unit Tests**: Test individual functions and components in isolation
+- **Integration Tests**: Test interactions between components
+- **End-to-End Tests**: Test complete user workflows
+
+## Unit Testing
+
+### What to Test
+
+Unit tests should focus on:
+
+- Pure functions and utilities
+- Component rendering and props
+- Custom hooks and their state changes
+- Edge cases and error scenarios
+
+### What Not to Test
+
+Avoid testing:
+
+- Implementation details that might change
+- Third-party libraries (assume they work)
+- Configuration files
+- Boilerplate code
+
+### Unit Test Examples
+
+#### Testing a Utility Function
+
+```typescript
+// Function to test
+function calculateWinner(items: string[], seed: number): string {
+  const index = Math.floor(seed * items.length) % items.length;
+  return items[index];
+}
+
+// The test
+describe('calculateWinner', () => {
+  it('returns the correct item based on the seed', () => {
+    const items = ['A', 'B', 'C', 'D'];
+    
+    // Test with specific seeds
+    expect(calculateWinner(items, 0)).toBe('A');
+    expect(calculateWinner(items, 0.25)).toBe('B');
+    expect(calculateWinner(items, 0.5)).toBe('C');
+    expect(calculateWinner(items, 0.75)).toBe('D');
+  });
+  
+  it('handles empty arrays by returning undefined', () => {
+    expect(calculateWinner([], 0.5)).toBeUndefined();
+  });
+});
+```
+
+#### Testing a React Component
+
+```tsx
+// Component to test
+function SpinButton({ onClick, isSpinning }: SpinButtonProps) {
+  return (
+    <button 
+      onClick={onClick}
+      disabled={isSpinning}
+      className="spin-button"
+    >
+      {isSpinning ? 'Spinning...' : 'Spin'}
+    </button>
+  );
+}
+
+// The test
+describe('SpinButton', () => {
+  it('renders correctly in default state', () => {
+    const { getByRole } = render(<SpinButton onClick={() => {}} isSpinning={false} />);
+    const button = getByRole('button');
+    
+    expect(button).toHaveTextContent('Spin');
+    expect(button).not.toBeDisabled();
+  });
+  
+  it('renders correctly in spinning state', () => {
+    const { getByRole } = render(<SpinButton onClick={() => {}} isSpinning={true} />);
+    const button = getByRole('button');
+    
+    expect(button).toHaveTextContent('Spinning...');
+    expect(button).toBeDisabled();
+  });
+  
+  it('calls onClick when clicked', async () => {
+    const user = userEvent.setup();
+    const handleClick = jest.fn();
+    const { getByRole } = render(<SpinButton onClick={handleClick} isSpinning={false} />);
+    const button = getByRole('button');
+    
+    await user.click(button);
+    
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+#### Testing a Custom Hook
+
+```tsx
+// Hook to test
+function useSpinner(items: string[]) {
+  const [winner, setWinner] = useState<string | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+  
+  const spin = useCallback(() => {
+    setIsSpinning(true);
+    
+    setTimeout(() => {
+      const randomIndex = Math.floor(Math.random() * items.length);
+      setWinner(items[randomIndex]);
+      setIsSpinning(false);
+    }, 1000);
+  }, [items]);
+  
+  return { winner, isSpinning, spin };
+}
+
+// The test
+describe('useSpinner', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+  
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+  
+  it('initializes with null winner and not spinning', () => {
+    const { result } = renderHook(() => useSpinner(['A', 'B', 'C']));
+    
+    expect(result.current.winner).toBeNull();
+    expect(result.current.isSpinning).toBe(false);
+  });
+  
+  it('sets isSpinning to true when spin is called', () => {
+    const { result } = renderHook(() => useSpinner(['A', 'B', 'C']));
+    
+    act(() => {
+      result.current.spin();
+    });
+    
+    expect(result.current.isSpinning).toBe(true);
+  });
+  
+  it('selects a winner and sets isSpinning to false after timeout', () => {
+    const items = ['A', 'B', 'C'];
+    const { result } = renderHook(() => useSpinner(items));
+    
+    act(() => {
+      result.current.spin();
+    });
+    
+    act(() => {
+      jest.runAllTimers();
+    });
+    
+    expect(result.current.isSpinning).toBe(false);
+    expect(items).toContain(result.current.winner);
+  });
+});
+```
+
+## Integration Testing
+
+Integration tests verify that components work together correctly.
+
+### What to Test
+
+- Component interactions (e.g., parent-child communication)
+- Data flow between components
+- API integration
+- Form submissions
+- Navigation flows
+
+### Integration Test Example
+
+```tsx
+// Integration test for spinner with results display
+describe('SpinnerWithResults', () => {
+  it('shows results after spinning', async () => {
+    const user = userEvent.setup();
+    const { getByRole, getByTestId } = render(<SpinnerWithResults />);
+    
+    // Initial state - no results
+    expect(getByTestId('results-display')).toHaveTextContent('No results yet');
+    
+    // Start the spin
+    const spinButton = getByRole('button', { name: /spin/i });
+    await user.click(spinButton);
+    
+    // Button should be disabled while spinning
+    expect(spinButton).toBeDisabled();
+    
+    // After animation completes
+    await waitFor(() => {
+      expect(spinButton).not.toBeDisabled();
+    });
+    
+    // Results should be updated
+    expect(getByTestId('results-display')).not.toHaveTextContent('No results yet');
+    expect(getByTestId('results-display')).toHaveTextContent(/winner/i);
+  });
+});
+```
+
+## End-to-End Testing
+
+E2E tests verify complete user workflows in a real-world environment.
+
+### What to Test
+
+- Critical user journeys (e.g., complete spin workflow)
+- Cross-browser compatibility
+- Extension-specific functionality
+- Persistence and storage
+
+### E2E Test Example
+
+```typescript
+// E2E test for spinner extension
+describe('Chrome Extension Spinner', () => {
+  it('completes a full spin workflow', async () => {
+    // Open extension side panel
+    await browser.url('chrome-extension://[extension-id]/sidepanel.html');
+    
+    // Add items to the spinner
+    const addItemInput = await $('input[name="newItem"]');
+    const addButton = await $('button[aria-label="Add Item"]');
+    
+    await addItemInput.setValue('Item 1');
+    await addButton.click();
+    
+    await addItemInput.setValue('Item 2');
+    await addButton.click();
+    
+    // Verify items are added
+    const items = await $$('.spinner-item');
+    expect(items.length).toBe(2);
+    
+    // Start spinning
+    const spinButton = await $('button=Spin');
+    await spinButton.click();
+    
+    // Wait for spinning to complete
+    await browser.waitUntil(
+      async () => !(await spinButton.isEnabled()),
+      { timeout: 5000, timeoutMsg: 'Spinner did not start' }
+    );
+    
+    await browser.waitUntil(
+      async () => await spinButton.isEnabled(),
+      { timeout: 10000, timeoutMsg: 'Spinner did not complete' }
+    );
+    
+    // Verify result is displayed
+    const result = await $('.result-display');
+    expect(await result.isDisplayed()).toBe(true);
+    expect(await result.getText()).toMatch(/winner/i);
+  });
+});
+```
+
+## Testing Tools
+
+We use these testing tools:
+
+### Unit and Integration Testing
+
+- **Jest**: Test runner and assertion library
+- **React Testing Library**: DOM testing utilities for React
+- **jest-mock-extended**: Type-safe mocking
+- **@testing-library/user-event**: Simulating user interactions
+
+### End-to-End Testing
+
+- **Playwright**: Cross-browser E2E testing
+- **Cypress**: Alternative for specific scenarios
+
+### Test Utils
+
+We've created custom test utilities:
+
+```typescript
+// apps/extension/src/test-utils/spinner-helpers.ts
+export function createMockSpinnerData(count: number): string[] {
+  return Array.from({ length: count }, (_, i) => `Item ${i + 1}`);
+}
+
+export function mockChromeSyncStorage() {
+  const storage: Record<string, any> = {};
+  
+  return {
+    get: jest.fn((key, callback) => {
+      callback(storage[key] ? { [key]: storage[key] } : {});
+    }),
+    set: jest.fn((items, callback) => {
+      Object.assign(storage, items);
+      if (callback) callback();
+    }),
+    // Mock other methods as needed
+  };
+}
+```
+
+## Testing Best Practices
+
+### General Guidelines
+
+1. **Write tests first**: Consider TDD for complex functionality
+2. **Test behavior, not implementation**: Focus on what the code does, not how
+3. **Use descriptive test names**: Explain the expected behavior
+4. **Arrange-Act-Assert pattern**: Structure tests consistently
+5. **Isolate tests**: Tests should not depend on each other
+6. **Clean up after tests**: Reset state between tests
+
+### React Component Testing
+
+1. **Query by role, text, or test ID**: Prefer methods that users would use to find elements
+2. **Avoid implementation details**: Don't test component state directly
+3. **Test user interactions**: Click, type, etc. using user-event
+4. **Test accessibility**: Verify appropriate ARIA attributes when relevant
+5. **Mock complex dependencies**: Replace APIs, complex subcomponents, etc.
+
+### Mock Guidelines
+
+1. **Mock external dependencies**: APIs, storage, etc.
+2. **Avoid excessive mocking**: Don't mock everything
+3. **Use realistic mock data**: Data should resemble real-world data
+4. **Verify mock interactions**: Check if mocks were called as expected
+
+## Test Coverage
+
+We aim for meaningful test coverage:
+
+- **Unit tests**: High coverage (80%+) for utility functions and core logic
+- **Component tests**: Cover all interactive elements and state changes
+- **Integration tests**: Cover key component interactions
+- **E2E tests**: Cover critical user journeys
+
+To check coverage:
+
+```bash
+# Run tests with coverage
+cd apps/extension
+pnpm test:coverage
+```
+
+## Testing Chrome Extension-Specific Features
+
+Testing Chrome extension features requires special handling:
+
+### Mocking Chrome APIs
+
+```typescript
+// Setup mocks for Chrome storage API
+global.chrome = {
+  storage: {
+    sync: mockChromeSyncStorage(),
+    local: mockChromeSyncStorage(),
+  },
+  runtime: {
+    // Mock other APIs as needed
+  },
+} as unknown as typeof chrome;
+```
+
+### Testing Background Scripts
+
+```typescript
+// Import the background script
+import '../background';
+
+describe('Background Script', () => {
+  it('registers side panel on install', () => {
+    // Simulate extension installation
+    chrome.runtime.onInstalled.dispatch({ reason: 'install' });
+    
+    // Verify side panel was registered
+    expect(chrome.sidePanel.setOptions).toHaveBeenCalledWith({
+      path: 'sidepanel.html',
+      enabled: true,
+    });
+  });
+});
+```
+
+## Continuous Integration Testing
+
+Tests run automatically in CI:
+
+- On every pull request
+- When pushing to main branch
+- Before releases
+
+The CI pipeline runs:
+
+1. Linting checks
+2. Type checking
+3. Unit and integration tests
+4. Build verification
+5. E2E tests (on scheduled runs)
+
+## Debugging Tests
+
+When tests fail:
+
+1. Use `console.log` or `debug()` to inspect values
+2. Check test output for specific failures
+3. Run specific tests with `--watch` for faster iteration
+4. Use browser devtools for E2E tests
+
+```bash
+# Run specific test file
+pnpm test -- Spinner.test.tsx
+
+# Run in watch mode
+pnpm test -- --watch
+
+# Debug with more information
+pnpm test -- --verbose
+```
+
+## Test Documentation
+
+Document complex test setups:
+
+```typescript
+/**
+ * This test suite verifies the spinner animation behavior.
+ * 
+ * It uses fake timers to control animation timing and
+ * mocks the random number generator to ensure consistent results.
+ */
+describe('Spinner Animation', () => {
+  // Tests follow
+});
+```
+
+## Next Steps
+
+- [Development Process](/docs/workflow/process): Our overall development workflow
+- [Code Standards](/docs/workflow/standards): Coding conventions and best practices
+- [Issue Management](/docs/workflow/issues): How we track and manage issues

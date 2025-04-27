@@ -1,0 +1,234 @@
+---
+title: Issue Management
+description: How we track and manage issues in the Winner Spinner project
+---
+
+# Issue Management
+
+This document describes our approach to issue management in the Winner Spinner project, including issue creation, tracking, and resolution.
+
+## Issue Lifecycle
+
+Issues in our project follow this lifecycle:
+
+```
+Todo → In Progress → Review → Done
+```
+
+Each state represents a specific stage:
+
+1. **Todo**: Issue is validated, prioritized, and ready for development
+2. **In Progress**: Someone is actively working on the issue
+3. **Review**: The work is complete and under review
+4. **Done**: The issue is resolved and closed
+
+## Creating Issues
+
+### Issue Templates
+
+We provide several issue templates:
+
+- **Bug Report**: For reporting defects
+- **Feature Request**: For suggesting new features
+- **Documentation**: For documentation improvements
+- **Refactoring**: For code improvement without changing behavior
+
+### Issue Guidelines
+
+When creating an issue:
+
+1. **Use descriptive titles**: Clearly state the problem or feature
+2. **Provide context**: Explain why the issue matters
+3. **Add reproduction steps**: For bugs, detail how to reproduce
+4. **Set realistic expectations**: Be clear about scope and effort
+5. **Add appropriate labels**: Help with classification and filtering
+
+### Example: Good Bug Report
+
+```markdown
+## Bug: Spinner stops prematurely on Firefox
+
+### Description
+The spinner component stops spinning before completing its animation when used in Firefox, but works correctly in Chrome.
+
+### Steps to Reproduce
+1. Open the spinner demo page
+2. Click "Spin" button
+3. Observe that the animation stops halfway through in Firefox
+
+### Expected Behavior
+The spinner should complete its full animation cycle (3 seconds) before stopping.
+
+### Actual Behavior
+The spinner stops after approximately 1.5 seconds.
+
+### Environment
+- Firefox: 98.0.2
+- OS: Windows 11
+- Screen size: 1920x1080
+
+### Additional Notes
+This issue does not occur in Chrome 99 or Edge 99.
+```
+
+## Tracking Issues
+
+### Project Board
+
+We use GitHub Projects to track issues through their lifecycle:
+
+- Issues are automatically added to the project board when created
+- Status is updated manually or through automation
+- The board provides an overview of project progress
+
+### Issue Status Management
+
+Update issue status using our project management scripts:
+
+```bash
+# Update an issue's status
+./dev-tools/github-project-manager.sh set-status <issue-number> <status>
+
+# Example: Mark issue #42 as in progress
+./dev-tools/github-project-manager.sh set-status 42 in-progress
+
+# Example: Mark issue #42 as done
+./dev-tools/github-project-manager.sh set-status 42 done
+```
+
+### Viewing Current Issues
+
+To see all issues in the project:
+
+```bash
+# List all issues and their status
+./dev-tools/github-project-manager.sh list-bettertech-issues
+```
+
+## Working with Issues
+
+### Starting Work on an Issue
+
+Before you start:
+
+1. **Claim the issue**: Comment that you're working on it
+2. **Update the status**: Set status to "In Progress"
+3. **Create a branch**: Use the naming convention `type/issue-number-description`
+
+```bash
+# Example for issue #42 about spinner colors
+git checkout -b feature/42-spinner-colors
+```
+
+4. **Update GitHub**: Use the script to update the issue status
+
+```bash
+./dev-tools/github-project-manager.sh set-status 42 in-progress
+```
+
+### During Development
+
+While working on an issue:
+
+1. **Make regular commits**: Keep changes focused and documented
+2. **Reference the issue**: Use `#issue-number` in commit messages and PR descriptions
+3. **Keep the issue updated**: Add comments about progress or blockers
+4. **Ask for help**: If you're stuck, mention it in the issue
+
+### Completing an Issue
+
+When you've resolved the issue:
+
+1. **Create a pull request**: Link it to the issue
+2. **Update the status**: Set status to "Review"
+3. **Request reviews**: Ask team members to review your work
+4. **Address feedback**: Make necessary changes based on reviews
+5. **Merge**: Once approved, merge the PR
+6. **Close the issue**: Set status to "Done"
+
+```bash
+# Update issue status to done
+./dev-tools/github-project-manager.sh set-status 42 done
+```
+
+## Issue Prioritization
+
+We prioritize issues using these criteria:
+
+### Priority Levels
+
+- **Critical**: Blocking issues that prevent core functionality
+- **High**: Important features or bugs affecting many users
+- **Medium**: Valuable improvements with moderate impact
+- **Low**: Nice-to-have enhancements or minor issues
+
+### Factors Considered
+
+- User impact (how many users are affected)
+- Strategic alignment with project goals
+- Dependencies with other issues
+- Effort required vs. value delivered
+- Urgency of the problem
+
+## Issue Labels
+
+We use labels to categorize issues:
+
+### Type Labels
+
+- `bug`: Something isn't working
+- `feature`: New functionality
+- `enhancement`: Improvement to existing features
+- `docs`: Documentation changes
+- `refactor`: Code improvements without behavior changes
+- `test`: Adding or improving tests
+
+### Status Labels
+
+- `good first issue`: Good for newcomers
+- `help wanted`: Extra attention needed
+- `duplicate`: Already exists
+- `wontfix`: Will not be worked on
+- `blocked`: Dependent on another issue
+
+### Component Labels
+
+- `spinner`: Related to the spinner component
+- `extension`: Chrome extension specific
+- `website`: Marketing website
+- `docs`: Documentation site
+- `directus`: Backend integration
+- `csv`: CSV import functionality
+
+## Issue Resolution
+
+Issues are considered resolved when:
+
+1. The code implementing the solution is merged to the main branch
+2. All acceptance criteria are met
+3. Tests pass and documentation is updated
+4. The issue is closed and marked as "Done"
+
+## Issue Metrics
+
+We track these metrics for project health:
+
+- Average time to resolution
+- Open vs. closed issue ratio
+- Issue distribution by component
+- Bug discovery rate
+
+## Reporting Issue Status
+
+For stakeholder updates, we generate reports showing:
+
+- Issues completed in the last period
+- Issues currently in progress
+- Upcoming high-priority issues
+- Blockers and risks
+
+## Next Steps
+
+- [Development Process](/docs/workflow/process): Our overall development workflow
+- [Code Standards](/docs/workflow/standards): Coding conventions and best practices
+- [Testing Guidelines](/docs/workflow/testing): How to write effective tests
