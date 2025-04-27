@@ -152,6 +152,9 @@ importers:
       '@repo/assets':
         specifier: workspace:*
         version: link:../../packages/assets
+      '@repo/spinner':
+        specifier: workspace:*
+        version: link:../../packages/spinner
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui

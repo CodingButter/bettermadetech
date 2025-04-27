@@ -89,6 +89,11 @@ const SpinnerDemoContent: React.FC = () => {
       setIsLoggingIn(true);
       setLoginError(undefined);
       
+      if (!client) {
+        setLoginError('Client not initialized');
+        return;
+      }
+      
       const authResult = await client.authenticate(email, password);
       
       if (!authResult.isAuthenticated) {
@@ -103,8 +108,10 @@ const SpinnerDemoContent: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await client.logout();
-    window.location.reload(); // Reload to reset state
+    if (client) {
+      await client.logout();
+      window.location.reload(); // Reload to reset state
+    }
   };
 
   const handleSpin = () => {
