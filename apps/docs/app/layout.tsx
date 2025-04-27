@@ -17,7 +17,7 @@ try {
     path.join(process.cwd(), 'public/favicon-snippet.html'),
     'utf8'
   );
-} catch (e) {
+} catch {
   console.warn('Favicon snippet not found');
 }
 

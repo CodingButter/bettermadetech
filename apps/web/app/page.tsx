@@ -1,14 +1,8 @@
+import React from "react";
 import Image, { type ImageProps } from "next/image";
 import { Button, Card, CardTitle, CardContent, Code } from "@repo/ui";
 import styles from "./page.module.css";
-import dynamic from 'next/dynamic';
-
-// Import the SpinnerDemo component with dynamic import to prevent SSR issues
-// since it uses browser APIs like localStorage
-const SpinnerDemo = dynamic(() => import('./spinner-demo').then(mod => mod.SpinnerDemo), {
-  ssr: false,
-  loading: () => <div className="p-8 text-center">Loading Spinner Demo...</div>
-});
+import { SpinnerContainer } from "./client-container";
 
 type Props = Omit<ImageProps, "src"> & {
   srcLight: string;
@@ -36,7 +30,7 @@ const ThemeImage = (props: Props) => {
   );
 };
 
-export default function Home() {
+const Home: React.FC = () => {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -59,7 +53,7 @@ export default function Home() {
           <h2 className="text-2xl font-bold mb-6">Winner Spinner Demo</h2>
           <Card className="p-6">
             <CardContent className="p-0">
-              <SpinnerDemo />
+              <SpinnerContainer />
             </CardContent>
           </Card>
         </section>
@@ -149,4 +143,6 @@ export default function Home() {
       </footer>
     </div>
   );
-}
+};
+
+export default Home;
