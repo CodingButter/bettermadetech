@@ -8,6 +8,7 @@ import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
 import { SpinnerProps, SpinnerSegment } from './types';
 import { useSpinner } from './spinner-context';
 import { measurePerformance } from './utils';
+import { isDevelopment } from './environment';
 
 /**
  * 3D Spinner implementation with enhanced visual effects.
@@ -104,7 +105,7 @@ export const Spinner3D = memo(function Spinner3D({
     };
     
     // Wrap with performance measurement in development
-    if (process.env.NODE_ENV === 'development') {
+    if (isDevelopment()) {
       measurePerformance('3DSpinner-Animation', spinnerAnimation);
     } else {
       spinnerAnimation();
