@@ -202,38 +202,6 @@ const Options: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-6">
               <section className="bg-card rounded-lg p-6 shadow">
-                <h2 className="text-xl font-semibold mb-4">Directus Connection</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="directusUrl" className="block mb-2 text-sm font-medium">
-                      API URL
-                    </label>
-                    <input
-                      type="text"
-                      id="directusUrl"
-                      value={settings.directusUrl || ""}
-                      onChange={handleDirectusChange}
-                      className="w-full p-2 rounded border bg-background"
-                      placeholder="https://admin.bettermade.tech"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="directusToken" className="block mb-2 text-sm font-medium">
-                      API Token
-                    </label>
-                    <input
-                      type="password"
-                      id="directusToken"
-                      value={settings.directusToken || ""}
-                      onChange={handleDirectusChange}
-                      className="w-full p-2 rounded border bg-background"
-                      placeholder="Enter your API token"
-                    />
-                  </div>
-                </div>
-              </section>
-
-              <section className="bg-card rounded-lg p-6 shadow">
                 <h2 className="text-xl font-semibold mb-4">User Account</h2>
 
                 {!isLoggedIn ? (
