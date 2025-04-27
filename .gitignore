@@ -45,3 +45,9 @@ yarn-error.log*
 *.pem
 *.zip
 web-ext-artifacts/
+
+# Dev Tools temp directory
+./.temp
+
+# Dev Tools temp directory
+dev-tools/.temp
