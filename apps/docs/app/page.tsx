@@ -91,7 +91,7 @@ export default function Home() {
           <DocCard
             title="Spinner Component"
             description="Detailed documentation for the customizable spinner wheel."
-            href="/components#spinner"
+            href="/spinner"
             icon="/file-text.svg"
           />
           <DocCard
