@@ -13,6 +13,8 @@ STATUS_FIELD_ID="PVTSSF_lAHOAJyrsc4A3qvEzgsxB-0"
 TODO_OPTION_ID="f75ad846"
 IN_PROGRESS_OPTION_ID="47fc9ee4"
 DONE_OPTION_ID="98236657"
+START_DATE_FIELD_ID="PVTF_lAHOAJyrsc4A3qvEzgsxCDA"
+END_DATE_FIELD_ID="PVTF_lAHOAJyrsc4A3qvEzgsxCDE"
 
 # Create a new project
 create_project() {
@@ -118,6 +120,8 @@ add_issue_to_project() {
     local project_id="$1"
     local issue_number="$2"
     local default_status="${3:-todo}"  # Default to "todo" if not specified
+    local start_date="$4"  # Optional start date (YYYY-MM-DD)
+    local end_date="$5"    # Optional end date (YYYY-MM-DD)
     
     echo "Adding issue #$issue_number to project $project_id"
     
@@ -171,6 +175,18 @@ add_issue_to_project() {
         # Update status
         update_issue_status "$PROJECT_ID" "$item_id" "$STATUS_FIELD_ID" "$option_id"
         echo "Issue #$issue_number status set to $default_status"
+        
+        # Set start date if provided
+        if [ ! -z "$start_date" ]; then
+            update_issue_date "$PROJECT_ID" "$item_id" "$START_DATE_FIELD_ID" "$start_date"
+            echo "Issue #$issue_number start date set to $start_date"
+        fi
+        
+        # Set end date if provided
+        if [ ! -z "$end_date" ]; then
+            update_issue_date "$PROJECT_ID" "$item_id" "$END_DATE_FIELD_ID" "$end_date"
+            echo "Issue #$issue_number end date set to $end_date"
+        fi
     fi
     
     # Return the item ID
@@ -206,6 +222,37 @@ update_issue_status() {
     
     echo "Response: $response"
     echo "Status updated successfully"
+}
+
+# Update an issue's date field (start date or end date)
+update_issue_date() {
+    local project_id="$1"
+    local item_id="$2"
+    local field_id="$3"  # Either START_DATE_FIELD_ID or END_DATE_FIELD_ID
+    local date_value="$4" # Date in YYYY-MM-DD format
+    
+    echo "Updating item $item_id date field $field_id to $date_value"
+    
+    response=$(gh api graphql -f query='
+      mutation {
+        updateProjectV2ItemFieldValue(
+          input: {
+            projectId: "'"$project_id"'",
+            itemId: "'"$item_id"'",
+            fieldId: "'"$field_id"'",
+            value: { 
+              date: "'"$date_value"'" 
+            }
+          }
+        ) {
+          projectV2Item {
+            id
+          }
+        }
+      }')
+    
+    echo "Response: $response"
+    echo "Date updated successfully"
 }
 
 # List all issues and their status in a project
@@ -348,14 +395,20 @@ main() {
             ;;
         add-issue)
             if [ -z "$3" ]; then
-                # Use BetterMadeTech project by default with 'todo' status
+                # Use BetterMadeTech project by default with 'todo' status, no dates
                 add_issue_to_project "$PROJECT_ID" "$2" "todo"
             elif [ -z "$4" ]; then
-                # Use BetterMadeTech project with provided status
+                # Use BetterMadeTech project with provided status, no dates
                 add_issue_to_project "$PROJECT_ID" "$2" "$3"
+            elif [ -z "$5" ]; then
+                # Use BetterMadeTech project with status and start date
+                add_issue_to_project "$PROJECT_ID" "$2" "$3" "$4"
+            elif [ -z "$6" ]; then
+                # Use BetterMadeTech project with status, start date, and end date
+                add_issue_to_project "$PROJECT_ID" "$2" "$3" "$4" "$5"
             else
-                # Custom project and issue number (status as 4th param)
-                add_issue_to_project "$2" "$3" "$4"
+                # Custom project, issue number, status, start date, end date
+                add_issue_to_project "$2" "$3" "$4" "$5" "$6"
             fi
             ;;
         update-status)
@@ -399,7 +452,7 @@ main() {
             echo "Commands:"
             echo "  set-status <issue-number> <status>         Set issue status (todo, in-progress, done, archived)"
             echo "  list-bettertech-issues                     List all issues in BetterMadeTech project"
-            echo "  add-issue <issue-number> [status]          Add issue to BetterMadeTech project with optional status (defaults to todo)"
+            echo "  add-issue <issue-number> [status] [start-date] [end-date]    Add issue to project with optional dates"
             echo ""
             echo "Advanced commands:"
             echo "  create-project <title>                     Create a new project"
@@ -407,6 +460,10 @@ main() {
             echo "  update-status <project-id> <item-id> <field-id> <option-id>  Update issue status"
             echo "  list-issues <project-id>                   List all issues in project"
             echo "  setup <project-title> <issue-numbers...>   Setup a full project with issues"
+            echo ""
+            echo "Examples:"
+            echo "  ./github-project-manager.sh add-issue 42 todo 2025-06-01 2025-06-15"
+            echo "  ./github-project-manager.sh set-status 42 in-progress"
             exit 1
             ;;
     esac
