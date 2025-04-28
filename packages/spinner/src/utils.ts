@@ -38,7 +38,7 @@ export function measurePerformance<T>(label: string, fn: () => T): T {
  * @param delay The delay in milliseconds
  * @returns The throttled function
  */
-export function throttle<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {
+export function throttle<T extends (...args: unknown[]) => unknown>(fn: T, delay: number): (...args: Parameters<T>) => void {
   let lastCall = 0;
   return (...args: Parameters<T>) => {
     const now = Date.now();
@@ -56,7 +56,7 @@ export function throttle<T extends (...args: any[]) => any>(fn: T, delay: number
  * @param delay The delay in milliseconds
  * @returns The debounced function
  */
-export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: unknown[]) => unknown>(fn: T, delay: number): (...args: Parameters<T>) => void {
   let timeoutId: number;
   return (...args: Parameters<T>) => {
     clearTimeout(timeoutId);
@@ -84,7 +84,7 @@ export function cubicBezier(x1: number, y1: number, x2: number, y2: number, t: n
   const t3 = t2 * t;
   const mt = 1 - t;
   const mt2 = mt * mt;
-  const mt3 = mt2 * mt;
+  // const mt3 = mt2 * mt;
   
   // Bezier formula
   return 3 * mt2 * t * y1 + 3 * mt * t2 * y2 + t3;
@@ -105,7 +105,7 @@ export function supportsHardwareAcceleration(): boolean {
   // Test for transform and other hardware acceleration properties
   for (const prefix of prefixes) {
     const propName = prefix ? `${prefix}Transform` : 'transform';
-    if (testEl.style[propName as any] !== undefined) {
+    if (testEl.style[propName as keyof CSSStyleDeclaration] !== undefined) {
       return true;
     }
   }

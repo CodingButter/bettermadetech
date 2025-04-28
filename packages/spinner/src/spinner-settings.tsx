@@ -150,7 +150,7 @@ export function SpinnerSettingsForm({
 
   const [settings, setSettings] = useState<SpinnerSettings>(defaultSettings);
 
-  const handleChange = (field: keyof SpinnerSettings, value: any) => {
+  const handleChange = (field: keyof SpinnerSettings, value: unknown) => {
     setSettings(prev => ({ ...prev, [field]: value }));
   };
 

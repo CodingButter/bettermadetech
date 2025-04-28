@@ -8,9 +8,6 @@
 
 import { SpinnerSettings, SpinnerSegment, AuthInfo, LoadSpinnerResult } from './types';
 
-// Re-export the types needed for implementations
-export type { SpinnerSettings, SpinnerSegment, AuthInfo, LoadSpinnerResult };
-
 /**
  * Abstract base class for spinner implementations.
  * Each application must provide its own implementation of this class.
@@ -98,7 +95,7 @@ export abstract class SpinnerBase {
   /**
    * Get application-specific configuration
    * 
-   * @returns {Promise<any>} Application configuration
+   * @returns {Promise<Record<string, unknown>>} Application configuration
    */
-  abstract getConfig(): Promise<any>;
+  abstract getConfig(): Promise<Record<string, unknown>>;
 }

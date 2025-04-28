@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@repo/ui/button';
 import { ThemeProvider } from '@repo/ui/theme-provider';
 import { ThemeToggle } from '@repo/ui/theme-toggle';
-import { Card } from '@repo/ui/card';
-import { Spinner, SpinnerSettingsManager, SpinnerProvider, useSpinner } from '@repo/spinner';
+// import { Card } from '@repo/ui/card';
+import { Spinner, SpinnerSettingsManager, SpinnerProvider, useSpinner, type SpinnerSegment } from '@repo/spinner';
 import { ExtensionSpinnerClient } from '../../utils/extension-spinner-client';
 
 // Create a singleton instance of the spinner client
@@ -15,14 +15,14 @@ const spinnerClient = new ExtensionSpinnerClient();
 const SpinnerPanel: React.FC = () => {
   const { auth, spinnerSettings, activeSpinnerId, isAuthLoading, isLoadingSettings } = useSpinner();
   const [isSpinning, setIsSpinning] = useState(false);
-  const [winner, setWinner] = useState<any>(null);
+  const [winner, setWinner] = useState<SpinnerSegment | null>(null);
   
   const handleSpin = () => {
     setWinner(null);
     setIsSpinning(true);
   };
   
-  const handleSpinEnd = (winner: any) => {
+  const handleSpinEnd = (winner: SpinnerSegment) => {
     setWinner(winner);
     setIsSpinning(false);
   };

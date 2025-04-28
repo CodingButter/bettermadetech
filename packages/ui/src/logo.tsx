@@ -31,12 +31,11 @@ export function Logo({
     // Check if running in a browser extension context safely
     const isChromeExtension = typeof window !== 'undefined' && 
                               'chrome' in window && 
-                              typeof (window as any).chrome.runtime !== 'undefined' && 
-                              typeof (window as any).chrome.runtime.getURL === 'function';
+                              typeof (window as Window & typeof globalThis & { chrome?: { runtime?: { getURL?: (path: string) => string } } }).chrome?.runtime?.getURL === 'function';
     
     // Use the extension icon as the logo if in extension context
     if (isChromeExtension) {
-      return (window as any).chrome.runtime.getURL('icons/icon128.png');
+      return (window as Window & typeof globalThis & { chrome: { runtime: { getURL: (path: string) => string } } }).chrome.runtime.getURL('icons/icon128.png');
     }
     
     // Fallback to variant handling for non-extension environments
@@ -73,7 +72,7 @@ export function LogoWithText({
   size = 'md',
   className,
   variant = 'default',
-  alt = 'Winner Spinner',
+  // alt is used in Logo component
 }: LogoProps) {
   return (
     <div className={cn('flex items-center gap-2', className)}>

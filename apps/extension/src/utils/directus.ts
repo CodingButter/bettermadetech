@@ -1,6 +1,6 @@
 // Utility for interacting with Directus API
 import { getUserSettings } from './storage';
-import { DIRECTUS_CONFIG } from './env-config';
+// import { DIRECTUS_CONFIG } from './env-config';
 
 interface DirectusAuthResponse {
   data: {
@@ -180,7 +180,7 @@ export const updateSpinner = async (
       }
       
       const existingSegments = await segmentsResponse.json();
-      const existingSegmentIds = existingSegments.data.map((segment: any) => segment.id);
+      const existingSegmentIds = existingSegments.data.map((segment: Record<string, unknown>) => segment.id);
       
       // Process each segment
       for (const segment of updates.segments) {

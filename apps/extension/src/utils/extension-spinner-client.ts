@@ -33,11 +33,15 @@ export class ExtensionSpinnerClient extends SpinnerBase {
     try {
       const { userData } = await getStorageItems(['userData']);
       
+      const userEmail = userData?.email ? String(userData.email) : undefined;
+      const userToken = userData?.token ? String(userData.token) : undefined;
+      const userId = userData?.userId ? String(userData.userId) : undefined;
+      
       return {
         isAuthenticated: !!userData?.loggedIn,
-        email: userData?.email,
-        token: userData?.token,
-        userId: userData?.userId,
+        email: userEmail,
+        token: userToken,
+        userId: userId,
       };
     } catch (error) {
       console.error('Failed to get auth info:', error);
@@ -297,7 +301,10 @@ export class ExtensionSpinnerClient extends SpinnerBase {
   async getActiveSpinnerId(): Promise<string | null> {
     try {
       const { activeSpinnerId } = await getStorageItems(['activeSpinnerId']);
-      return activeSpinnerId || null;
+      if (typeof activeSpinnerId === 'string') {
+        return activeSpinnerId;
+      }
+      return null;
     } catch (error) {
       console.error('Failed to get active spinner ID:', error);
       return null;
@@ -307,9 +314,9 @@ export class ExtensionSpinnerClient extends SpinnerBase {
   /**
    * Get application-specific configuration
    * 
-   * @returns {Promise<any>} Application configuration
+   * @returns {Promise<Record<string, unknown>>} Application configuration
    */
-  async getConfig(): Promise<any> {
+  async getConfig(): Promise<Record<string, unknown>> {
     const settings = await getUserSettings();
     
     return {

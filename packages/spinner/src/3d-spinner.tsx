@@ -169,7 +169,7 @@ export const Spinner3D = memo(function Spinner3D({
   // In a real implementation, this would use WebGL or Three.js
   
   // Determine current state for accessibility
-  const spinnerStatus = isAnimating ? 'spinning' : (winner ? 'complete' : 'ready');
+  // const spinnerStatus = isAnimating ? 'spinning' : (winner ? 'complete' : 'ready');
   const spinnerStatusText = isAnimating 
     ? 'Spinner is currently spinning' 
     : (winner ? `Winner selected: ${winner.label}` : 'Spinner ready to spin');

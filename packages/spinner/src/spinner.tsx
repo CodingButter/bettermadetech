@@ -10,7 +10,7 @@
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
 import { SpinnerProps, SpinnerSegment } from './types';
 import { useSpinner } from './spinner-context';
-import { cubicBezier, getHardwareAccelerationStyles, measurePerformance } from './utils';
+import { cubicBezier } from './utils';
 
 /**
  * Spinner wheel component with configurable segments and animation.
@@ -200,7 +200,7 @@ export const Spinner = memo(function Spinner({
   }, [winner, showWinner, isAnimating]);
 
   // Determine current state for accessibility
-  const spinnerStatus = isAnimating ? 'spinning' : (winner ? 'complete' : 'ready');
+  // const spinnerStatus = isAnimating ? 'spinning' : (winner ? 'complete' : 'ready');
   const spinnerStatusText = isAnimating 
     ? 'Spinner is currently spinning' 
     : (winner ? `Winner selected: ${winner.label}` : 'Spinner ready to spin');
