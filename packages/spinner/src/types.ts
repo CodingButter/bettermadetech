@@ -40,7 +40,15 @@ export interface SpinnerProps {
   /** Whether to show a winner overlay when spinning stops */
   showWinner?: boolean;
   /** The spinner client implementation */
-  spinnerClient?: any; // This will be replaced with the actual type
+  spinnerClient?: Record<string, unknown>; // This will be replaced with the actual type
+  /** High contrast mode for better accessibility */
+  highContrast?: boolean;
+  /** Accessibility features enabled - set to false only for specific use cases */
+  accessibilityEnabled?: boolean;
+  /** Custom ARIA label for the spinner */
+  ariaLabel?: string;
+  /** Animation speed control - 1 is normal, lower value is slower */
+  animationSpeed?: number;
 }
 
 /**

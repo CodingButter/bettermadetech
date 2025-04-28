@@ -1,0 +1,626 @@
+---
+title: Advanced Customization
+description: Deep dive into advanced spinner customization options
+---
+
+# Advanced Customization
+
+This guide explores advanced customization options for the spinner component, allowing you to create highly tailored spinning wheel experiences.
+
+## Custom Appearance
+
+### Custom Segment Colors
+
+You can assign individual colors to each segment:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3', 'Item 4']}
+  segmentColors={[
+    '#ef4444', // Red
+    '#f59e0b', // Amber
+    '#10b981', // Green
+    '#3b82f6', // Blue
+  ]}
+/>
+```
+
+For alternating patterns:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3', 'Item 4']}
+  // Alternate between two colors
+  alternateColors={['#3b82f6', '#10b981']}
+/>
+```
+
+### Custom Segment Shapes
+
+Modify the shape of spinner segments:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Adjust inner radius to create donut shape
+  innerRadius={0.3} // As percentage of outer radius (0-1)
+  // Rounded segments
+  roundedSegments={true}
+  // Segment spacing
+  segmentSpacing={2} // Pixels between segments
+/>
+```
+
+### Custom Fonts and Text Styling
+
+Apply custom typography to segment labels:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  textStyle={{
+    fontFamily: 'Montserrat, sans-serif',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+  }}
+  // Text alignment from center
+  textAlignment={0.7} // 0 (center) to 1 (edge)
+  // Text direction
+  textDirection="vertical" // "horizontal" or "vertical"
+/>
+```
+
+### Custom Border and Shadow
+
+Add borders and shadows for a 3D effect:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Border styling
+  borderWidth={3}
+  borderColor="#000000"
+  // Shadow effects
+  shadowEnabled={true}
+  shadowColor="rgba(0, 0, 0, 0.3)"
+  shadowBlur={10}
+  shadowOffsetX={2}
+  shadowOffsetY={2}
+/>
+```
+
+### Custom Indicator
+
+Customize the pointer/indicator:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Indicator customization
+  indicatorType="triangle" // "triangle", "arrow", "pin", "custom"
+  indicatorSize={20} // Size in pixels
+  indicatorColor="#ef4444" // Color
+  indicatorPosition="top" // "top", "right", "bottom", "left"
+  // For custom indicator, provide JSX
+  customIndicator={
+    <div className="custom-indicator">
+      <svg width="30" height="30">
+        {/* Custom SVG indicator */}
+        <polygon points="15,0 30,30 0,30" fill="#ef4444" />
+      </svg>
+    </div>
+  }
+/>
+```
+
+## Custom Behavior
+
+### Weighted Probability
+
+Assign different probabilities to items:
+
+```tsx
+<Spinner
+  items={['Rare Item', 'Common Item 1', 'Common Item 2']}
+  // Higher number = higher probability
+  weights={[1, 5, 5]} // Rare item has 1/11 chance, common items have 5/11 each
+  // Visually show weights in segments
+  visualizeWeights={true}
+/>
+```
+
+### Custom Easing Functions
+
+Customize the physics of the spinning animation:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Predefined easing functions
+  easingFunction="elasticOut" // "linear", "easeOutQuad", "easeOutCubic", "elasticOut"
+  // Or use custom easing function
+  customEasing={(t) => {
+    // t goes from 0 to 1
+    // Return transformed t value
+    return 1 - Math.pow(1 - t, 3);
+  }}
+/>
+```
+
+### Custom Durations
+
+Fine-tune spinning timing:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Total spin duration
+  duration={5000} // milliseconds
+  // Breaking down the sequence
+  accelerationDuration={1000} // Initial speed-up phase
+  decelerationDuration={2000} // Slow-down phase
+  // Optional delay before showing result
+  resultDelay={500} // milliseconds
+/>
+```
+
+### Multiple Spins
+
+Set up multiple consecutive spins:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Number of auto spins before stopping
+  multiSpin={3}
+  // Delay between spins
+  spinDelay={1000} // milliseconds
+  // Callback after all spins complete
+  onAllSpinsComplete={(winners) => {
+    console.log('All winners:', winners);
+  }}
+/>
+```
+
+## Custom Interaction
+
+### Custom Trigger Controls
+
+Control how the spinner is activated:
+
+```tsx
+<div>
+  <Spinner
+    items={['Item 1', 'Item 2', 'Item 3']}
+    id="custom-trigger-spinner"
+    // Disable built-in click-to-spin
+    disableClickToSpin={true}
+  />
+  
+  {/* Custom trigger elements */}
+  <div className="spinner-controls">
+    <button onClick={() => {
+      // Use the global spinner controller
+      window.spinnerController.spin('custom-trigger-spinner');
+    }}>
+      Spin
+    </button>
+    
+    <button onClick={() => {
+      window.spinnerController.reset('custom-trigger-spinner');
+    }}>
+      Reset
+    </button>
+  </div>
+</div>
+```
+
+### Custom Interaction Modes
+
+Change how users interact with the spinner:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Enable manual spinning
+  manualSpin={true}
+  // Control sensitivity
+  manualSpinSensitivity={1.5}
+  // Set friction (higher = stops faster)
+  friction={0.95}
+  // Minimum speed to keep spinning
+  minSpinSpeed={0.1}
+  // Maximum speed
+  maxSpinSpeed={50}
+/>
+```
+
+### Touch and Drag Interactions
+
+Configure touch and drag behavior:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Enable touch and drag
+  enableDrag={true}
+  // Momentum after drag
+  dragMomentum={true}
+  // Haptic feedback on mobile
+  hapticFeedback={true}
+  // Drag sensitivity
+  dragSensitivity={1.2}
+/>
+```
+
+## Custom Animations
+
+### Custom Animation Sequences
+
+Create multi-phase animations:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Define animation sequence
+  animationSequence={[
+    { type: 'accelerate', duration: 1000 },
+    { type: 'constant', duration: 2000, speed: 10 },
+    { type: 'bounce', duration: 500, bounces: 3 },
+    { type: 'decelerate', duration: 1500 },
+  ]}
+/>
+```
+
+### Custom Effects and Overlays
+
+Add visual effects during spinning:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Blur effect during spinning
+  blurOnSpin={true}
+  blurAmount={2} // Pixels
+  // Glow effect
+  glowOnSpin={true}
+  glowColor="#f59e0b"
+  glowIntensity={0.8}
+  // Particle effects
+  particleEffects={true}
+  particleType="confetti" // "confetti", "sparkles", "stars"
+  particleDensity={100} // Number of particles
+/>
+```
+
+### Winner Highlight Effects
+
+Emphasize the winning segment:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Winner highlight effect
+  winnerHighlight={true}
+  // Type of highlight
+  highlightType="pulse" // "pulse", "glow", "zoom", "bounce"
+  // Duration of highlight
+  highlightDuration={2000} // milliseconds
+  // Custom highlight color (overrides segment color)
+  highlightColor="#f59e0b"
+/>
+```
+
+## Integration with External Libraries
+
+### Integration with Animation Libraries
+
+Use external animation libraries for enhanced effects:
+
+```tsx
+import { useEffect, useRef } from 'react';
+import { Spinner } from '@repo/spinner';
+import { gsap } from 'gsap';
+
+function AnimatedSpinner() {
+  const spinnerRef = useRef(null);
+  const containerRef = useRef(null);
+  
+  useEffect(() => {
+    if (containerRef.current) {
+      // GSAP animation for container entrance
+      gsap.from(containerRef.current, {
+        opacity: 0,
+        y: 50,
+        duration: 1,
+        ease: 'power3.out'
+      });
+    }
+  }, []);
+  
+  const handleSpinStart = () => {
+    // Container animation on spin start
+    gsap.to(containerRef.current, {
+      scale: 1.05,
+      duration: 0.3,
+      ease: 'power1.out'
+    });
+  };
+  
+  const handleSpinComplete = (winner) => {
+    // Container animation on spin complete
+    gsap.to(containerRef.current, {
+      scale: 1,
+      duration: 0.5,
+      ease: 'elastic.out(1, 0.3)'
+    });
+    
+    // Winner announcement animation
+    const winnerElement = document.getElementById('winner-announcement');
+    if (winnerElement) {
+      winnerElement.textContent = `Winner: ${winner}`;
+      gsap.fromTo(winnerElement, 
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, delay: 0.3 }
+      );
+    }
+  };
+  
+  return (
+    <div ref={containerRef} className="spinner-container">
+      <Spinner
+        ref={spinnerRef}
+        items={['Item 1', 'Item 2', 'Item 3']}
+        onStart={handleSpinStart}
+        onComplete={handleSpinComplete}
+      />
+      <div id="winner-announcement" className="winner-text"></div>
+    </div>
+  );
+}
+```
+
+### Integration with State Management
+
+Connect the spinner to Redux, Zustand, or other state management libraries:
+
+```tsx
+import { useSelector, useDispatch } from 'react-redux';
+import { Spinner } from '@repo/spinner';
+
+function ReduxSpinner() {
+  const dispatch = useDispatch();
+  const { items, spinnerConfig, isSpinning } = useSelector((state) => state.spinner);
+  
+  const handleSpinComplete = (winner) => {
+    dispatch({
+      type: 'SPINNER_RESULT',
+      payload: {
+        winner,
+        timestamp: Date.now()
+      }
+    });
+  };
+  
+  const handleSpinStart = () => {
+    dispatch({ type: 'SPINNER_START' });
+  };
+  
+  return (
+    <Spinner
+      items={items}
+      colorScheme={spinnerConfig.colorScheme}
+      duration={spinnerConfig.duration}
+      onComplete={handleSpinComplete}
+      onStart={handleSpinStart}
+      // Disable spinning if already in progress
+      disabled={isSpinning}
+    />
+  );
+}
+```
+
+## Creating Custom Components
+
+### Custom Spinner Implementation
+
+Create a completely custom spinner by extending the base class:
+
+```tsx
+import { SpinnerBase } from '@repo/spinner/core';
+import { useEffect, useRef, useState } from 'react';
+
+// Custom implementation of a slot machine-like spinner
+class SlotMachineSpinner extends SpinnerBase {
+  constructor(config) {
+    super(config);
+    this.reelSpinSpeed = config.reelSpinSpeed || 100;
+    this.reels = 3; // Number of reels
+  }
+  
+  // Override the spin method for slot machine behavior
+  spin() {
+    this.emitEvent('spin-start');
+    
+    // Simulate spinning reels at different speeds
+    const spinPromises = [];
+    
+    for (let i = 0; i < this.reels; i++) {
+      const spinTime = this.duration - (i * 500); // Staggered stopping
+      
+      spinPromises.push(
+        new Promise(resolve => {
+          setTimeout(() => {
+            // Each reel stops on a random item
+            const randomIndex = Math.floor(Math.random() * this.items.length);
+            resolve(this.items[randomIndex]);
+          }, spinTime);
+        })
+      );
+    }
+    
+    return Promise.all(spinPromises).then(results => {
+      const winner = this.determineWinner(results);
+      this.emitEvent('spin-complete', winner);
+      return winner;
+    });
+  }
+  
+  // Determine winner based on reel results
+  determineWinner(reelResults) {
+    // Check for matches
+    if (reelResults[0] === reelResults[1] && reelResults[1] === reelResults[2]) {
+      return `Jackpot! ${reelResults[0]}`;
+    } else if (reelResults[0] === reelResults[1] || reelResults[1] === reelResults[2]) {
+      return `Small Win! ${reelResults[1]}`;
+    } else {
+      return "Try Again!";
+    }
+  }
+}
+
+// React component using custom spinner
+function CustomSlotMachine() {
+  const [result, setResult] = useState(null);
+  const [reelValues, setReelValues] = useState(['?', '?', '?']);
+  const spinnerRef = useRef(null);
+  
+  useEffect(() => {
+    // Initialize custom spinner
+    spinnerRef.current = new SlotMachineSpinner({
+      items: ['🍒', '🍊', '🍋', '🍇', '💎', '7️⃣'],
+      duration: 3000,
+      reelSpinSpeed: 100
+    });
+    
+    // Event listeners
+    spinnerRef.current.on('spin-complete', (winner) => {
+      setResult(winner);
+    });
+    
+    return () => {
+      // Cleanup
+      spinnerRef.current.removeAllListeners();
+    };
+  }, []);
+  
+  const handleSpin = () => {
+    setResult(null);
+    setReelValues(['?', '?', '?']);
+    
+    // Spin animation for reels
+    const reelInterval = setInterval(() => {
+      setReelValues(current => {
+        return current.map(() => {
+          const randomIndex = Math.floor(Math.random() * spinnerRef.current.items.length);
+          return spinnerRef.current.items[randomIndex];
+        });
+      });
+    }, 100);
+    
+    // Start actual spin
+    spinnerRef.current.spin().then(winner => {
+      clearInterval(reelInterval);
+      // Final reel values determined by the winner logic in the custom spinner
+    });
+  };
+  
+  return (
+    <div className="slot-machine">
+      <div className="reels">
+        {reelValues.map((value, index) => (
+          <div key={index} className="reel">
+            {value}
+          </div>
+        ))}
+      </div>
+      
+      <button onClick={handleSpin}>Spin</button>
+      
+      {result && (
+        <div className="result">{result}</div>
+      )}
+    </div>
+  );
+}
+```
+
+## Accessibility Customization
+
+For detailed accessibility customization, see the [Accessibility Guide](/docs/spinner/accessibility). Here are some additional advanced options:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Custom ARIA labels
+  ariaLabels={{
+    spinner: "Prize selection wheel",
+    item: (item) => `Prize option: ${item}`,
+    spinButton: "Spin the wheel",
+    result: (winner) => `Winner: ${winner}`
+  }}
+  // Custom announcements
+  ariaAnnouncements={{
+    spinStart: "The wheel is spinning",
+    spinComplete: (winner) => `The wheel has stopped on ${winner}`,
+    error: "There was a problem with the spinner"
+  }}
+  // Control announcement frequency
+  announcementFrequency="high" // "low", "medium", "high"
+/>
+```
+
+## Performance Customization
+
+For detailed performance customization, see the [Performance Guide](/docs/spinner/performance). Here are some additional advanced options:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Render optimization
+  shouldComponentUpdate={(prevProps, nextProps) => {
+    // Custom logic to determine if spinner should update
+    return prevProps.items.length !== nextProps.items.length;
+  }}
+  // Custom render strategy
+  renderStrategy="canvas" // "svg", "dom", "canvas"
+  // For canvas rendering
+  canvasOptions={{
+    resolution: window.devicePixelRatio, // Adapt to device
+    optimizeForRetina: true,
+    disableAlpha: true // Better performance if no transparency
+  }}
+/>
+```
+
+## Mobile-Specific Customization
+
+Optimize for mobile devices:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2', 'Item 3']}
+  // Mobile detection (override auto-detection)
+  forceMode="mobile" // "desktop", "mobile", "auto"
+  // Touch-optimized controls
+  touchControls={true}
+  // Larger tap targets
+  touchTargetSize={44} // Recommended minimum size in pixels
+  // Prevent page scrolling during interaction
+  preventScrollOnTouch={true}
+  // Mobile-specific styling
+  mobileStyles={{
+    fontSize: "16px", // Larger text for readability
+    segmentPadding: 10,
+    indicatorSize: 24
+  }}
+/>
+```
+
+## Conclusion
+
+These advanced customization options allow you to create unique spinner experiences tailored to your specific needs. By combining visual customizations with behavioral modifications, you can create experiences that range from simple randomizers to complex interactive elements.
+
+Remember that not all options may be supported in all spinner implementations, so refer to the specific client documentation for compatibility information.

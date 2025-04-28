@@ -10,7 +10,12 @@
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
 import { SpinnerProps, SpinnerSegment } from './types';
 import { useSpinner } from './spinner-context';
-import { cubicBezier } from './utils';
+import { 
+  cubicBezier, 
+  getHardwareAccelerationStyles, 
+  safeRequestAnimationFrame, 
+  safeCancelAnimationFrame 
+} from './utils';
 
 /**
  * Spinner wheel component with configurable segments and animation.
@@ -53,7 +58,7 @@ export const Spinner = memo(function Spinner({
         clearTimeout(animationRef.current.timeoutId);
       }
       if (animationRef.current.animationFrameId) {
-        cancelAnimationFrame(animationRef.current.animationFrameId);
+        safeCancelAnimationFrame(animationRef.current.animationFrameId);
       }
     };
   }, []);
@@ -86,15 +91,15 @@ export const Spinner = memo(function Spinner({
     const startTime = performance.now();
     const endTime = startTime + (duration * 1000);
     
-    // Use requestAnimationFrame for smoother animation
+    // Use safeRequestAnimationFrame for smoother animation with fallback
     const animateWheelSpin = (timestamp: number) => {
       // Animation complete
       if (timestamp >= endTime) {
         // Set final position
         setRotation(targetRotation);
         
-        // Announce winner with requestAnimationFrame for smoother UI update
-        animationRef.current.animationFrameId = requestAnimationFrame(() => {
+        // Announce winner with safeRequestAnimationFrame for smoother UI update
+        animationRef.current.animationFrameId = safeRequestAnimationFrame(() => {
           const winningSegment = segments[randomSegment];
           if (winningSegment) {
             setWinner(winningSegment);
@@ -115,20 +120,23 @@ export const Spinner = memo(function Spinner({
       // Calculate current rotation
       const currentRotation = rotation + (targetRotation - rotation) * easedProgress;
       
-      // Update rotation state
-      setRotation(currentRotation);
+      // Use a batched state update for better performance
+      if (Math.abs(currentRotation - rotation) > 0.5) {
+        // Only update when the change is significant enough to be visible
+        setRotation(currentRotation);
+      }
       
       // Continue animation
-      animationRef.current.animationFrameId = requestAnimationFrame(animateWheelSpin);
+      animationRef.current.animationFrameId = safeRequestAnimationFrame(animateWheelSpin);
     };
     
     // Start animation with initial frame
-    animationRef.current.animationFrameId = requestAnimationFrame(animateWheelSpin);
+    animationRef.current.animationFrameId = safeRequestAnimationFrame(animateWheelSpin);
     
     // Clean up function to handle component unmounting during animation
     return () => {
       if (animationRef.current.animationFrameId) {
-        cancelAnimationFrame(animationRef.current.animationFrameId);
+        safeCancelAnimationFrame(animationRef.current.animationFrameId);
       }
       animationRef.current.isActive = false;
     };
@@ -221,8 +229,7 @@ export const Spinner = memo(function Spinner({
           transition: isAnimating ? `transform ${duration}s cubic-bezier(0.1, 0.7, 0.1, 1)` : 'none',
           backgroundColor: primaryColor,
           borderColor: secondaryColor,
-          backfaceVisibility: 'hidden', // Additional GPU acceleration
-          perspective: 1000, // Helps with GPU acceleration
+          ...getHardwareAccelerationStyles(), // Comprehensive GPU acceleration
         }}
         role="img"
         aria-label={`Spinner wheel with ${segments.length} options`}

@@ -1,0 +1,593 @@
+---
+title: Testing Guide
+description: Comprehensive guide for testing spinner implementations
+---
+
+# Testing Spinner Implementations
+
+This guide provides strategies and best practices for testing spinner implementations across different environments.
+
+## Testing Approaches
+
+The spinner package can be tested using different approaches depending on your needs:
+
+1. **Unit Testing**: Testing individual components and functions
+2. **Integration Testing**: Testing how components work together
+3. **Accessibility Testing**: Ensuring the spinner is accessible
+4. **Visual Regression Testing**: Ensuring the appearance is consistent
+5. **Performance Testing**: Validating performance metrics
+
+## Unit Testing
+
+### Testing Components
+
+Use React Testing Library to test spinner components:
+
+```tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { WebSpinnerClient } from '@repo/spinner';
+
+describe('WebSpinnerClient', () => {
+  it('renders with provided items', () => {
+    render(<WebSpinnerClient items={['Item 1', 'Item 2']} />);
+    
+    expect(screen.getByText('Item 1')).toBeInTheDocument();
+    expect(screen.getByText('Item 2')).toBeInTheDocument();
+  });
+  
+  it('triggers spin on click', () => {
+    const handleComplete = jest.fn();
+    render(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        onComplete={handleComplete}
+        duration={100} // Short duration for testing
+      />
+    );
+    
+    // Click the spinner to start
+    fireEvent.click(screen.getByTestId('spinner'));
+    
+    // Wait for animation to complete
+    return new Promise(resolve => {
+      setTimeout(() => {
+        expect(handleComplete).toHaveBeenCalled();
+        resolve();
+      }, 200); // Slightly longer than duration
+    });
+  });
+});
+```
+
+### Testing Core Logic
+
+Test the core spinner logic independently:
+
+```tsx
+import { SpinnerBase } from '@repo/spinner/core';
+
+describe('SpinnerBase', () => {
+  it('selects a winner from provided items', async () => {
+    const items = ['Item 1', 'Item 2', 'Item 3'];
+    const spinner = new SpinnerBase({
+      items,
+      duration: 100
+    });
+    
+    const winner = await spinner.spin();
+    
+    // Winner should be one of the items
+    expect(items).toContain(winner);
+  });
+  
+  it('emits events during spinning', () => {
+    const spinner = new SpinnerBase({
+      items: ['Item 1', 'Item 2'],
+      duration: 100
+    });
+    
+    const startSpy = jest.fn();
+    const completeSpy = jest.fn();
+    
+    spinner.on('spin-start', startSpy);
+    spinner.on('spin-complete', completeSpy);
+    
+    return spinner.spin().then(() => {
+      expect(startSpy).toHaveBeenCalled();
+      expect(completeSpy).toHaveBeenCalled();
+    });
+  });
+});
+```
+
+## Integration Testing
+
+Test the spinner in the context of a larger application:
+
+```tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import SpinnerPage from '../pages/SpinnerPage';
+
+describe('Spinner Page Integration', () => {
+  it('displays result after spinning', async () => {
+    render(<SpinnerPage />);
+    
+    // Find and click the spin button
+    fireEvent.click(screen.getByText('Spin'));
+    
+    // Wait for result to display
+    const resultElement = await screen.findByTestId('spinner-result', {}, { timeout: 4000 });
+    
+    expect(resultElement).toHaveTextContent(/Winner:/);
+  });
+  
+  it('updates history after spinning', async () => {
+    render(<SpinnerPage />);
+    
+    // Initially no history items
+    expect(screen.queryByTestId('history-item')).not.toBeInTheDocument();
+    
+    // Spin the wheel
+    fireEvent.click(screen.getByText('Spin'));
+    
+    // Wait for history to update
+    const historyItem = await screen.findByTestId('history-item', {}, { timeout: 4000 });
+    
+    expect(historyItem).toBeInTheDocument();
+  });
+});
+```
+
+## Accessibility Testing
+
+Test that the spinner meets accessibility requirements:
+
+```tsx
+import { render } from '@testing-library/react';
+import { axe, toHaveNoViolations } from 'jest-axe';
+import { WebSpinnerClient } from '@repo/spinner';
+
+expect.extend(toHaveNoViolations);
+
+describe('Spinner Accessibility', () => {
+  it('should not have accessibility violations', async () => {
+    const { container } = render(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        ariaLabel="Test spinner"
+      />
+    );
+    
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+  
+  it('should have proper ARIA attributes', () => {
+    render(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        ariaLabel="Test spinner"
+      />
+    );
+    
+    const spinner = document.querySelector('[role="group"]');
+    expect(spinner).toHaveAttribute('aria-label', 'Test spinner');
+  });
+});
+```
+
+## Visual Regression Testing
+
+Use tools like Storybook and Chromatic to test visual appearance:
+
+```jsx
+// In your Storybook stories file
+import { WebSpinnerClient } from '@repo/spinner';
+
+export default {
+  title: 'Components/WebSpinnerClient',
+  component: WebSpinnerClient,
+};
+
+// Basic spinner
+export const Basic = () => (
+  <WebSpinnerClient 
+    items={['Item 1', 'Item 2', 'Item 3']}
+  />
+);
+
+// Custom colors
+export const CustomColors = () => (
+  <WebSpinnerClient 
+    items={['Item 1', 'Item 2', 'Item 3']}
+    colorScheme={{
+      primary: '#ef4444',
+      secondary: '#f59e0b',
+      text: '#ffffff'
+    }}
+  />
+);
+
+// Different sizes
+export const Small = () => (
+  <WebSpinnerClient 
+    items={['Item 1', 'Item 2', 'Item 3']}
+    size="sm"
+  />
+);
+
+export const Large = () => (
+  <WebSpinnerClient 
+    items={['Item 1', 'Item 2', 'Item 3']}
+    size="lg"
+  />
+);
+```
+
+Then use snapshot testing to detect changes:
+
+```tsx
+import { render } from '@testing-library/react';
+import { Basic, CustomColors } from './Spinner.stories';
+
+describe('Spinner Snapshots', () => {
+  it('basic spinner matches snapshot', () => {
+    const { container } = render(<Basic />);
+    expect(container).toMatchSnapshot();
+  });
+  
+  it('custom colors spinner matches snapshot', () => {
+    const { container } = render(<CustomColors />);
+    expect(container).toMatchSnapshot();
+  });
+});
+```
+
+## Performance Testing
+
+Measure spinner performance metrics:
+
+```tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { WebSpinnerClient } from '@repo/spinner';
+
+describe('Spinner Performance', () => {
+  it('maintains acceptable frame rate during animation', async () => {
+    // Mock performance APIs
+    const originalNow = performance.now;
+    let frameCount = 0;
+    let lastFrameTime = 0;
+    const frameTimes = [];
+    
+    global.requestAnimationFrame = (callback) => {
+      setTimeout(() => {
+        frameCount++;
+        const now = originalNow();
+        if (lastFrameTime) {
+          frameTimes.push(now - lastFrameTime);
+        }
+        lastFrameTime = now;
+        callback(now);
+      }, 16); // Simulate 60fps
+      return 0;
+    };
+    
+    const { rerender } = render(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        duration={1000}
+        useRequestAnimationFrame={true}
+      />
+    );
+    
+    // Start spinning
+    fireEvent.click(screen.getByTestId('spinner'));
+    
+    // Wait for animation to complete
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Calculate metrics
+    const avgFrameTime = frameTimes.reduce((sum, time) => sum + time, 0) / frameTimes.length;
+    const fps = 1000 / avgFrameTime;
+    
+    console.log(`Average FPS: ${fps.toFixed(2)}`);
+    
+    // Frame rate should be acceptable
+    expect(fps).toBeGreaterThan(30);
+    
+    // Restore original performance.now
+    global.requestAnimationFrame = window.requestAnimationFrame;
+  });
+  
+  it('renders within acceptable time', () => {
+    const start = performance.now();
+    
+    render(
+      <WebSpinnerClient 
+        items={Array(100).fill(0).map((_, i) => `Item ${i}`)}
+      />
+    );
+    
+    const renderTime = performance.now() - start;
+    console.log(`Render time: ${renderTime.toFixed(2)}ms`);
+    
+    // Initial render should be fast
+    expect(renderTime).toBeLessThan(100);
+  });
+});
+```
+
+## Testing in Different Environments
+
+### Browser Extension Testing
+
+For testing in Chrome extension environment:
+
+```tsx
+// In jest setup file
+global.chrome = {
+  storage: {
+    local: {
+      get: jest.fn((keys, callback) => {
+        callback({}); // Mock empty storage
+      }),
+      set: jest.fn((obj, callback) => {
+        if (callback) callback();
+      })
+    }
+  }
+};
+
+// In test file
+import { render } from '@testing-library/react';
+import { ExtensionSpinnerClient } from '@repo/spinner';
+
+describe('ExtensionSpinnerClient', () => {
+  it('uses chrome storage when specified', () => {
+    render(
+      <ExtensionSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        storage="chrome"
+        persistResults={true}
+      />
+    );
+    
+    // Spin the spinner and check if chrome storage is used
+    // ...
+    
+    expect(chrome.storage.local.set).toHaveBeenCalled();
+  });
+});
+```
+
+### Mobile Device Testing
+
+For testing on mobile devices or in responsive mode:
+
+```tsx
+import { render } from '@testing-library/react';
+import { WebSpinnerClient } from '@repo/spinner';
+
+// Mock window resize
+const resizeWindow = (width, height) => {
+  window.innerWidth = width;
+  window.innerHeight = height;
+  window.dispatchEvent(new Event('resize'));
+};
+
+describe('Responsive Spinner', () => {
+  it('adapts to mobile screen size', () => {
+    const { rerender } = render(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        responsive={true}
+      />
+    );
+    
+    // Check desktop size first
+    expect(screen.getByTestId('spinner')).toHaveStyle({
+      width: '300px', // Default desktop size
+    });
+    
+    // Resize to mobile dimensions
+    resizeWindow(375, 667); // iPhone 8 dimensions
+    rerender(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        responsive={true}
+      />
+    );
+    
+    // Should adjust size for mobile
+    expect(screen.getByTestId('spinner')).toHaveStyle({
+      width: '250px', // Mobile-adjusted size
+    });
+  });
+});
+```
+
+## Testing Utilities
+
+The spinner package includes testing utilities to make testing easier:
+
+```tsx
+import { render, screen } from '@testing-library/react';
+import { Spinner } from '@repo/spinner';
+import { 
+  createTestSpinner, 
+  mockSpinnerEvents,
+  spinnerTestIds
+} from '@repo/spinner/testing';
+
+describe('Spinner with test utilities', () => {
+  it('can use test spinner for predictable results', () => {
+    // Create a test spinner with predictable outcome
+    const testSpinner = createTestSpinner({
+      items: ['Item 1', 'Item 2', 'Item 3'],
+      fixedWinner: 'Item 2' // Always selects this item
+    });
+    
+    render(<Spinner spinnerImpl={testSpinner} />);
+    
+    // Trigger spin
+    fireEvent.click(screen.getByTestId(spinnerTestIds.spinButton));
+    
+    // Wait for result
+    return screen.findByText('Winner: Item 2');
+  });
+  
+  it('can mock spinner events', () => {
+    const { mockStart, mockComplete, cleanup } = mockSpinnerEvents();
+    
+    render(<Spinner items={['Item 1', 'Item 2']} />);
+    
+    // Trigger mocked start event
+    mockStart();
+    expect(screen.getByTestId(spinnerTestIds.spinner)).toHaveClass('spinning');
+    
+    // Trigger mocked complete event
+    mockComplete('Item 1');
+    expect(screen.getByText('Winner: Item 1')).toBeInTheDocument();
+    
+    // Clean up mocks
+    cleanup();
+  });
+});
+```
+
+## Testing Best Practices
+
+1. **Test isolated components**: Test spinner components in isolation before testing them in the full application
+2. **Mock long animations**: Set duration to small values for faster tests
+3. **Test different configurations**: Ensure all props and configurations are tested
+4. **Test edge cases**: Test with empty item arrays, single items, or very large numbers of items
+5. **Test accessibility thoroughly**: Ensure the spinner is usable by all users
+6. **Test performance**: Include performance tests especially if targeting mobile devices
+
+## Running the Tests
+
+The spinner package includes a comprehensive test suite that you can run:
+
+```bash
+# Run all tests
+pnpm --filter @repo/spinner test
+
+# Run specific tests
+pnpm --filter @repo/spinner test -- -t "accessibility"
+
+# Run with coverage
+pnpm --filter @repo/spinner test -- --coverage
+```
+
+## Example: Full Test Suite
+
+Here's an example of a complete test for a spinner component:
+
+```tsx
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { axe } from 'jest-axe';
+import { WebSpinnerClient } from '@repo/spinner';
+
+describe('WebSpinnerClient', () => {
+  it('renders correctly with default props', () => {
+    render(<WebSpinnerClient items={['Item 1', 'Item 2']} />);
+    
+    expect(screen.getByTestId('spinner')).toBeInTheDocument();
+    expect(screen.getByText('Item 1')).toBeInTheDocument();
+    expect(screen.getByText('Item 2')).toBeInTheDocument();
+  });
+  
+  it('applies custom color scheme', () => {
+    render(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        colorScheme={{
+          primary: '#ff0000',
+          secondary: '#00ff00',
+          text: '#ffffff'
+        }}
+      />
+    );
+    
+    const segments = screen.getAllByTestId('spinner-segment');
+    
+    // Check that at least one segment has the primary color
+    expect(segments.some(segment => 
+      window.getComputedStyle(segment).backgroundColor === 'rgb(255, 0, 0)'
+    )).toBe(true);
+  });
+  
+  it('starts spinning on click', async () => {
+    const handleStart = jest.fn();
+    
+    render(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        onStart={handleStart}
+        duration={100}
+      />
+    );
+    
+    fireEvent.click(screen.getByTestId('spinner'));
+    
+    expect(handleStart).toHaveBeenCalled();
+    expect(screen.getByTestId('spinner')).toHaveClass('spinning');
+  });
+  
+  it('calls onComplete with winner', async () => {
+    const handleComplete = jest.fn();
+    
+    render(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        onComplete={handleComplete}
+        duration={100}
+      />
+    );
+    
+    fireEvent.click(screen.getByTestId('spinner'));
+    
+    await waitFor(() => {
+      expect(handleComplete).toHaveBeenCalled();
+    }, { timeout: 200 });
+    
+    const winner = handleComplete.mock.calls[0][0];
+    expect(['Item 1', 'Item 2']).toContain(winner);
+  });
+  
+  it('has no accessibility violations', async () => {
+    const { container } = render(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        ariaLabel="Test spinner"
+      />
+    );
+    
+    const results = await axe(container);
+    expect(results.violations.length).toBe(0);
+  });
+  
+  it('respects reduced motion setting', () => {
+    // Mock prefers-reduced-motion media query
+    window.matchMedia = jest.fn().mockImplementation(query => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+    }));
+    
+    render(
+      <WebSpinnerClient 
+        items={['Item 1', 'Item 2']}
+        respectReducedMotion={true}
+      />
+    );
+    
+    fireEvent.click(screen.getByTestId('spinner'));
+    
+    // Should use reduced animation
+    expect(screen.getByTestId('spinner')).toHaveClass('reduced-motion');
+  });
+});
+```

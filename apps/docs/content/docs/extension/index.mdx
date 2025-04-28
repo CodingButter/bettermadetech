@@ -1,0 +1,370 @@
+---
+title: Chrome Extension
+description: Documentation for the Winner Spinner Chrome extension
+---
+
+# Chrome Extension
+
+Documentation for the Winner Spinner Chrome extension.
+
+## Overview
+
+The Winner Spinner Chrome extension provides a convenient way to access and use the spinner functionality directly in your browser. The extension is built using the Chrome Extensions API and integrates with Directus for data storage.
+
+## Features
+
+- **Spinner Interface**: Run raffles and select winners directly from your browser
+- **CSV Import**: Import participant lists from CSV files
+- **Directus Integration**: Store and retrieve spinner configurations and results
+- **Customization Options**: Personalize the spinner appearance and behavior
+- **Result History**: View and export past spin results
+
+## Getting Started
+
+### Installation
+
+#### From Chrome Web Store
+
+1. Visit the [Winner Spinner Chrome Web Store page](https://chrome.google.com/webstore/detail/winner-spinner/id) (coming soon)
+2. Click "Add to Chrome"
+3. Confirm the installation when prompted
+
+#### Manual Installation (Development)
+
+1. Clone the repository: `git clone https://github.com/CodingButter/bettermadetech.git`
+2. Build the extension:
+   ```bash
+   cd bettermadetech
+   pnpm install
+   pnpm --filter better-made-tech-extension build
+   ```
+3. Open Chrome and navigate to `chrome://extensions/`
+4. Enable "Developer mode" using the toggle in the top-right corner
+5. Click "Load unpacked" and select the `apps/extension/dist` directory
+6. The Winner Spinner extension should now appear in your extensions list
+
+### Basic Usage
+
+1. Click the Winner Spinner icon in your Chrome toolbar
+2. Sign in with your Directus account (or create a new one)
+3. Create a new spinner or select an existing one
+4. Add participants manually or import from CSV
+5. Click "Spin" to select a winner
+6. View and export results as needed
+
+## Extension Structure
+
+The Winner Spinner Chrome extension consists of several components:
+
+### Popup
+
+The popup is the small interface that appears when clicking the extension icon in the toolbar. It provides quick access to:
+
+- Recent spinners
+- Quick spin functionality
+- Links to side panel and options
+
+### Side Panel
+
+The side panel provides a larger interface for more detailed spinner management:
+
+- Full spinner interface
+- Participant management
+- CSV import/export
+- Result history
+- Configuration options
+
+### Background Script
+
+The background script runs in the background and handles:
+
+- Authentication with Directus
+- Data synchronization
+- Notifications
+- Extension lifecycle events
+
+### Content Script
+
+The content script can inject the spinner into web pages when needed:
+
+- Embed spinner on compatible websites
+- Extract participant data from web pages
+- Provide context menu functionality
+
+### Options Page
+
+The options page allows users to configure:
+
+- Default spinner settings
+- Directus server configuration
+- User preferences
+- Theme options
+
+## Development
+
+### Project Structure
+
+```
+apps/extension/
+├── build.sh             # Build script
+├── dist/                # Build output
+├── public/              # Static assets
+│   └── icons/           # Extension icons
+├── src/                 # Source code
+│   ├── background/      # Background script
+│   ├── components/      # Shared React components
+│   ├── content/         # Content scripts
+│   ├── globals.css      # Global styles
+│   ├── pages/           # UI pages
+│   │   ├── options/     # Options page
+│   │   ├── popup/       # Popup page
+│   │   └── sidepanel/   # Side panel page
+│   └── utils/           # Utility functions
+│       ├── directus.ts       # Directus API client
+│       ├── env-config.ts     # Environment configuration
+│       ├── extension-spinner-client.ts # Extension-specific spinner client
+│       └── storage.ts        # Chrome storage utilities
+├── manifest.json        # Extension manifest
+└── package.json         # Package configuration
+```
+
+### Build Process
+
+The extension is built using Vite with the following process:
+
+1. TypeScript compilation
+2. React component bundling
+3. CSS processing with Tailwind
+4. Asset optimization
+5. Manifest generation
+6. Package bundling
+
+To build the extension:
+
+```bash
+# Build for development (includes source maps)
+pnpm --filter better-made-tech-extension dev
+
+# Build for production (optimized)
+pnpm --filter better-made-tech-extension build
+```
+
+### Development Workflow
+
+1. Make changes to the source code
+2. Build the extension using the commands above
+3. Navigate to `chrome://extensions/` in Chrome
+4. Click the refresh icon on the Winner Spinner extension card
+5. Test your changes
+
+For a smoother workflow, you can use the watch mode:
+
+```bash
+pnpm --filter better-made-tech-extension dev --watch
+```
+
+This will automatically rebuild the extension when changes are detected.
+
+## Architecture
+
+### Component Hierarchy
+
+```
+Extension
+│
+├── Popup
+│   ├── LoginForm
+│   ├── SpinnerList
+│   └── QuickSpinner
+│
+├── SidePanel
+│   ├── SpinnerInterface
+│   │   ├── SpinnerDisplay
+│   │   ├── ControlPanel
+│   │   └── ResultDisplay
+│   │
+│   ├── ParticipantManager
+│   │   ├── ParticipantList
+│   │   ├── AddParticipantForm
+│   │   └── CSVImport
+│   │
+│   └── ResultHistory
+│       ├── ResultList
+│       └── ExportOptions
+│
+└── Options
+    ├── GeneralSettings
+    ├── SpinnerDefaults
+    ├── DirectusSettings
+    └── ThemeSettings
+```
+
+### Data Flow
+
+1. User interacts with the UI (popup, side panel, or options)
+2. React components dispatch actions to update the state
+3. State changes trigger API calls to Directus or Chrome storage updates
+4. Results are reflected back in the UI
+
+### State Management
+
+The extension uses React Context API for state management:
+
+```typescript
+// Example spinner context
+const SpinnerContext = React.createContext<{
+  spinner: Spinner | null;
+  participants: Participant[];
+  results: SpinnerResult[];
+  loading: boolean;
+  error: string | null;
+  actions: {
+    loadSpinner: (id: string) => Promise<void>;
+    spin: () => Promise<SpinnerResult>;
+    addParticipant: (name: string) => Promise<void>;
+    importCSV: (file: File) => Promise<void>;
+    // other actions...
+  };
+}>(initialState);
+
+// Usage in components
+const { spinner, participants, actions } = useContext(SpinnerContext);
+```
+
+## Integration with Directus
+
+The extension integrates with Directus for data persistence:
+
+```typescript
+// Example authentication
+const login = async (email: string, password: string) => {
+  try {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      // Store tokens in Chrome storage
+      await chrome.storage.local.set({
+        access_token: data.data.access_token,
+        refresh_token: data.data.refresh_token,
+      });
+      
+      return true;
+    } else {
+      throw new Error(data.errors?.[0]?.message || 'Authentication failed');
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+};
+```
+
+## Chrome API Usage
+
+The extension uses various Chrome APIs:
+
+### Storage
+
+```typescript
+// Save data
+await chrome.storage.local.set({ key: value });
+
+// Retrieve data
+const data = await chrome.storage.local.get('key');
+```
+
+### Notifications
+
+```typescript
+chrome.notifications.create({
+  type: 'basic',
+  iconUrl: 'icons/icon128.png',
+  title: 'Winner Selected!',
+  message: `The winner is: ${winner.name}`,
+});
+```
+
+### Side Panel
+
+```typescript
+// Open side panel
+chrome.sidePanel.open();
+
+// Set side panel page
+chrome.sidePanel.setOptions({
+  path: 'sidepanel.html',
+  enabled: true,
+});
+```
+
+### Context Menu
+
+```typescript
+chrome.contextMenus.create({
+  id: 'add-to-spinner',
+  title: 'Add selection to Winner Spinner',
+  contexts: ['selection'],
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'add-to-spinner' && info.selectionText) {
+    // Add the selected text as a participant
+  }
+});
+```
+
+## Security Considerations
+
+The Winner Spinner extension follows these security practices:
+
+- **Authentication**: Secure token-based authentication with Directus
+- **Data Storage**: Sensitive data is encrypted before storage in Chrome storage
+- **Permissions**: Minimal required permissions in the manifest
+- **Content Security Policy**: Strict CSP to prevent XSS attacks
+- **Input Validation**: All user inputs are validated and sanitized
+
+## Troubleshooting
+
+### Common Issues
+
+#### Extension Not Loading
+- Ensure Developer Mode is enabled in Chrome extensions
+- Check for console errors in the background page (click "background page" in the extension card)
+- Try removing and reinstalling the extension
+
+#### Authentication Problems
+- Verify your Directus server URL in the options
+- Ensure your Directus account has the correct permissions
+- Try logging out and logging back in
+
+#### Spinner Not Working
+- Check your internet connection
+- Verify the spinner configuration
+- Look for console errors in the side panel
+
+### Debugging
+
+To debug the extension:
+
+1. Open Chrome DevTools for the component you want to debug:
+   - Background script: Click "background page" in the extension card
+   - Popup: Right-click the popup and select "Inspect"
+   - Side panel: Right-click in the side panel and select "Inspect"
+   - Options page: Right-click on the page and select "Inspect"
+
+2. Use the Console and Network tabs to identify issues
+3. Set breakpoints in the Sources tab to step through code execution
+
+## Next Steps
+
+- [Chrome Extension API Reference](/docs/extension/api) - Detailed API documentation
+- [Extension Configuration](/docs/extension/configuration) - Configuration options
+- [Extension Development Guide](/docs/extension/development) - Guide for extension developers

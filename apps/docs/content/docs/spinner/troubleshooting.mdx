@@ -1,0 +1,475 @@
+---
+title: Troubleshooting
+description: Common issues and solutions when working with the spinner package
+---
+
+# Troubleshooting
+
+This guide addresses common issues you might encounter when implementing and using the spinner package, along with their solutions.
+
+## Common Issues
+
+### Rendering Issues
+
+#### Spinner Not Appearing
+
+**Problem**: The spinner component is rendered but not visible on the page.
+
+**Possible causes**:
+- Container has zero height or width
+- CSS issues hiding the spinner
+- Missing required props
+
+**Solutions**:
+
+1. Check your container dimensions:
+```tsx
+<div style={{ width: '300px', height: '300px' }}>
+  <Spinner items={['Item 1', 'Item 2']} />
+</div>
+```
+
+2. Verify CSS isn't hiding the spinner:
+```tsx
+// Add className for debugging
+<Spinner 
+  items={['Item 1', 'Item 2']} 
+  className="debug-spinner" 
+/>
+
+// Add in your CSS or inspect element
+.debug-spinner {
+  border: 1px solid red;
+  z-index: 1000;
+}
+```
+
+3. Check console for errors about missing required props.
+
+#### Misaligned or Distorted Spinner
+
+**Problem**: The spinner appears visually distorted or misaligned.
+
+**Solutions**:
+
+1. Use fixed dimensions:
+```tsx
+<Spinner 
+  items={['Item 1', 'Item 2']} 
+  size="md"
+  fixedSize={true}
+/>
+```
+
+2. Check parent container styling:
+```tsx
+<div style={{ 
+  display: 'flex', 
+  justifyContent: 'center', 
+  alignItems: 'center',
+  overflow: 'visible'
+}}>
+  <Spinner items={['Item 1', 'Item 2']} />
+</div>
+```
+
+### Animation Issues
+
+#### Stuttering or Laggy Animation
+
+**Problem**: The spinner animation isn't smooth.
+
+**Solutions**:
+
+1. Enable hardware acceleration:
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  useHardwareAcceleration={true}
+/>
+```
+
+2. Reduce complexity:
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  animationStyle="simple"
+  maxSegments={8}
+/>
+```
+
+3. Check for other resource-intensive processes running simultaneously.
+
+#### Animation Doesn't Start
+
+**Problem**: The spinner doesn't animate when expected.
+
+**Solutions**:
+
+1. Use the `autoSpin` prop to start automatically:
+```tsx
+<Spinner 
+  items={['Item 1', 'Item 2']}
+  autoSpin={true}
+/>
+```
+
+2. Use the imperative handle to control spinning:
+```tsx
+import { useRef } from 'react';
+
+function MyComponent() {
+  const spinnerRef = useRef(null);
+  
+  const handleStartSpin = () => {
+    spinnerRef.current?.spin();
+  };
+  
+  return (
+    <>
+      <Spinner 
+        ref={spinnerRef}
+        items={['Item 1', 'Item 2']}
+      />
+      <button onClick={handleStartSpin}>Spin</button>
+    </>
+  );
+}
+```
+
+### Integration Issues
+
+#### Issues with Chrome Extension
+
+**Problem**: Spinner doesn't work properly in the Chrome extension environment.
+
+**Solutions**:
+
+1. Use the correct client:
+```tsx
+import { ExtensionSpinnerClient } from '@repo/spinner';
+
+<ExtensionSpinnerClient 
+  items={['Item 1', 'Item 2']}
+/>
+```
+
+2. Check storage permissions:
+```tsx
+<ExtensionSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  storage="memory" // Try memory storage if chrome storage isn't working
+/>
+```
+
+3. Verify manifest.json has appropriate permissions.
+
+#### Issues with Server-Side Rendering
+
+**Problem**: Spinner causes hydration errors or doesn't work with SSR.
+
+**Solutions**:
+
+1. Use dynamic import with Next.js:
+```tsx
+import dynamic from 'next/dynamic';
+
+const DynamicSpinner = dynamic(
+  () => import('@repo/spinner').then((mod) => mod.WebSpinnerClient),
+  { ssr: false }
+);
+
+function MyComponent() {
+  return <DynamicSpinner items={['Item 1', 'Item 2']} />;
+}
+```
+
+2. Use client directive in Next.js App Router:
+```tsx
+'use client';
+
+import { WebSpinnerClient } from '@repo/spinner';
+
+export default function SpinnerComponent() {
+  return <WebSpinnerClient items={['Item 1', 'Item 2']} />;
+}
+```
+
+### Event Handling Issues
+
+#### onComplete Not Firing
+
+**Problem**: The onComplete callback doesn't execute when the spinner stops.
+
+**Solutions**:
+
+1. Ensure the callback is memoized:
+```tsx
+import { useCallback } from 'react';
+
+function MyComponent() {
+  const handleComplete = useCallback((winner) => {
+    console.log(`Winner: ${winner}`);
+  }, []);
+  
+  return (
+    <Spinner 
+      items={['Item 1', 'Item 2']}
+      onComplete={handleComplete}
+    />
+  );
+}
+```
+
+2. Verify the spinner is actually completing:
+```tsx
+<Spinner 
+  items={['Item 1', 'Item 2']}
+  duration={3000} // Ensure this is a reasonable value
+  onComplete={(winner) => console.log(`Winner: ${winner}`)}
+  // Log when spinning starts
+  onStart={() => console.log('Spinning started')}
+/>
+```
+
+### Styling Issues
+
+#### Custom Colors Not Applying
+
+**Problem**: Custom color scheme isn't working.
+
+**Solutions**:
+
+1. Verify colorScheme prop structure:
+```tsx
+<Spinner 
+  items={['Item 1', 'Item 2']}
+  colorScheme={{
+    primary: '#3b82f6',    // Main color
+    secondary: '#10b981',  // Secondary color
+    text: '#ffffff',       // Text color
+    background: 'transparent'  // Background
+  }}
+/>
+```
+
+2. Check for CSS conflicts:
+```tsx
+// Use higher specificity selectors in your CSS
+.my-container .spinner-segment {
+  /* Your custom styles */
+}
+```
+
+#### Theme-Related Issues
+
+**Problem**: Spinner doesn't adapt to light/dark mode.
+
+**Solution**:
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  theme="auto" // "light", "dark", or "auto"
+/>
+```
+
+### Cross-Browser Issues
+
+#### Safari-Specific Problems
+
+**Problem**: Spinner doesn't work correctly in Safari.
+
+**Solutions**:
+
+1. Use WebKit prefixes:
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  useWebkitFixes={true}
+/>
+```
+
+2. Adjust animation settings:
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  // Use more compatible animation style
+  animationStyle="compatible"
+/>
+```
+
+## Advanced Troubleshooting
+
+### Debugging Tools
+
+The spinner package includes built-in debugging tools:
+
+```tsx
+<Spinner 
+  items={['Item 1', 'Item 2']}
+  debug={true} // Enable debug mode
+  logLevel="verbose" // "error", "warn", "info", or "verbose"
+/>
+```
+
+This will log helpful information to the console during rendering and animation.
+
+### Performance Analysis
+
+To debug performance issues:
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  measurePerformance={true}
+  onPerformanceReport={(metrics) => {
+    console.table(metrics);
+  }}
+/>
+```
+
+### DOM Structure Inspection
+
+If you're having trouble with the spinner's DOM structure:
+
+```tsx
+<Spinner 
+  items={['Item 1', 'Item 2']}
+  // Add data attributes for inspection
+  dataTestId="my-spinner"
+/>
+```
+
+Then use browser DevTools to inspect:
+```javascript
+// In browser console
+document.querySelector('[data-test-id="my-spinner"]');
+```
+
+## Testing in Isolation
+
+If you're having trouble isolating an issue, create a minimal test case:
+
+```tsx
+import { SpinnerBase } from '@repo/spinner/core';
+
+// Create a minimal spinner implementation
+class MinimalSpinner extends SpinnerBase {
+  constructor() {
+    super({
+      items: ['Test 1', 'Test 2'],
+      duration: 3000
+    });
+  }
+  
+  // Override with minimal implementation
+  render() {
+    return this.items.map(item => `<div>${item}</div>`).join('');
+  }
+}
+
+// Test basic functionality
+const spinner = new MinimalSpinner();
+spinner.spin().then(winner => {
+  console.log(`Winner: ${winner}`);
+});
+```
+
+## Environment-Specific Debugging
+
+### Development vs Production
+
+Some issues only appear in production builds. Test both:
+
+```bash
+# Development build
+pnpm dev
+
+# Production build
+pnpm build
+pnpm start
+```
+
+### Extension Debugging
+
+For Chrome extension issues:
+
+1. Open Chrome's extension page: `chrome://extensions/`
+2. Enable developer mode
+3. Click on "background page" for your extension
+4. Check the console for errors
+
+## Getting Help
+
+If you're still experiencing issues:
+
+1. Check GitHub issues for similar problems
+2. Create a minimal reproduction of the issue
+3. File a detailed bug report with:
+   - Browser and OS versions
+   - Error messages
+   - Steps to reproduce
+   - Expected vs. actual behavior
+
+## FAQ
+
+### Q: Why does my spinner reset when the component re-renders?
+
+A: The spinner state is reset on re-render unless you use proper state management:
+
+```tsx
+import { useState, useRef } from 'react';
+
+function MyComponent() {
+  // Use ref to maintain state between renders
+  const spinnerStateRef = useRef({
+    isSpinning: false,
+    lastWinner: null
+  });
+  
+  return (
+    <Spinner 
+      items={['Item 1', 'Item 2']}
+      // Preserve state
+      stateRef={spinnerStateRef}
+    />
+  );
+}
+```
+
+### Q: Can I have multiple spinners on the same page?
+
+A: Yes, but each needs a unique identifier:
+
+```tsx
+<div>
+  <Spinner 
+    items={['Item 1A', 'Item 2A']}
+    id="spinner-1"
+  />
+  
+  <Spinner 
+    items={['Item 1B', 'Item 2B']}
+    id="spinner-2"
+  />
+</div>
+```
+
+### Q: Why do my segments have inconsistent sizes?
+
+A: The spinner calculates segment sizes based on the number of items:
+
+```tsx
+// For equal-sized segments
+<Spinner 
+  items={['Item 1', 'Item 2', 'Item 3', 'Item 4']}
+  equalSegments={true}
+/>
+
+// For weighted segments
+<Spinner 
+  items={['Item 1', 'Item 2', 'Item 3']}
+  weights={[2, 1, 1]} // Item 1 gets twice the space
+/>
+```

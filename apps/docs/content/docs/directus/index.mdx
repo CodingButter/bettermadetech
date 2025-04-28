@@ -1,0 +1,202 @@
+---
+title: Directus Backend
+description: Documentation for the Directus backend integration with Winner Spinner
+---
+
+# Directus Backend
+
+Documentation for the Directus backend integration with Winner Spinner.
+
+## Overview
+
+Winner Spinner uses Directus as a headless CMS to manage raffle data, user settings, and configuration. Directus provides a flexible and secure data storage solution that powers the spinner application across platforms.
+
+## Key Features
+
+- **Data Storage**: Secure cloud storage for raffle participants and results
+- **User Management**: Authentication and user permission management
+- **Configuration Storage**: Save and retrieve spinner configurations
+- **API Access**: RESTful API for accessing and manipulating data
+- **Asset Management**: Store and manage images and other assets
+
+## Getting Started
+
+### Prerequisites
+
+To work with the Directus backend, you'll need:
+
+- Docker and Docker Compose installed
+- Node.js 18+ installed
+- Basic understanding of REST APIs
+
+### Local Setup
+
+The Directus backend can be run locally using Docker:
+
+```bash
+# Navigate to the Directus directory
+cd apps/directus
+
+# Copy the example environment file
+cp .env.example .env
+
+# Edit the environment variables as needed
+# IMPORTANT: Update the admin email and password
+
+# Start Directus using Docker Compose
+docker-compose up -d
+```
+
+Once running, you can access the Directus admin interface at `http://localhost:8055`.
+
+## Configuration
+
+The Directus instance is configured with the following collections:
+
+- **Spinners**: Stores spinner configurations and settings
+- **Participants**: Stores raffle participant information
+- **Results**: Records spinner results and winners
+- **Users**: Manages user accounts and permissions
+
+## API Usage
+
+### Authentication
+
+All API requests require authentication using JWT tokens:
+
+```typescript
+// Example authentication
+const login = async () => {
+  const response = await fetch('http://localhost:8055/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: 'user@example.com',
+      password: 'password',
+    }),
+  });
+  
+  const data = await response.json();
+  return data.data.access_token;
+};
+```
+
+### Fetching Data
+
+```typescript
+// Example fetching spinner data
+const getSpinnerData = async (token, spinnerId) => {
+  const response = await fetch(`http://localhost:8055/items/spinners/${spinnerId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  
+  return await response.json();
+};
+```
+
+### Saving Data
+
+```typescript
+// Example saving spinner result
+const saveSpinnerResult = async (token, resultData) => {
+  const response = await fetch('http://localhost:8055/items/results', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(resultData),
+  });
+  
+  return await response.json();
+};
+```
+
+## Data Models
+
+### Spinner Model
+
+```typescript
+interface Spinner {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  user_id: string;
+  config: {
+    colorScheme: {
+      primary: string;
+      secondary: string;
+      text: string;
+      background?: string;
+    };
+    size: 'sm' | 'md' | 'lg';
+    duration: number;
+    initialRotation: number;
+  };
+}
+```
+
+### Participant Model
+
+```typescript
+interface Participant {
+  id: string;
+  spinner_id: string;
+  name: string;
+  email?: string;
+  weight?: number;
+  created_at: string;
+  status: 'active' | 'removed' | 'winner';
+  metadata?: Record<string, any>;
+}
+```
+
+### Result Model
+
+```typescript
+interface SpinnerResult {
+  id: string;
+  spinner_id: string;
+  winner_id: string;
+  timestamp: string;
+  duration: number;
+  items: string[];
+}
+```
+
+## Security Considerations
+
+- Always use HTTPS in production environments
+- Keep API keys and credentials secure
+- Implement appropriate access controls and permissions
+- Validate and sanitize all user inputs
+
+## Troubleshooting
+
+### Common Issues
+
+- **Connection Refused**: Ensure Docker is running and the Directus container is up
+- **Authentication Failed**: Verify credentials and token expiration
+- **Permission Denied**: Check user roles and permissions
+- **Data Not Found**: Verify IDs and collection names
+
+### Logs
+
+Docker logs can be helpful for debugging:
+
+```bash
+# View Directus logs
+docker-compose logs -f directus
+```
+
+## Next Steps
+
+- [Directus API Documentation](/docs/directus/api) - Detailed API reference
+- [Data Schema](/docs/directus/schema) - Complete data schema documentation
+- [Integration Examples](/docs/directus/examples) - Example integration patterns

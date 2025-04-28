@@ -127,6 +127,72 @@ export function getHardwareAccelerationStyles(): Record<string, string> {
         backfaceVisibility: 'hidden',
         perspective: '1000px',
         willChange: 'transform',
+        WebkitOverflowScrolling: 'touch',
+        WebkitTransformStyle: 'preserve-3d',
+        WebkitBackfaceVisibility: 'hidden',
       }
     : {};
+}
+
+/**
+ * Optimized requestAnimationFrame with fallback
+ * 
+ * @param callback The animation callback
+ * @returns The animation frame ID
+ */
+export function safeRequestAnimationFrame(callback: FrameRequestCallback): number {
+  if (typeof window !== 'undefined' && window.requestAnimationFrame) {
+    return window.requestAnimationFrame(callback);
+  } else {
+    // Fallback for environments without requestAnimationFrame
+    const timestamp = Date.now();
+    return setTimeout(() => callback(timestamp), 16) as unknown as number;
+  }
+}
+
+/**
+ * Optimized cancelAnimationFrame with fallback
+ * 
+ * @param id The animation frame ID to cancel
+ */
+export function safeCancelAnimationFrame(id: number): void {
+  if (typeof window !== 'undefined') {
+    if (window.cancelAnimationFrame) {
+      window.cancelAnimationFrame(id);
+    } else {
+      clearTimeout(id);
+    }
+  }
+}
+
+/**
+ * Creates a memoized version of a function that only recalculates
+ * when dependencies change. More efficient than useMemo for non-component code.
+ * 
+ * @param fn The function to memoize
+ * @param getDependencies Array of dependencies that trigger recalculation
+ * @returns Memoized function result
+ */
+export function memoize<T, D extends unknown[]>(
+  fn: (...args: D) => T,
+  getDependencies: () => unknown[]
+): () => T {
+  let cache: T;
+  let lastDeps: unknown[] = [];
+  let initialized = false;
+  
+  return () => {
+    const dependencies = getDependencies();
+    const depsChanged = !initialized || 
+      dependencies.length !== lastDeps.length ||
+      dependencies.some((dep, i) => !Object.is(dep, lastDeps[i]));
+      
+    if (depsChanged) {
+      cache = fn(...dependencies as unknown as D);
+      lastDeps = dependencies;
+      initialized = true;
+    }
+    
+    return cache;
+  };
 }

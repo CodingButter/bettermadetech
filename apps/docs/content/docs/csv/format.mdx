@@ -1,0 +1,442 @@
+---
+title: CSV Format Specification
+description: Detailed specification for CSV files used with the Winner Spinner
+---
+
+# CSV Format Specification
+
+Detailed specification for CSV files used with the Winner Spinner.
+
+## Overview
+
+This document provides the technical specification for CSV (Comma-Separated Values) files that can be imported into and exported from the Winner Spinner. Adherence to this specification ensures optimal compatibility and functionality.
+
+## File Format
+
+### General Requirements
+
+- **File Extension**: `.csv`
+- **Character Encoding**: UTF-8
+- **Line Endings**: CRLF (`\r\n`) or LF (`\n`)
+- **Field Delimiter**: Comma (`,`)
+- **Text Qualifier**: Double quote (`"`)
+- **Maximum File Size**: 10MB (approximately 50,000 participants)
+- **Header Row**: Required as the first row
+- **BOM (Byte Order Mark)**: Optional, but supported
+
+### File Structure
+
+A valid CSV file must contain:
+
+1. A header row defining column names
+2. One or more data rows with participant information
+3. Consistent number of fields in each row
+
+### Example
+
+```csv
+Name,Email,Weight,Department,TicketNumber
+John Smith,john@example.com,1,Marketing,A123
+Jane Doe,jane@example.com,2,Sales,B456
+Alex Johnson,alex@example.com,1,Engineering,C789
+```
+
+## Field Specifications
+
+### Standard Fields
+
+Winner Spinner recognizes the following standard fields:
+
+#### Name Field
+
+- **Required**: Yes
+- **Recognized Headers**: "Name", "Participant", "Participant Name", "Full Name"
+- **Format**: Text
+- **Max Length**: 100 characters
+- **Constraints**: Must not be empty
+- **Special Character Handling**: If contains commas, must be enclosed in double quotes
+- **Examples**: `John Smith`, `"Doe, Jane"`, `Alex Johnson`
+
+#### Email Field
+
+- **Required**: No
+- **Recognized Headers**: "Email", "E-mail", "Email Address"
+- **Format**: Valid email address
+- **Max Length**: 255 characters
+- **Validation**: Must match pattern `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+- **Examples**: `john@example.com`, `jane.doe@company.co.uk`
+
+#### Weight Field
+
+- **Required**: No
+- **Recognized Headers**: "Weight", "Points", "Score", "Value"
+- **Format**: Positive integer
+- **Default**: 1
+- **Range**: 1-100
+- **Description**: Higher weight increases selection probability proportionally
+- **Examples**: `1`, `2`, `5`
+
+### Custom Fields
+
+Any column not matching the recognized standard fields is treated as custom metadata:
+
+- **Format**: Any text or numeric data
+- **Usage**: Stored as metadata and can be displayed with the participant
+- **Examples**: Department, TicketNumber, RegistrationDate
+
+## Data Type Handling
+
+### Text Fields
+
+- **Format**: Any text
+- **Escaping**: Double quotes within text should be escaped by doubling them
+- **Example**: `"John ""The Winner"" Smith"` (Represents: John "The Winner" Smith)
+
+### Date Fields
+
+- **Preferred Format**: ISO 8601 (YYYY-MM-DD)
+- **Alternative Formats**: MM/DD/YYYY, DD/MM/YYYY
+- **Examples**: `2023-06-15`, `06/15/2023`, `15/06/2023`
+
+### Numeric Fields
+
+- **Integers**: Whole numbers without thousand separators
+- **Decimals**: Period (`.`) as decimal separator
+- **Examples**: `42`, `3.14`
+
+### Boolean Fields
+
+- **Values**: "true"/"false", "yes"/"no", "1"/"0"
+- **Case Sensitivity**: Case-insensitive
+- **Examples**: `true`, `Yes`, `1`
+
+## Special Cases
+
+### Handling Empty Fields
+
+- **Empty Fields**: Represented by nothing between two delimiters
+- **Null Values**: Empty values are interpreted as null
+- **Example**: `John Smith,,1,Marketing,` (Empty email and ticket number)
+
+### Handling Quoted Values
+
+- **When Required**: Fields containing commas, quotes, or newlines must be quoted
+- **How to Quote**: Enclose field in double quotes
+- **Example**: `"Smith, John",john@example.com,1`
+
+### Handling Line Breaks in Fields
+
+- **Format**: Line breaks inside fields must be enclosed in quotes
+- **Example**: `"John Smith","Bio with
+a line break",1`
+
+## Extended Format Features
+
+### Header Aliases
+
+The importer recognizes various aliases for standard columns:
+
+| Field | Recognized Headers |
+|-------|-------------------|
+| Name | "Name", "Participant", "Participant Name", "Full Name", "Username", "Client" |
+| Email | "Email", "E-mail", "Email Address", "Contact", "Mail" |
+| Weight | "Weight", "Points", "Score", "Value", "Entries", "Tickets", "Chances" |
+
+### Metadata Handling
+
+Any column not recognized as a standard field is preserved as metadata:
+
+- **Storage**: Stored in a nested `metadata` object
+- **Access**: Available for display and can be included in exports
+- **Example**:
+  - CSV: `Name,Department,TicketNumber`
+  - Stored as: `{ name: "John Smith", metadata: { department: "Marketing", ticketNumber: "A123" } }`
+
+### Column Order
+
+The order of columns in the CSV does not matter. The importer identifies columns by header names, not position.
+
+## Import Behavior
+
+### Column Detection
+
+1. The importer reads the header row
+2. It attempts to match standard fields by name (case-insensitive)
+3. Unmatched columns are treated as metadata
+4. If no "Name" column is found, the first column is used as the name field
+5. If no "Weight" column is found, all weights default to 1
+
+### Data Validation
+
+During import:
+
+1. Empty rows are skipped
+2. Rows without a name are skipped
+3. Invalid email formats are cleared but the participant is still imported
+4. Non-numeric weights are set to the default (1)
+5. Weights outside the allowed range (1-100) are clamped to the valid range
+
+### Duplicate Handling
+
+By default, all entries are imported, even if duplicates. Optional settings:
+
+- **Skip Duplicates**: Rows with duplicate names are skipped
+- **Merge Duplicates**: Combines duplicate entries and uses the highest weight
+- **Mark Duplicates**: Imports all but flags duplicates for review
+
+## Export Format
+
+### Standard Export
+
+The default export format includes:
+
+```csv
+Name,Email,Weight,WinCount,LastSelected
+John Smith,john@example.com,1,2,2023-06-15T14:30:45Z
+Jane Doe,jane@example.com,2,1,2023-06-15T14:35:12Z
+Alex Johnson,alex@example.com,1,0,
+```
+
+### Comprehensive Export
+
+The comprehensive export includes all metadata:
+
+```csv
+Name,Email,Weight,WinCount,LastSelected,Metadata.Department,Metadata.TicketNumber
+John Smith,john@example.com,1,2,2023-06-15T14:30:45Z,Marketing,A123
+Jane Doe,jane@example.com,2,1,2023-06-15T14:35:12Z,Sales,B456
+Alex Johnson,alex@example.com,1,0,,Engineering,C789
+```
+
+### Results Export
+
+The results export format:
+
+```csv
+Timestamp,Winner,Duration,TotalParticipants,Items
+2023-06-15T14:30:45Z,John Smith,3500,25,"John Smith,Jane Doe,Alex Johnson,..."
+2023-06-15T14:35:12Z,Jane Doe,3000,25,"John Smith,Jane Doe,Alex Johnson,..."
+```
+
+## Programmatic Generation
+
+### JavaScript Example
+
+```javascript
+/**
+ * Convert participant objects to CSV format
+ * @param {Array} participants - Array of participant objects
+ * @returns {string} CSV content
+ */
+function generateCsv(participants) {
+  // Extract all unique headers
+  const headers = new Set(['Name', 'Email', 'Weight']);
+  
+  // Add metadata headers
+  participants.forEach(participant => {
+    if (participant.metadata) {
+      Object.keys(participant.metadata).forEach(key => {
+        headers.add(`Metadata.${key}`);
+      });
+    }
+  });
+  
+  const headerRow = Array.from(headers).join(',');
+  
+  // Generate data rows
+  const dataRows = participants.map(participant => {
+    const values = Array.from(headers).map(header => {
+      let value = '';
+      
+      if (header === 'Name') value = participant.name || '';
+      else if (header === 'Email') value = participant.email || '';
+      else if (header === 'Weight') value = participant.weight || 1;
+      else if (header.startsWith('Metadata.')) {
+        const metaKey = header.substring(9);
+        value = participant.metadata?.[metaKey] || '';
+      }
+      
+      // Quote values containing commas, quotes, or newlines
+      if (typeof value === 'string' && 
+          (value.includes(',') || value.includes('"') || value.includes('\n'))) {
+        value = `"${value.replace(/"/g, '""')}"`;
+      }
+      
+      return value;
+    });
+    
+    return values.join(',');
+  });
+  
+  return [headerRow, ...dataRows].join('\n');
+}
+```
+
+### Python Example
+
+```python
+import csv
+import io
+
+def generate_csv(participants):
+    """
+    Convert participant objects to CSV format
+    
+    Args:
+        participants (list): List of participant dictionaries
+        
+    Returns:
+        str: CSV content as a string
+    """
+    # Extract all unique headers
+    headers = set(['Name', 'Email', 'Weight'])
+    
+    # Add metadata headers
+    for participant in participants:
+        if 'metadata' in participant and participant['metadata']:
+            for key in participant['metadata'].keys():
+                headers.add(f'Metadata.{key}')
+    
+    # Create a string buffer
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_MINIMAL)
+    
+    # Write header row
+    writer.writerow(headers)
+    
+    # Write data rows
+    for participant in participants:
+        row = []
+        for header in headers:
+            if header == 'Name':
+                row.append(participant.get('name', ''))
+            elif header == 'Email':
+                row.append(participant.get('email', ''))
+            elif header == 'Weight':
+                row.append(participant.get('weight', 1))
+            elif header.startswith('Metadata.'):
+                meta_key = header[9:]  # Remove 'Metadata.' prefix
+                row.append(participant.get('metadata', {}).get(meta_key, ''))
+        
+        writer.writerow(row)
+    
+    return output.getvalue()
+```
+
+## Validation Rules
+
+### Name Validation
+
+- **Required**: Yes
+- **Non-empty**: Must contain at least one non-whitespace character
+- **Length**: 1-100 characters
+- **Invalid Characters**: None (all Unicode characters allowed)
+
+### Email Validation
+
+- **Required**: No
+- **Format**: Must match email pattern if provided
+- **Length**: 1-255 characters
+- **Domain**: Must include valid TLD
+
+### Weight Validation
+
+- **Required**: No
+- **Type**: Must be numeric if provided
+- **Range**: 1-100
+- **Decimals**: Rounded to nearest integer
+
+## Error Handling
+
+The importer provides specific error messages for various issues:
+
+| Error | Description | Resolution |
+|-------|-------------|------------|
+| `Invalid CSV format` | File is not valid CSV | Check delimiter and encoding |
+| `Missing header row` | No header row detected | Add a header row to the CSV |
+| `Missing required Name column` | No column matched for names | Add a Name column |
+| `Line {n}: Inconsistent field count` | Row has wrong number of fields | Fix the row to match header count |
+| `Line {n}: Missing name` | Name field is empty | Add a name to this row |
+| `Line {n}: Invalid email format` | Email doesn't match pattern | Fix email or leave blank |
+| `Line {n}: Invalid weight` | Weight is not a valid number | Fix weight or leave blank |
+
+## Best Practices
+
+### Creating CSV Files
+
+- Include a header row with clear column names
+- Use UTF-8 encoding to support all characters
+- Keep individual field values under 2000 characters
+- Test import with a small sample before large imports
+- Validate your CSV before importing
+
+### Working with Weights
+
+- Use weights between 1-10 for most cases
+- Consider the total number of participants when assigning weights
+- For tiered systems, use consistent weight values for each tier
+- Document your weight allocation strategy
+
+### Including Metadata
+
+- Use clear, descriptive column names
+- Prefer flat metadata structure
+- Avoid sensitive or personal information not needed for the spinner
+- Consider including a unique ID field for participant tracking
+
+## Compatibility Notes
+
+### Spreadsheet Compatibility
+
+| Software | Export Setting | Notes |
+|----------|----------------|-------|
+| Microsoft Excel | "CSV (Comma delimited)" | May need to specify UTF-8 in newer versions |
+| Google Sheets | "Comma-separated values (.csv)" | Automatically uses UTF-8 |
+| LibreOffice Calc | "Text CSV (.csv)" | Select UTF-8 in character set dropdown |
+| Apple Numbers | "CSV" | Select UTF-8 encoding |
+
+### CSV Dialects
+
+The importer handles various CSV dialects:
+
+- **RFC 4180**: Standard CSV format
+- **Excel CSV**: Handles Excel-specific quirks
+- **TSV**: Can auto-detect and support tab-separated values
+- **European CSV**: Supports comma as decimal separator and semicolon as delimiter
+
+To use a non-standard dialect, specify it during import.
+
+## Sample Files
+
+### Minimal Valid CSV
+
+```csv
+Name
+John Smith
+Jane Doe
+Alex Johnson
+```
+
+### Standard CSV
+
+```csv
+Name,Email,Weight
+John Smith,john@example.com,1
+Jane Doe,jane@example.com,2
+Alex Johnson,alex@example.com,1
+```
+
+### Comprehensive CSV
+
+```csv
+Name,Email,Weight,Department,Location,JoinDate,TicketNumber
+"Smith, John",john@example.com,1,Marketing,London,2023-01-15,A123
+"Doe, Jane",jane@example.com,2,Sales,New York,2023-02-20,B456
+"Johnson, Alex",alex@example.com,1,Engineering,Berlin,2023-03-10,C789
+```
+
+## Next Steps
+
+- [CSV Integration Overview](/docs/csv) - General CSV integration documentation
+- [Programmatic CSV Integration](/docs/csv/api) - API for CSV operations
+- [Spinner Documentation](/docs/spinner) - Learn about the spinner component

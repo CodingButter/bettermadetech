@@ -1,148 +1,68 @@
 import React from "react";
-import Image, { type ImageProps } from "next/image";
-import { Button, Card, CardTitle, CardContent, Code } from "@repo/ui";
 import styles from "./page.module.css";
+import { Header } from "./components/header";
+import { Hero } from "./components/hero";
+import { Features } from "./components/features";
 import { SpinnerContainer } from "./client-container";
+import { Testimonials } from "./components/testimonials";
+import { CTA } from "./components/cta";
+import { Footer } from "./components/footer";
+import { Card, CardContent, CardTitle } from "@repo/ui/card";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
-
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, className, ...rest } = props;
-
+export default function Home() {
   return (
-    <>
-      <Image 
-        {...rest} 
-        src={srcLight} 
-        className={`imgLight ${className || ""}`} 
-        data-theme-image
-      />
-      <Image 
-        {...rest} 
-        src={srcDark} 
-        className={`imgDark ${className || ""}`} 
-        data-theme-image
-      />
-    </>
-  );
-};
-
-const Home: React.FC = () => {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      
+      <main className="flex-grow">
+        <Hero />
         
-        <h1 className="text-3xl font-bold mt-6 mb-2">Better Made Tech</h1>
-        <p className="text-xl text-muted-foreground mb-8">
-          Welcome to the Better Made Tech demo site
-        </p>
-
-        <section className="mb-16 w-full max-w-5xl">
-          <h2 className="text-2xl font-bold mb-6">Winner Spinner Demo</h2>
-          <Card className="p-6">
-            <CardContent className="p-0">
-              <SpinnerContainer />
-            </CardContent>
-          </Card>
-        </section>
-
-        <section className="mb-16 w-full max-w-5xl">
-          <h2 className="text-2xl font-bold mb-6">UI Components</h2>
-          
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-wrap gap-4">
-              <Button variant="default">
-                Default Button
-              </Button>
-              <Button variant="destructive">
-                Destructive Button
-              </Button>
-              <Button variant="outline">
-                Outline Button
-              </Button>
-              <Button variant="accent" size="xl">
-                Accent Button
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card hoverable className="p-6">
-                <CardTitle>Card Title</CardTitle>
-                <CardContent className="pt-4">
-                  This is a hoverable card using Tailwind CSS v4.1 features.
-                </CardContent>
-              </Card>
-              
-              <Card className="p-6">
-                <CardTitle>Code Example</CardTitle>
-                <CardContent className="pt-4">
-                  <Code variant="block">{`function hello() {
-  console.log("Hello world!");
-}`}</Code>
-                </CardContent>
-              </Card>
+        <section id="spinner-demo" className="py-24">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-3xl font-bold mb-4">Winner Spinner Demo</h2>
+                <p className="text-lg text-muted-foreground mb-6">
+                  Create custom spinners for giveaways, decision making, or audience engagement. 
+                  Easily integrate with your streams and content.
+                </p>
+                <ul className="space-y-3 mb-6">
+                  {[
+                    'Customizable colors and segments',
+                    'Adjustable spin duration and animations',
+                    'Save multiple spinner configurations',
+                    'Easy integration with OBS and other platforms',
+                    'Mobile-friendly design'
+                  ].map((feature, i) => (
+                    <li key={i} className="flex items-start">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <Card className="p-6 shadow-lg border border-border">
+                  <CardTitle className="mb-4">Try it Yourself</CardTitle>
+                  <CardContent className="p-0">
+                    <SpinnerContainer />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </section>
         
-        <div className={styles.ctas}>
-          <a
-            href="/docs"
-            className={styles.primary}
-          >
-            <Image
-              className={styles.logo}
-              src="/file-text.svg"
-              alt="Docs icon"
-              width={20}
-              height={20}
-            />
-            View Documentation
-          </a>
-          <a
-            href="https://github.com/CodingButter/bettermadetech"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            GitHub Repository
-          </a>
-        </div>
+        <Features />
+        
+        <Testimonials />
+        
+        <CTA />
       </main>
       
-      <footer className={styles.footer}>
-        <a
-          href="https://github.com/CodingButter/bettermadetech"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          GitHub
-        </a>
-        <p>
-          © {new Date().getFullYear()} Better Made Tech
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
-};
-
-export default Home;
+}

@@ -1,0 +1,590 @@
+---
+title: Directus Integration
+description: Detailed API reference for integrating with the Directus backend
+---
+
+# Directus Integration
+
+Detailed API reference for integrating with the Directus backend.
+
+## API Endpoints
+
+This document provides a comprehensive reference for the Directus API endpoints used in the Winner Spinner project.
+
+## Authentication
+
+### Login
+
+Authenticates a user and retrieves an access token.
+
+**Endpoint**: `POST /auth/login`
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "password": "password"
+}
+```
+
+**Response**:
+```json
+{
+  "data": {
+    "access_token": "jwt_token_here",
+    "expires": 900000,
+    "refresh_token": "refresh_token_here"
+  }
+}
+```
+
+### Refresh Token
+
+Refreshes an expired access token.
+
+**Endpoint**: `POST /auth/refresh`
+
+**Request Body**:
+```json
+{
+  "refresh_token": "refresh_token_here"
+}
+```
+
+**Response**:
+```json
+{
+  "data": {
+    "access_token": "new_jwt_token_here",
+    "expires": 900000,
+    "refresh_token": "new_refresh_token_here"
+  }
+}
+```
+
+## Spinner Management
+
+### Get All Spinners
+
+Retrieves all spinners for the authenticated user.
+
+**Endpoint**: `GET /items/spinners`
+
+**Parameters**:
+- `filter[user_id][_eq]` - Filter by user ID
+- `sort` - Sort field and direction (e.g. `-created_at`)
+- `limit` - Limit results (default: 100)
+- `page` - Page number for pagination
+
+**Response**:
+```json
+{
+  "data": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "name": "Conference Raffle",
+      "created_at": "2023-05-15T08:30:00Z",
+      "updated_at": "2023-05-16T10:20:00Z",
+      "created_by": "user_id",
+      "user_id": "user_id",
+      "config": {
+        "colorScheme": {
+          "primary": "#3b82f6",
+          "secondary": "#10b981",
+          "text": "#ffffff"
+        },
+        "size": "md",
+        "duration": 3000,
+        "initialRotation": 0
+      }
+    }
+  ],
+  "meta": {
+    "total_count": 5,
+    "filter_count": 5
+  }
+}
+```
+
+### Get Single Spinner
+
+Retrieves a single spinner by ID.
+
+**Endpoint**: `GET /items/spinners/:id`
+
+**Response**:
+```json
+{
+  "data": {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "name": "Conference Raffle",
+    "created_at": "2023-05-15T08:30:00Z",
+    "updated_at": "2023-05-16T10:20:00Z",
+    "created_by": "user_id",
+    "user_id": "user_id",
+    "config": {
+      "colorScheme": {
+        "primary": "#3b82f6",
+        "secondary": "#10b981",
+        "text": "#ffffff"
+      },
+      "size": "md",
+      "duration": 3000,
+      "initialRotation": 0
+    }
+  }
+}
+```
+
+### Create Spinner
+
+Creates a new spinner.
+
+**Endpoint**: `POST /items/spinners`
+
+**Request Body**:
+```json
+{
+  "name": "New Raffle",
+  "user_id": "user_id",
+  "config": {
+    "colorScheme": {
+      "primary": "#3b82f6",
+      "secondary": "#10b981",
+      "text": "#ffffff"
+    },
+    "size": "md",
+    "duration": 3000,
+    "initialRotation": 0
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "data": {
+    "id": "new_spinner_id",
+    "name": "New Raffle",
+    "created_at": "2023-06-10T14:25:00Z",
+    "updated_at": "2023-06-10T14:25:00Z",
+    "created_by": "user_id",
+    "user_id": "user_id",
+    "config": {
+      "colorScheme": {
+        "primary": "#3b82f6",
+        "secondary": "#10b981",
+        "text": "#ffffff"
+      },
+      "size": "md",
+      "duration": 3000,
+      "initialRotation": 0
+    }
+  }
+}
+```
+
+### Update Spinner
+
+Updates an existing spinner.
+
+**Endpoint**: `PATCH /items/spinners/:id`
+
+**Request Body**:
+```json
+{
+  "name": "Updated Raffle Name",
+  "config": {
+    "colorScheme": {
+      "primary": "#f59e0b",
+      "secondary": "#10b981",
+      "text": "#ffffff"
+    }
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "data": {
+    "id": "spinner_id",
+    "name": "Updated Raffle Name",
+    "config": {
+      "colorScheme": {
+        "primary": "#f59e0b",
+        "secondary": "#10b981",
+        "text": "#ffffff"
+      },
+      "size": "md",
+      "duration": 3000,
+      "initialRotation": 0
+    }
+  }
+}
+```
+
+### Delete Spinner
+
+Deletes a spinner.
+
+**Endpoint**: `DELETE /items/spinners/:id`
+
+**Response**:
+```json
+{
+  "data": null
+}
+```
+
+## Participant Management
+
+### Get Participants
+
+Retrieves participants for a specific spinner.
+
+**Endpoint**: `GET /items/participants`
+
+**Parameters**:
+- `filter[spinner_id][_eq]` - Filter by spinner ID
+- `sort` - Sort field and direction (e.g. `name`)
+- `limit` - Limit results (default: 100)
+- `page` - Page number for pagination
+
+**Response**:
+```json
+{
+  "data": [
+    {
+      "id": "participant_id_1",
+      "spinner_id": "spinner_id",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "weight": 1,
+      "created_at": "2023-05-15T09:00:00Z",
+      "status": "active",
+      "metadata": {
+        "department": "Marketing",
+        "ticket_number": "A123"
+      }
+    },
+    {
+      "id": "participant_id_2",
+      "spinner_id": "spinner_id",
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "weight": 1,
+      "created_at": "2023-05-15T09:05:00Z",
+      "status": "active",
+      "metadata": {
+        "department": "Sales",
+        "ticket_number": "B456"
+      }
+    }
+  ],
+  "meta": {
+    "total_count": 25,
+    "filter_count": 25
+  }
+}
+```
+
+### Add Participants (Bulk)
+
+Adds multiple participants to a spinner.
+
+**Endpoint**: `POST /items/participants`
+
+**Request Body**:
+```json
+{
+  "spinner_id": "spinner_id",
+  "participants": [
+    {
+      "name": "Alice Johnson",
+      "email": "alice@example.com",
+      "weight": 1,
+      "metadata": {
+        "department": "Engineering",
+        "ticket_number": "C789"
+      }
+    },
+    {
+      "name": "Bob Williams",
+      "email": "bob@example.com",
+      "weight": 2,
+      "metadata": {
+        "department": "Design",
+        "ticket_number": "D012"
+      }
+    }
+  ]
+}
+```
+
+**Response**:
+```json
+{
+  "data": [
+    {
+      "id": "new_participant_id_1",
+      "spinner_id": "spinner_id",
+      "name": "Alice Johnson",
+      "email": "alice@example.com",
+      "weight": 1,
+      "created_at": "2023-06-10T15:00:00Z",
+      "status": "active",
+      "metadata": {
+        "department": "Engineering",
+        "ticket_number": "C789"
+      }
+    },
+    {
+      "id": "new_participant_id_2",
+      "spinner_id": "spinner_id",
+      "name": "Bob Williams",
+      "email": "bob@example.com",
+      "weight": 2,
+      "created_at": "2023-06-10T15:00:00Z",
+      "status": "active",
+      "metadata": {
+        "department": "Design",
+        "ticket_number": "D012"
+      }
+    }
+  ]
+}
+```
+
+### Update Participant
+
+Updates a participant's information.
+
+**Endpoint**: `PATCH /items/participants/:id`
+
+**Request Body**:
+```json
+{
+  "name": "Alice Johnson-Smith",
+  "weight": 3,
+  "status": "winner"
+}
+```
+
+**Response**:
+```json
+{
+  "data": {
+    "id": "participant_id",
+    "name": "Alice Johnson-Smith",
+    "weight": 3,
+    "status": "winner"
+  }
+}
+```
+
+### Delete Participant
+
+Deletes a participant.
+
+**Endpoint**: `DELETE /items/participants/:id`
+
+**Response**:
+```json
+{
+  "data": null
+}
+```
+
+## Results Management
+
+### Get Results
+
+Retrieves results for a specific spinner.
+
+**Endpoint**: `GET /items/results`
+
+**Parameters**:
+- `filter[spinner_id][_eq]` - Filter by spinner ID
+- `sort` - Sort field and direction (e.g. `-timestamp`)
+- `limit` - Limit results (default: 100)
+- `page` - Page number for pagination
+
+**Response**:
+```json
+{
+  "data": [
+    {
+      "id": "result_id_1",
+      "spinner_id": "spinner_id",
+      "winner_id": "participant_id",
+      "timestamp": "2023-06-10T16:30:00Z",
+      "duration": 3500,
+      "items": [
+        "John Doe",
+        "Jane Smith",
+        "Alice Johnson-Smith",
+        "Bob Williams"
+      ]
+    }
+  ],
+  "meta": {
+    "total_count": 5,
+    "filter_count": 5
+  }
+}
+```
+
+### Save Result
+
+Saves a spinner result.
+
+**Endpoint**: `POST /items/results`
+
+**Request Body**:
+```json
+{
+  "spinner_id": "spinner_id",
+  "winner_id": "participant_id",
+  "duration": 3500,
+  "items": [
+    "John Doe",
+    "Jane Smith",
+    "Alice Johnson-Smith",
+    "Bob Williams"
+  ]
+}
+```
+
+**Response**:
+```json
+{
+  "data": {
+    "id": "new_result_id",
+    "spinner_id": "spinner_id",
+    "winner_id": "participant_id",
+    "timestamp": "2023-06-10T16:35:00Z",
+    "duration": 3500,
+    "items": [
+      "John Doe",
+      "Jane Smith",
+      "Alice Johnson-Smith",
+      "Bob Williams"
+    ]
+  }
+}
+```
+
+## Error Handling
+
+All API responses follow a standard error format:
+
+```json
+{
+  "errors": [
+    {
+      "message": "Error message description",
+      "extensions": {
+        "code": "ERROR_CODE"
+      }
+    }
+  ]
+}
+```
+
+Common error codes:
+- `INVALID_CREDENTIALS` - Authentication failed
+- `INVALID_TOKEN` - Token is invalid or expired
+- `FORBIDDEN` - Permission denied
+- `NOT_FOUND` - Requested resource not found
+- `VALIDATION_FAILED` - Input validation failed
+
+## Rate Limiting
+
+The API implements rate limiting to prevent abuse:
+
+- 60 requests per minute per user
+- 5 failed login attempts per 10 minutes
+
+When rate limited, the API will respond with HTTP status 429 and the following headers:
+- `Retry-After`: Seconds to wait before retrying
+- `X-RateLimit-Limit`: Request limit
+- `X-RateLimit-Remaining`: Remaining requests in window
+
+## Using with TypeScript
+
+Type definitions for the API can be imported from our utility package:
+
+```typescript
+import { Spinner, Participant, SpinnerResult } from '@repo/env-config';
+
+// Example usage with fetch and types
+const getSpinner = async (token: string, id: string): Promise<Spinner> => {
+  const response = await fetch(`${API_URL}/items/spinners/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  
+  const data = await response.json();
+  return data.data;
+};
+```
+
+## Integration Example
+
+Here's a complete example of integrating with the Directus API:
+
+```typescript
+import { DirectusClient } from '@repo/env-config';
+
+// Initialize the client
+const client = new DirectusClient({
+  url: 'http://localhost:8055',
+});
+
+// Login and get access token
+await client.login({
+  email: 'user@example.com',
+  password: 'password',
+});
+
+// Create a new spinner
+const spinner = await client.createSpinner({
+  name: 'Event Raffle',
+  config: {
+    colorScheme: {
+      primary: '#3b82f6',
+      secondary: '#10b981',
+      text: '#ffffff',
+    },
+    size: 'md',
+    duration: 3000,
+    initialRotation: 0,
+  },
+});
+
+// Add participants from CSV data
+const participants = await client.addParticipants(spinner.id, [
+  { name: 'Participant 1' },
+  { name: 'Participant 2' },
+  { name: 'Participant 3' },
+]);
+
+// Get the participant names
+const participantNames = participants.map(p => p.name);
+
+// Save a spin result
+await client.saveResult({
+  spinner_id: spinner.id,
+  winner_id: participants[0].id,
+  duration: 3000,
+  items: participantNames,
+});
+```
+
+## Next Steps
+
+- [Directus Overview](/docs/directus) - General Directus integration
+- [Data Schema](/docs/directus/schema) - Complete data schema documentation
+- [Integration Examples](/docs/directus/examples) - Example integration patterns

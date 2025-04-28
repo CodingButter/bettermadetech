@@ -1,0 +1,931 @@
+---
+title: Programmatic CSV Integration
+description: API reference for programmatic CSV integration with the Winner Spinner
+---
+
+# Programmatic CSV Integration
+
+API reference for programmatic CSV integration with the Winner Spinner.
+
+## Overview
+
+The Winner Spinner provides a comprehensive API for working with CSV data programmatically. This document details the classes, methods, and utilities available for developers who want to integrate CSV functionality into their applications or extend the Winner Spinner's capabilities.
+
+## CSV Parser
+
+The `CSVParser` class provides the core functionality for parsing and validating CSV data.
+
+### Import
+
+```typescript
+import { CSVParser } from '@repo/spinner';
+```
+
+### Basic Usage
+
+```typescript
+// Create a parser instance
+const parser = new CSVParser();
+
+// Parse CSV string
+const results = parser.parse(csvString);
+
+// Access parsed data
+console.log(`Found ${results.participants.length} participants`);
+console.log(`Detected columns: ${results.columns.join(', ')}`);
+```
+
+### Constructor Options
+
+The `CSVParser` constructor accepts an options object:
+
+```typescript
+const parser = new CSVParser({
+  delimiter: ',',       // Field delimiter (default: ',')
+  newline: '\n',        // Line separator (default: auto-detect)
+  quoteChar: '"',       // Quote character (default: '"')
+  escapeChar: '"',      // Escape character (default: '"')
+  headerRow: true,      // Whether CSV has a header row (default: true)
+  skipEmptyLines: true, // Whether to skip empty lines (default: true)
+  trimFields: true,     // Whether to trim whitespace from fields (default: true)
+  encoding: 'utf8'      // File encoding (default: 'utf8')
+});
+```
+
+### Methods
+
+#### `parse(csv: string): CSVParseResult`
+
+Parses a CSV string and returns structured data.
+
+Parameters:
+- `csv`: The CSV string to parse
+
+Returns:
+- `CSVParseResult`: Object containing parsed data:
+  - `participants`: Array of participant objects
+  - `columns`: Array of detected column names
+  - `mapping`: Object mapping column names to field types
+  - `errors`: Array of parsing errors (if any)
+  - `warnings`: Array of parsing warnings (if any)
+
+```typescript
+const results = parser.parse(csvString);
+```
+
+#### `parseFile(file: File): Promise<CSVParseResult>`
+
+Asynchronously parses a CSV file and returns structured data.
+
+Parameters:
+- `file`: File object from an input element or drag and drop
+
+Returns:
+- `Promise<CSVParseResult>`: Promise resolving to parsed data
+
+```typescript
+const fileInput = document.getElementById('csv-file') as HTMLInputElement;
+const file = fileInput.files?.[0];
+
+if (file) {
+  const results = await parser.parseFile(file);
+  // Use results
+}
+```
+
+#### `detectDelimiter(sample: string): string`
+
+Automatically detects the delimiter used in a CSV sample.
+
+Parameters:
+- `sample`: Sample CSV text
+
+Returns:
+- Detected delimiter character
+
+```typescript
+const delimiter = parser.detectDelimiter(csvSample);
+console.log(`Detected delimiter: ${delimiter}`);
+```
+
+#### `validateCSV(csv: string): ValidationResult`
+
+Validates a CSV string against the specification.
+
+Parameters:
+- `csv`: The CSV string to validate
+
+Returns:
+- `ValidationResult`: Object containing validation results:
+  - `valid`: Boolean indicating if the CSV is valid
+  - `errors`: Array of validation errors
+  - `warnings`: Array of validation warnings
+
+```typescript
+const validation = parser.validateCSV(csvString);
+
+if (validation.valid) {
+  console.log('CSV is valid!');
+} else {
+  console.error('CSV has errors:', validation.errors);
+}
+```
+
+### Types
+
+```typescript
+interface CSVParseResult {
+  participants: Participant[];
+  columns: string[];
+  mapping: Record<string, string>;
+  errors: ParseError[];
+  warnings: ParseWarning[];
+}
+
+interface Participant {
+  name: string;
+  email?: string;
+  weight?: number;
+  metadata?: Record<string, any>;
+}
+
+interface ParseError {
+  line: number;
+  message: string;
+  code: string;
+}
+
+interface ParseWarning {
+  line: number;
+  message: string;
+  code: string;
+}
+
+interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+}
+
+interface ValidationError {
+  line: number;
+  column?: number;
+  message: string;
+  code: string;
+}
+
+interface ValidationWarning {
+  line: number;
+  column?: number;
+  message: string;
+  code: string;
+}
+```
+
+## CSV Generator
+
+The `CSVGenerator` class provides functionality for creating CSV files from participant data.
+
+### Import
+
+```typescript
+import { CSVGenerator } from '@repo/spinner';
+```
+
+### Basic Usage
+
+```typescript
+// Create a generator instance
+const generator = new CSVGenerator();
+
+// Define participants
+const participants = [
+  { name: 'John Smith', email: 'john@example.com', weight: 1 },
+  { name: 'Jane Doe', email: 'jane@example.com', weight: 2 },
+  { name: 'Alex Johnson', email: 'alex@example.com', weight: 1 }
+];
+
+// Generate CSV
+const csv = generator.generate(participants);
+
+// Use the CSV string
+console.log(csv);
+```
+
+### Constructor Options
+
+The `CSVGenerator` constructor accepts an options object:
+
+```typescript
+const generator = new CSVGenerator({
+  delimiter: ',',    // Field delimiter (default: ',')
+  newline: '\n',     // Line separator (default: '\n')
+  quoteChar: '"',    // Quote character (default: '"')
+  escapeChar: '"',   // Escape character (default: '"')
+  headerRow: true,   // Whether to include a header row (default: true)
+  quoteAlways: false // Whether to quote all fields (default: false)
+});
+```
+
+### Methods
+
+#### `generate(participants: Participant[]): string`
+
+Generates a CSV string from an array of participants.
+
+Parameters:
+- `participants`: Array of participant objects
+
+Returns:
+- CSV string
+
+```typescript
+const csv = generator.generate(participants);
+```
+
+#### `generateWithColumns(participants: Participant[], columns: string[]): string`
+
+Generates a CSV string with specific columns.
+
+Parameters:
+- `participants`: Array of participant objects
+- `columns`: Array of column names to include
+
+Returns:
+- CSV string
+
+```typescript
+const columns = ['name', 'email', 'weight', 'metadata.department'];
+const csv = generator.generateWithColumns(participants, columns);
+```
+
+#### `downloadCSV(participants: Participant[], filename: string): void`
+
+Generates a CSV and triggers a download in the browser.
+
+Parameters:
+- `participants`: Array of participant objects
+- `filename`: Filename for the downloaded file
+
+```typescript
+generator.downloadCSV(participants, 'raffle-participants.csv');
+```
+
+#### `downloadResultsCSV(results: SpinnerResult[], filename: string): void`
+
+Generates a CSV of spinner results and triggers a download.
+
+Parameters:
+- `results`: Array of spinner result objects
+- `filename`: Filename for the downloaded file
+
+```typescript
+generator.downloadResultsCSV(spinnerResults, 'raffle-results.csv');
+```
+
+## CSV Import/Export Utils
+
+The `CSVUtils` namespace provides utility functions for working with CSV data.
+
+### Import
+
+```typescript
+import { CSVUtils } from '@repo/spinner';
+```
+
+### Functions
+
+#### `detectColumns(headers: string[]): ColumnMapping`
+
+Detects column types from header row.
+
+Parameters:
+- `headers`: Array of header strings
+
+Returns:
+- `ColumnMapping`: Object mapping column indexes to field types
+
+```typescript
+const headers = ['Name', 'E-mail', 'Points', 'Department'];
+const mapping = CSVUtils.detectColumns(headers);
+console.log(mapping);
+// { 0: 'name', 1: 'email', 2: 'weight', 3: 'metadata' }
+```
+
+#### `mapRowToParticipant(row: string[], mapping: ColumnMapping): Participant`
+
+Maps a CSV row to a participant object using the provided column mapping.
+
+Parameters:
+- `row`: Array of field values
+- `mapping`: Column mapping object
+
+Returns:
+- `Participant`: Participant object
+
+```typescript
+const row = ['John Smith', 'john@example.com', '2', 'Marketing'];
+const participant = CSVUtils.mapRowToParticipant(row, mapping);
+```
+
+#### `validateParticipant(participant: Participant): ValidationResult`
+
+Validates a participant object against the schema.
+
+Parameters:
+- `participant`: Participant object to validate
+
+Returns:
+- `ValidationResult`: Validation result object
+
+```typescript
+const validation = CSVUtils.validateParticipant(participant);
+if (!validation.valid) {
+  console.error('Invalid participant:', validation.errors);
+}
+```
+
+#### `stringifyParticipant(participant: Participant, columns: string[]): string[]`
+
+Converts a participant object to an array of field values.
+
+Parameters:
+- `participant`: Participant object
+- `columns`: Array of column names
+
+Returns:
+- Array of field values
+
+```typescript
+const columns = ['name', 'email', 'weight', 'metadata.department'];
+const row = CSVUtils.stringifyParticipant(participant, columns);
+```
+
+#### `isValidEmail(email: string): boolean`
+
+Validates email format.
+
+Parameters:
+- `email`: Email string to validate
+
+Returns:
+- Boolean indicating if the email is valid
+
+```typescript
+if (!CSVUtils.isValidEmail(email)) {
+  console.error('Invalid email address');
+}
+```
+
+#### `getNestedProperty(obj: any, path: string): any`
+
+Gets a nested property from an object using dot notation.
+
+Parameters:
+- `obj`: Object to get property from
+- `path`: Property path using dot notation
+
+Returns:
+- Property value or undefined
+
+```typescript
+const department = CSVUtils.getNestedProperty(participant, 'metadata.department');
+```
+
+## Integration with Spinner Components
+
+The spinner components include built-in CSV import/export capabilities.
+
+### WebSpinnerClient
+
+```typescript
+import { WebSpinnerClient } from '@repo/spinner';
+
+const spinner = new WebSpinnerClient({
+  items: ['Initial Item'],
+  // ... other options
+});
+
+// Import participants from CSV string
+await spinner.importFromCSV(csvString);
+
+// Export participants to CSV
+const csv = spinner.exportToCSV();
+
+// Export results to CSV
+const resultsCSV = spinner.exportResultsToCSV();
+```
+
+### ExtensionSpinnerClient
+
+```typescript
+import { ExtensionSpinnerClient } from '@repo/spinner';
+
+const spinner = new ExtensionSpinnerClient({
+  items: ['Initial Item'],
+  // ... other options
+});
+
+// Import participants from File object
+const fileInput = document.getElementById('csv-file') as HTMLInputElement;
+const file = fileInput.files?.[0];
+
+if (file) {
+  await spinner.importFromFile(file);
+}
+
+// Export as downloadable CSV
+spinner.downloadParticipantsCSV('spinner-participants.csv');
+spinner.downloadResultsCSV('spinner-results.csv');
+```
+
+## React Components
+
+The Winner Spinner includes React components for CSV import/export.
+
+### CSVImport Component
+
+```tsx
+import { CSVImport } from '@repo/spinner';
+
+const MyComponent = () => {
+  const handleImport = (participants) => {
+    console.log(`Imported ${participants.length} participants`);
+    // Update your application state
+  };
+
+  return (
+    <div>
+      <h2>Import Participants</h2>
+      <CSVImport 
+        onImport={handleImport}
+        onError={(errors) => console.error('Import errors:', errors)}
+        allowedColumns={['name', 'email', 'weight']}
+        maxFileSize={1024 * 1024} // 1MB
+      />
+    </div>
+  );
+};
+```
+
+### CSVExport Component
+
+```tsx
+import { CSVExport } from '@repo/spinner';
+
+const MyComponent = ({ participants, results }) => {
+  return (
+    <div className="export-buttons">
+      <CSVExport 
+        data={participants}
+        filename="participants.csv"
+        buttonLabel="Export Participants"
+        columns={['name', 'email', 'weight', 'metadata.department']}
+      />
+      
+      <CSVExport 
+        data={results}
+        filename="results.csv"
+        buttonLabel="Export Results"
+        exportType="results"
+      />
+    </div>
+  );
+};
+```
+
+## Examples
+
+### Complete CSV Import Example
+
+```typescript
+import { CSVParser, CSVUtils } from '@repo/spinner';
+
+// Function to handle CSV file input
+async function handleCSVUpload(file: File) {
+  try {
+    // Create parser
+    const parser = new CSVParser({
+      skipEmptyLines: true,
+      trimFields: true
+    });
+    
+    // Parse the file
+    const results = await parser.parseFile(file);
+    
+    // Handle parsing errors
+    if (results.errors.length > 0) {
+      console.error('CSV parsing errors:', results.errors);
+      return;
+    }
+    
+    // Process the participants
+    const validParticipants = results.participants.filter(participant => {
+      const validation = CSVUtils.validateParticipant(participant);
+      return validation.valid;
+    });
+    
+    console.log(`Successfully imported ${validParticipants.length} participants`);
+    
+    // Return the valid participants
+    return validParticipants;
+    
+  } catch (error) {
+    console.error('CSV import failed:', error);
+    throw error;
+  }
+}
+
+// UI event handler
+document.getElementById('csv-upload').addEventListener('change', async (event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  
+  if (file) {
+    try {
+      const participants = await handleCSVUpload(file);
+      // Update UI with imported participants
+      updateParticipantList(participants);
+    } catch (error) {
+      // Show error in UI
+      showErrorMessage('Failed to import CSV: ' + error.message);
+    }
+  }
+});
+```
+
+### Complete CSV Export Example
+
+```typescript
+import { CSVGenerator } from '@repo/spinner';
+
+// Function to export participants
+function exportParticipants(participants, options = {}) {
+  // Create generator with options
+  const generator = new CSVGenerator({
+    delimiter: options.delimiter || ',',
+    quoteAlways: options.quoteAll || false,
+    newline: '\n'
+  });
+  
+  // Define columns to export
+  const columns = [
+    'name',
+    'email',
+    'weight',
+    ...(options.includeMetadata ? ['metadata.department', 'metadata.ticketNumber'] : [])
+  ];
+  
+  try {
+    // Generate CSV with specific columns
+    if (options.columnsOnly) {
+      return generator.generateWithColumns(participants, columns);
+    }
+    
+    // Or generate with all data
+    return generator.generate(participants);
+    
+  } catch (error) {
+    console.error('CSV export failed:', error);
+    throw error;
+  }
+}
+
+// UI event handler
+document.getElementById('export-button').addEventListener('click', () => {
+  try {
+    // Get current participants from application state
+    const participants = getParticipantsFromState();
+    
+    // Get export options from UI
+    const options = {
+      delimiter: document.getElementById('delimiter-select').value,
+      quoteAll: document.getElementById('quote-all-checkbox').checked,
+      includeMetadata: document.getElementById('include-metadata-checkbox').checked,
+      columnsOnly: false
+    };
+    
+    // Create generator
+    const generator = new CSVGenerator(options);
+    
+    // Download CSV
+    generator.downloadCSV(
+      participants, 
+      'spinner-participants-' + new Date().toISOString().slice(0, 10) + '.csv'
+    );
+    
+    // Show success message
+    showSuccessMessage('Participants exported successfully!');
+    
+  } catch (error) {
+    // Show error in UI
+    showErrorMessage('Failed to export CSV: ' + error.message);
+  }
+});
+```
+
+### Integration with Backend API
+
+```typescript
+import { CSVParser, CSVGenerator } from '@repo/spinner';
+
+class ParticipantService {
+  private apiBaseUrl: string;
+  
+  constructor(apiBaseUrl: string) {
+    this.apiBaseUrl = apiBaseUrl;
+  }
+  
+  async importCSVToAPI(file: File, spinnerId: string): Promise<ImportResult> {
+    try {
+      // Parse the CSV file
+      const parser = new CSVParser();
+      const parseResult = await parser.parseFile(file);
+      
+      if (parseResult.errors.length > 0) {
+        return {
+          success: false,
+          errors: parseResult.errors,
+          importedCount: 0
+        };
+      }
+      
+      // Send the parsed participants to the API
+      const response = await fetch(`${this.apiBaseUrl}/api/spinners/${spinnerId}/participants/batch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getAuthToken()}`
+        },
+        body: JSON.stringify({
+          participants: parseResult.participants
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      return {
+        success: true,
+        importedCount: result.importedCount,
+        errors: result.errors || []
+      };
+      
+    } catch (error) {
+      console.error('Import failed:', error);
+      return {
+        success: false,
+        errors: [{ message: error.message, code: 'API_ERROR' }],
+        importedCount: 0
+      };
+    }
+  }
+  
+  async exportParticipantsFromAPI(spinnerId: string, filename: string): Promise<void> {
+    try {
+      // Fetch participants from API
+      const response = await fetch(`${this.apiBaseUrl}/api/spinners/${spinnerId}/participants`, {
+        headers: {
+          'Authorization': `Bearer ${this.getAuthToken()}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const { participants } = await response.json();
+      
+      // Generate and download CSV
+      const generator = new CSVGenerator();
+      generator.downloadCSV(participants, filename);
+      
+    } catch (error) {
+      console.error('Export failed:', error);
+      throw error;
+    }
+  }
+  
+  private getAuthToken(): string {
+    // Get authentication token from storage
+    return localStorage.getItem('auth_token') || '';
+  }
+}
+
+// Usage example
+const participantService = new ParticipantService('https://api.example.com');
+
+// Import handler
+document.getElementById('import-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  
+  const fileInput = document.getElementById('csv-file') as HTMLInputElement;
+  const spinnerId = document.getElementById('spinner-id').value;
+  const file = fileInput.files?.[0];
+  
+  if (file && spinnerId) {
+    try {
+      const result = await participantService.importCSVToAPI(file, spinnerId);
+      
+      if (result.success) {
+        showSuccessMessage(`Successfully imported ${result.importedCount} participants`);
+      } else {
+        showErrorMessage('Import failed: ' + result.errors.map(e => e.message).join(', '));
+      }
+    } catch (error) {
+      showErrorMessage('Import failed: ' + error.message);
+    }
+  }
+});
+
+// Export handler
+document.getElementById('export-button').addEventListener('click', async () => {
+  const spinnerId = document.getElementById('spinner-id').value;
+  
+  if (spinnerId) {
+    try {
+      await participantService.exportParticipantsFromAPI(
+        spinnerId, 
+        `spinner-${spinnerId}-participants.csv`
+      );
+    } catch (error) {
+      showErrorMessage('Export failed: ' + error.message);
+    }
+  }
+});
+```
+
+## Error Handling
+
+The CSV API provides detailed error information to help diagnose issues:
+
+### Error Codes
+
+| Code | Description |
+|------|-------------|
+| `INVALID_FORMAT` | Generic invalid format error |
+| `EMPTY_CSV` | CSV is empty |
+| `MISSING_HEADER` | Header row is missing |
+| `INCONSISTENT_FIELDS` | Row has inconsistent number of fields |
+| `MISSING_NAME` | Required name field is missing |
+| `INVALID_EMAIL` | Email format is invalid |
+| `INVALID_WEIGHT` | Weight is not a valid number |
+| `FILE_TOO_LARGE` | File exceeds size limit |
+| `ENCODING_ERROR` | Character encoding issue |
+| `PARSE_ERROR` | Generic parsing error |
+| `VALIDATION_ERROR` | Generic validation error |
+| `API_ERROR` | Error communicating with API |
+
+### Handling Errors
+
+The API provides structured error information:
+
+```typescript
+try {
+  const results = await parser.parseFile(file);
+  
+  if (results.errors.length > 0) {
+    // Group errors by type
+    const errorsByCode = results.errors.reduce((acc, error) => {
+      if (!acc[error.code]) {
+        acc[error.code] = [];
+      }
+      acc[error.code].push(error);
+      return acc;
+    }, {});
+    
+    // Handle specific error types
+    if (errorsByCode.INVALID_EMAIL) {
+      console.warn(`Found ${errorsByCode.INVALID_EMAIL.length} invalid emails`);
+      // Show warning but continue
+    }
+    
+    if (errorsByCode.MISSING_NAME) {
+      console.error(`Found ${errorsByCode.MISSING_NAME.length} rows without names`);
+      // Show error and possibly abort
+    }
+    
+    // Log all errors for debugging
+    console.debug('All CSV errors:', results.errors);
+  }
+  
+} catch (error) {
+  // Handle catastrophic errors
+  console.error('CSV processing failed completely:', error);
+}
+```
+
+## Performance Considerations
+
+### Large File Handling
+
+For large CSV files:
+
+```typescript
+// Configure the parser for large file processing
+const parser = new CSVParser({
+  chunkSize: 1024 * 1024, // Process in 1MB chunks
+  progressCallback: (progress) => {
+    // Update progress UI
+    updateProgressBar(progress);
+  }
+});
+
+// Parse the file with streaming
+const results = await parser.parseFileStreaming(file);
+```
+
+### Worker-based Processing
+
+For UI responsiveness during CSV processing:
+
+```typescript
+// In your main code
+import { CSVWorker } from '@repo/spinner';
+
+const worker = new CSVWorker();
+
+worker.parseFile(file)
+  .on('progress', (progress) => {
+    updateProgressBar(progress);
+  })
+  .on('complete', (results) => {
+    // Handle completed parsing
+    displayResults(results);
+  })
+  .on('error', (error) => {
+    // Handle errors
+    showError(error);
+  });
+```
+
+## Customization
+
+### Custom Field Mapping
+
+```typescript
+// Define custom column mapping
+const customMapping = {
+  'Full Name': 'name',
+  'Contact Email': 'email',
+  'Entry Points': 'weight',
+  'Group': 'metadata.group',
+  'Member Since': 'metadata.memberSince'
+};
+
+// Configure parser with custom mapping
+const parser = new CSVParser({
+  columnMapping: customMapping
+});
+
+// Parse with custom mapping
+const results = parser.parse(csvString);
+```
+
+### Custom Validators
+
+```typescript
+// Define custom field validator
+const customValidator = {
+  name: (value) => {
+    // Must be at least 2 characters with a space
+    if (!value || value.length < 3 || !value.includes(' ')) {
+      return {
+        valid: false,
+        error: {
+          code: 'INVALID_NAME_FORMAT',
+          message: 'Name must be full name with space'
+        }
+      };
+    }
+    return { valid: true };
+  },
+  email: (value) => {
+    // Must be from specific domain
+    if (value && !value.endsWith('@ourcompany.com')) {
+      return {
+        valid: false,
+        error: {
+          code: 'INVALID_EMAIL_DOMAIN',
+          message: 'Email must be from @ourcompany.com domain'
+        }
+      };
+    }
+    return { valid: true };
+  }
+};
+
+// Configure parser with custom validators
+const parser = new CSVParser({
+  validators: customValidator
+});
+```
+
+## Next Steps
+
+- [CSV Integration Overview](/docs/csv) - General CSV integration documentation
+- [CSV Format Specification](/docs/csv/format) - Detailed CSV format documentation
+- [Spinner API Reference](/docs/spinner/api-reference) - Complete spinner API reference

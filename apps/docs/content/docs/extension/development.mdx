@@ -1,0 +1,680 @@
+---
+title: Extension Development Guide
+description: Comprehensive guide for developers working on the Winner Spinner Chrome extension
+---
+
+# Extension Development Guide
+
+Comprehensive guide for developers working on the Winner Spinner Chrome extension.
+
+## Overview
+
+This guide provides detailed information for developers who want to contribute to or extend the Winner Spinner Chrome extension. It covers the development environment setup, architecture, best practices, and common workflows.
+
+## Getting Started
+
+### Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** (version 18 or higher, avoid 23.1 for production builds)
+- **pnpm** (version 8 or higher)
+- **Git**
+- **Chrome** (latest version recommended)
+- **Visual Studio Code** or another code editor
+
+### Development Environment Setup
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/CodingButter/bettermadetech.git
+cd bettermadetech
+```
+
+2. Install dependencies:
+
+```bash
+pnpm install
+```
+
+3. Build the extension for development:
+
+```bash
+# Build just the extension
+pnpm --filter better-made-tech-extension dev
+
+# Or build all packages (recommended for a clean setup)
+pnpm build
+```
+
+4. Load the extension in Chrome:
+   - Open Chrome and navigate to `chrome://extensions/`
+   - Enable "Developer mode" using the toggle in the top-right corner
+   - Click "Load unpacked" and select the `apps/extension/dist` directory
+   - The Winner Spinner extension should now appear in your extensions list
+
+5. Set up a development Directus instance (optional but recommended):
+
+```bash
+# Navigate to the Directus directory
+cd apps/directus
+
+# Copy the example environment file
+cp .env.example .env
+
+# Edit the environment variables as needed
+# ADMIN_EMAIL=admin@example.com
+# ADMIN_PASSWORD=password
+
+# Start Directus using Docker Compose
+docker-compose up -d
+```
+
+### Development Workflow
+
+1. Make changes to the source code in the `apps/extension` directory
+2. Rebuild the extension:
+
+```bash
+pnpm --filter better-made-tech-extension dev
+```
+
+3. Reload the extension in Chrome:
+   - Go to `chrome://extensions/`
+   - Find the Winner Spinner extension
+   - Click the reload icon (circular arrow)
+
+4. Test your changes
+
+For a smoother workflow, you can use watch mode:
+
+```bash
+pnpm --filter better-made-tech-extension dev --watch
+```
+
+This will automatically rebuild when files change, but you'll still need to reload the extension in Chrome.
+
+## Project Structure
+
+The extension source code is located in the `apps/extension` directory with the following structure:
+
+```
+apps/extension/
+├── build.sh             # Build script
+├── dist/                # Build output
+├── manifest.json        # Extension manifest
+├── package.json         # Package configuration
+├── postcss.config.cjs   # PostCSS configuration
+├── public/              # Static assets
+│   └── icons/           # Extension icons
+├── src/                 # Source code
+│   ├── background/      # Background script
+│   │   └── index.ts     # Main background script
+│   ├── components/      # Shared React components
+│   ├── content/         # Content scripts
+│   │   └── index.ts     # Main content script
+│   ├── globals.css      # Global styles
+│   ├── pages/           # UI pages
+│   │   ├── options/     # Options page
+│   │   │   ├── Options.tsx   # Options component
+│   │   │   ├── index.html    # Options HTML template
+│   │   │   └── index.tsx     # Options entry point
+│   │   ├── popup/       # Popup page
+│   │   │   ├── Popup.tsx     # Popup component
+│   │   │   ├── index.html    # Popup HTML template
+│   │   │   └── index.tsx     # Popup entry point
+│   │   └── sidepanel/   # Side panel page
+│   │       ├── SidePanel.tsx # Side panel component
+│   │       ├── index.html    # Side panel HTML template
+│   │       ├── index.tsx     # Side panel entry point
+│   │       └── sidepanel.css # Side panel styles
+│   └── utils/           # Utility functions
+│       ├── directus.ts       # Directus API client
+│       ├── env-config.ts     # Environment configuration
+│       ├── extension-spinner-client.ts # Extension-specific spinner client
+│       └── storage.ts        # Chrome storage utilities
+├── tailwind.config.js   # Tailwind CSS configuration
+├── tsconfig.json        # TypeScript configuration
+├── tsconfig.node.json   # Node-specific TypeScript configuration
+└── vite.config.ts       # Vite configuration
+```
+
+### Key Files
+
+- **manifest.json**: Defines the extension's permissions, resources, and capabilities
+- **src/background/index.ts**: Main background script that runs persistently
+- **src/content/index.ts**: Content script injected into web pages
+- **src/pages/popup/index.tsx**: Entry point for the popup UI
+- **src/pages/sidepanel/index.tsx**: Entry point for the side panel UI
+- **src/pages/options/index.tsx**: Entry point for the options page
+- **src/utils/extension-spinner-client.ts**: Spinner implementation for the extension
+
+## Architecture
+
+The Winner Spinner extension follows a modular architecture with clear separation of concerns:
+
+### Core Components
+
+1. **Background Service Worker**: Long-running script that handles:
+   - Authentication with Directus
+   - Data synchronization
+   - Event handling
+   - Message processing
+
+2. **UI Components**: React-based interfaces for:
+   - Popup (quick access)
+   - Side panel (detailed interface)
+   - Options page (configuration)
+
+3. **Content Scripts**: Injected into web pages to:
+   - Add context menu functionality
+   - Extract participant data from pages
+   - Embed spinner in compatible websites
+
+4. **Utilities**: Shared functionality:
+   - Chrome storage wrapper
+   - Directus API client
+   - Extension-specific spinner implementation
+
+### Data Flow
+
+The extension follows a unidirectional data flow pattern:
+
+1. User interacts with a UI component
+2. Component dispatches an action
+3. Action is processed by a service
+4. Service updates the state
+5. UI components react to state changes
+
+### Communication Flow
+
+Different parts of the extension communicate through message passing:
+
+- **Popup ↔ Background**: Using `chrome.runtime.sendMessage` and `chrome.runtime.onMessage`
+- **Side Panel ↔ Background**: Same as popup
+- **Content Scripts ↔ Background**: Same as popup
+- **Options ↔ Storage**: Direct access to Chrome storage
+- **Background ↔ Directus**: HTTP requests to the Directus API
+
+## Development Guidelines
+
+### Code Style
+
+Follow these code style guidelines:
+
+- Use TypeScript for type safety
+- Follow the React functional component pattern
+- Use named exports for better tree-shaking
+- Structure imports in groups: React/libraries, internal modules, types
+- Use consistent naming conventions:
+  - PascalCase for components
+  - camelCase for functions and variables
+  - kebab-case for file names
+
+### TypeScript Best Practices
+
+- Define explicit types for function parameters and return values
+- Use interfaces for object shapes
+- Use enums for fixed sets of values
+- Avoid `any` type when possible
+- Use type guards for type narrowing
+
+Example:
+
+```typescript
+// Good
+interface SpinnerProps {
+  items: string[];
+  duration: number;
+  onComplete?: (winner: string) => void;
+}
+
+const Spinner: React.FC<SpinnerProps> = ({ items, duration, onComplete }) => {
+  // Implementation
+};
+
+// Avoid
+const Spinner = (props: any) => {
+  const { items, duration, onComplete } = props;
+  // Implementation
+};
+```
+
+### React Best Practices
+
+- Use functional components with hooks
+- Memoize expensive computations with `useMemo`
+- Memoize callbacks with `useCallback`
+- Use the Context API for state that needs to be shared between components
+- Break UI into small, reusable components
+
+Example:
+
+```typescript
+import React, { useState, useCallback, useMemo } from 'react';
+
+const SpinnerControl: React.FC<SpinnerControlProps> = ({ 
+  onSpin, 
+  disabled 
+}) => {
+  const [isSpinning, setIsSpinning] = useState(false);
+  
+  const handleSpin = useCallback(() => {
+    setIsSpinning(true);
+    onSpin().finally(() => setIsSpinning(false));
+  }, [onSpin]);
+  
+  const buttonText = useMemo(() => {
+    return isSpinning ? 'Spinning...' : 'Spin';
+  }, [isSpinning]);
+  
+  return (
+    <button 
+      onClick={handleSpin} 
+      disabled={disabled || isSpinning}
+      className="spinner-control-button"
+    >
+      {buttonText}
+    </button>
+  );
+};
+```
+
+### Chrome Extension Best Practices
+
+- Request only the permissions you need
+- Use the appropriate storage area (`sync` vs `local`)
+- Be mindful of performance in content scripts
+- Handle errors gracefully, especially in async operations
+- Use event listeners for cleanup to prevent memory leaks
+
+Example:
+
+```typescript
+// In background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'getData') {
+    // Handling async operations in message listeners
+    getDataAsync()
+      .then(data => sendResponse({ success: true, data }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    
+    // Return true to indicate async response
+    return true;
+  }
+});
+
+// Cleanup when extension is unloaded
+chrome.runtime.onSuspend.addListener(() => {
+  // Perform cleanup
+  saveState();
+  closeConnections();
+});
+```
+
+## Common Tasks
+
+### Adding a New Feature
+
+1. **Plan**: Define the feature and how it fits into the architecture
+2. **Component**: Create any necessary UI components
+3. **Service**: Implement the business logic in a service
+4. **Integration**: Connect the UI and service through actions
+5. **Testing**: Write tests for the feature
+6. **Documentation**: Update the documentation
+
+### Example: Adding a CSV Export Feature
+
+1. Create a new component:
+
+```typescript
+// src/components/CSVExport.tsx
+import React from 'react';
+
+interface CSVExportProps {
+  data: Record<string, any>[];
+  filename?: string;
+}
+
+export const CSVExport: React.FC<CSVExportProps> = ({ 
+  data, 
+  filename = 'export.csv' 
+}) => {
+  const handleExport = () => {
+    // Convert data to CSV
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map(item => 
+      Object.values(item).map(value => 
+        typeof value === 'string' ? `"${value}"` : value
+      ).join(',')
+    );
+    const csv = [headers, ...rows].join('\n');
+    
+    // Create download link
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  
+  return (
+    <button 
+      onClick={handleExport}
+      className="csv-export-button"
+    >
+      Export CSV
+    </button>
+  );
+};
+```
+
+2. Add the feature to the side panel:
+
+```typescript
+// src/pages/sidepanel/SidePanel.tsx
+import { CSVExport } from '../../components/CSVExport';
+
+// In your component
+const SidePanel: React.FC = () => {
+  const { participants } = useSpinnerContext();
+  
+  return (
+    <div className="side-panel">
+      {/* Other components */}
+      
+      <div className="export-section">
+        <h3>Export Data</h3>
+        <CSVExport 
+          data={participants} 
+          filename={`participants-${Date.now()}.csv`} 
+        />
+      </div>
+    </div>
+  );
+};
+```
+
+### Debugging Extensions
+
+1. **Background Service Worker**:
+   - Go to `chrome://extensions`
+   - Find Winner Spinner and click "service worker" link
+   - This opens DevTools for the background script
+
+2. **Popup**:
+   - Open the popup
+   - Right-click and select "Inspect"
+   - This opens DevTools for the popup
+
+3. **Side Panel**:
+   - Open the side panel
+   - Right-click and select "Inspect"
+   - This opens DevTools for the side panel
+
+4. **Content Scripts**:
+   - Open DevTools on a page with the content script
+   - Go to the "Sources" tab
+   - Look for the content script under "Content scripts" section
+
+5. **Storage**:
+   - Open DevTools in any extension context
+   - Go to the "Application" tab
+   - Expand "Storage" and select "Extension Storage"
+
+### Handling Chrome API Updates
+
+Chrome APIs evolve over time. Stay updated with the latest changes:
+
+1. Follow the [Chrome Extensions Documentation](https://developer.chrome.com/docs/extensions/)
+2. Subscribe to the [Chromium Blog](https://blog.chromium.org/)
+3. Test your extension with Chrome Canary to catch upcoming issues
+4. Use feature detection instead of version checking:
+
+```typescript
+// Good - Feature detection
+if (chrome.sidePanel) {
+  // Use side panel API
+} else {
+  // Fallback behavior
+}
+
+// Avoid - Version checking
+const chromeVersion = /Chrome\/([0-9]+)/.exec(navigator.userAgent)[1];
+if (parseInt(chromeVersion, 10) >= 114) {
+  // Assumes side panel API exists in Chrome 114+
+}
+```
+
+## Testing
+
+### Manual Testing
+
+1. Build the extension
+2. Load it in Chrome
+3. Test all key functionality:
+   - Creating and configuring spinners
+   - Adding and importing participants
+   - Spinning and displaying results
+   - Saving and loading data
+   - All UI components and interactions
+
+### Automated Testing
+
+The extension uses Jest for unit tests:
+
+```bash
+# Run tests
+pnpm --filter better-made-tech-extension test
+
+# Run tests with coverage
+pnpm --filter better-made-tech-extension test -- --coverage
+```
+
+### Writing Tests
+
+Create test files adjacent to the files they test with a `.test.ts` or `.test.tsx` extension:
+
+```typescript
+// src/utils/storage.test.ts
+import { storage } from './storage';
+
+// Mock chrome.storage
+global.chrome = {
+  storage: {
+    local: {
+      get: jest.fn(),
+      set: jest.fn(),
+      remove: jest.fn(),
+      clear: jest.fn(),
+    },
+  },
+} as any;
+
+describe('storage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  
+  it('should get a value from storage', async () => {
+    const mockValue = { testKey: 'testValue' };
+    chrome.storage.local.get.mockImplementation((key, callback) => {
+      callback(mockValue);
+    });
+    
+    const result = await storage.get('testKey');
+    
+    expect(chrome.storage.local.get).toHaveBeenCalledWith('testKey', expect.any(Function));
+    expect(result).toBe('testValue');
+  });
+  
+  // More tests...
+});
+```
+
+### Testing React Components
+
+Use React Testing Library to test components:
+
+```typescript
+// src/components/Spinner.test.tsx
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Spinner } from './Spinner';
+
+describe('Spinner', () => {
+  it('should render with the correct items', () => {
+    const items = ['Item 1', 'Item 2', 'Item 3'];
+    render(<Spinner items={items} duration={1000} />);
+    
+    items.forEach(item => {
+      expect(screen.getByText(item)).toBeInTheDocument();
+    });
+  });
+  
+  it('should call onComplete when spin finishes', async () => {
+    const onComplete = jest.fn();
+    const items = ['Item 1', 'Item 2'];
+    
+    render(
+      <Spinner 
+        items={items} 
+        duration={10} // Short duration for test
+        onComplete={onComplete} 
+      />
+    );
+    
+    fireEvent.click(screen.getByRole('button', { name: /spin/i }));
+    
+    // Wait for the spin to complete
+    await new Promise(r => setTimeout(r, 50));
+    
+    expect(onComplete).toHaveBeenCalledWith(expect.any(String));
+    expect(items).toContain(onComplete.mock.calls[0][0]);
+  });
+  
+  // More tests...
+});
+```
+
+## Building for Production
+
+To build the extension for production:
+
+```bash
+pnpm --filter better-made-tech-extension build
+```
+
+This creates optimized files in the `apps/extension/dist` directory.
+
+### Release Checklist
+
+Before publishing a new version:
+
+1. Update the version in `manifest.json` and `package.json`
+2. Run linting and tests:
+   ```bash
+   pnpm --filter better-made-tech-extension lint
+   pnpm --filter better-made-tech-extension test
+   ```
+3. Build for production:
+   ```bash
+   pnpm --filter better-made-tech-extension build
+   ```
+4. Test the production build thoroughly
+5. Create a zip file for submission:
+   ```bash
+   cd apps/extension/dist
+   zip -r ../winner-spinner-v1.0.0.zip *
+   ```
+6. Submit the zip file to the Chrome Web Store
+
+### Continuous Integration
+
+The project uses GitHub Actions for continuous integration:
+
+- **Lint**: Check code style
+- **Test**: Run automated tests
+- **Build**: Ensure the extension builds successfully
+- **Artifacts**: Create build artifacts
+
+CI workflows are defined in `.github/workflows/` directory.
+
+## Contributing
+
+### Contribution Process
+
+1. Find an issue to work on or create a new one
+2. Fork the repository
+3. Create a feature branch: `feature/your-feature-name`
+4. Make your changes
+5. Run tests and linting
+6. Submit a pull request with a clear description
+
+### Pull Request Guidelines
+
+- Keep PRs focused on a single feature or fix
+- Include relevant tests
+- Ensure all CI checks pass
+- Follow the code style guidelines
+- Write a clear PR description
+- Update documentation if needed
+
+### Code Review Process
+
+- All PRs require at least one review
+- Address review comments
+- Be responsive to feedback
+- Squash commits before merge
+
+## Troubleshooting
+
+### Common Issues
+
+#### Extension Not Loading
+
+- Check for console errors in the background service worker
+- Ensure the extension is properly built
+- Verify manifest.json is correct
+- Check for syntax errors in content scripts
+
+#### Chrome API Changes
+
+- Consult Chrome documentation for updated APIs
+- Check for deprecated features
+- Test with latest Chrome version
+
+#### React Component Issues
+
+- Check for missing dependencies in useEffect
+- Ensure proper cleanup in useEffect
+- Check for state updates after component unmount
+
+#### Build Issues
+
+- Clear the build cache:
+  ```bash
+  rm -rf apps/extension/dist
+  ```
+- Update dependencies:
+  ```bash
+  pnpm update
+  ```
+- Check Vite configuration for errors
+
+### Debugging Strategies
+
+1. Use `console.log` or `debugger` statements
+2. Leverage Chrome DevTools
+3. Inspect network requests
+4. Examine storage state
+5. Test in incognito mode to isolate from other extensions
+
+## Next Steps
+
+- [Chrome Extension Overview](/docs/extension) - General extension documentation
+- [Extension API Reference](/docs/extension/api) - Detailed API documentation
+- [Extension Configuration](/docs/extension/configuration) - Configuration options

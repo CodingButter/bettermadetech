@@ -1,0 +1,390 @@
+---
+title: CSV Integration
+description: Documentation for CSV integration with the Winner Spinner
+---
+
+# CSV Integration
+
+Documentation for CSV integration with the Winner Spinner.
+
+## Overview
+
+The Winner Spinner provides comprehensive CSV (Comma-Separated Values) integration for importing and exporting participant data. This feature allows users to quickly add large numbers of participants to their spinners, making it ideal for events, raffles, and contests.
+
+## Importing Participants
+
+### Basic Import
+
+To import participants from a CSV file:
+
+1. Open a spinner or create a new one
+2. Click the "Import" button
+3. Select your CSV file
+4. Review the detected columns and mappings
+5. Click "Import Participants"
+
+The spinner will automatically load the participants from your CSV file.
+
+### CSV Format
+
+The CSV file should contain at minimum a column for participant names. Additional columns for email, weight, and custom properties are also supported.
+
+#### Minimum Required Format
+
+A basic CSV file with just names:
+
+```csv
+Name
+John Smith
+Jane Doe
+Alex Johnson
+```
+
+#### Recommended Format
+
+A more comprehensive format with additional information:
+
+```csv
+Name,Email,Weight,Group,Ticket Number
+John Smith,john@example.com,1,Marketing,A123
+Jane Doe,jane@example.com,2,Sales,B456
+Alex Johnson,alex@example.com,1,Engineering,C789
+```
+
+### Column Mapping
+
+The CSV import feature automatically detects common column names and maps them to the appropriate fields:
+
+| Field | Recognized Column Names |
+|-------|-------------------------|
+| Name | "name", "participant", "participant name", "full name" |
+| Email | "email", "e-mail", "email address" |
+| Weight | "weight", "points", "score", "value" |
+
+Any other columns are preserved as metadata that can be displayed in the spinner.
+
+### Custom Column Mapping
+
+If your CSV uses different column names, you can manually map them during import:
+
+1. After selecting your CSV file, the import screen will show detected columns
+2. Click the dropdown next to each detected column
+3. Select the appropriate field (Name, Email, Weight, or Metadata)
+4. For metadata fields, you can specify a custom label
+
+### Handling Special Characters
+
+CSV files should be UTF-8 encoded to properly handle special characters, accents, and non-Latin alphabets.
+
+If your CSV file contains special characters like commas within fields, ensure they are properly quoted:
+
+```csv
+Name,Comment
+"Smith, John","First entry, very excited!"
+```
+
+### Large Files
+
+The CSV importer can handle files with thousands of participants. For very large files (10,000+ participants), the import process may take a few moments to complete.
+
+Performance recommendations:
+
+- Keep files under 50,000 participants for optimal performance
+- For extremely large datasets, consider splitting into multiple imports
+- Import times scale roughly linearly with the number of participants
+
+## Exporting Data
+
+### Exporting Participants
+
+To export your current participants to a CSV file:
+
+1. Open a spinner with participants loaded
+2. Click the "Export" button
+3. Select "Export Participants"
+4. Choose your export options
+5. Click "Download CSV"
+
+### Exporting Results
+
+You can also export spin results and history:
+
+1. Open a spinner with previous spins
+2. Click the "Export" button
+3. Select "Export Results"
+4. Choose your export options
+5. Click "Download CSV"
+
+### Export Options
+
+The following options are available when exporting:
+
+- **Include Header Row**: Add column headers (recommended)
+- **Include Metadata**: Export additional metadata fields 
+- **Export Format**: CSV or JSON format
+- **Unicode Encoding**: Use UTF-8 for international character support
+- **Date Format**: Choose between ISO format (YYYY-MM-DD) or localized format
+
+### Sample Export Formats
+
+#### Participants Export
+
+```csv
+Name,Email,Weight,Metadata.Group,Metadata.TicketNumber
+John Smith,john@example.com,1,Marketing,A123
+Jane Doe,jane@example.com,2,Sales,B456
+Alex Johnson,alex@example.com,1,Engineering,C789
+```
+
+#### Results Export
+
+```csv
+Timestamp,Winner,Duration,ParticipantCount
+2023-06-15T14:30:45Z,Jane Doe,3500,25
+2023-06-15T14:35:12Z,Alex Johnson,3000,25
+2023-06-15T14:40:05Z,John Smith,3200,25
+```
+
+## CSV Format Specification
+
+### Standard Format
+
+Winner Spinner works best with standard CSV files that follow these conventions:
+
+1. UTF-8 encoded text
+2. CRLF or LF line endings
+3. Comma-separated values
+4. First row contains header names
+5. Optional double quotes around fields with special characters
+
+### Field Requirements
+
+#### Name Field
+
+- **Required**: Yes
+- **Format**: Text
+- **Max Length**: 100 characters
+- **Constraints**: Must not be empty
+
+#### Email Field
+
+- **Required**: No
+- **Format**: Valid email address
+- **Max Length**: 255 characters
+
+#### Weight Field
+
+- **Required**: No
+- **Format**: Numeric
+- **Default**: 1
+- **Range**: 1-100
+- **Usage**: Higher values increase the probability of selection
+
+#### Metadata Fields
+
+- **Required**: No
+- **Format**: Any text or numeric data
+- **Usage**: Additional information displayed with the participant
+
+### Example Files
+
+#### Basic Example
+
+```csv
+Name
+John Smith
+Jane Doe
+Alex Johnson
+```
+
+#### Standard Example
+
+```csv
+Name,Email,Weight
+John Smith,john@example.com,1
+Jane Doe,jane@example.com,2
+Alex Johnson,alex@example.com,1
+```
+
+#### Comprehensive Example
+
+```csv
+Name,Email,Weight,Department,TicketNumber,RegistrationDate
+John Smith,john@example.com,1,Marketing,A123,2023-05-10
+Jane Doe,jane@example.com,2,Sales,B456,2023-05-11
+Alex Johnson,alex@example.com,1,Engineering,C789,2023-05-12
+```
+
+### Handling Invalid Data
+
+The CSV importer handles various data issues:
+
+- **Empty rows**: Automatically skipped
+- **Missing required fields**: Row is skipped and reported
+- **Invalid email format**: Email is ignored but participant is still imported
+- **Non-numeric weight**: Default weight (1) is applied
+- **Duplicate names**: Both entries are imported (can be filtered later)
+
+## Generating CSV Files
+
+### Using Spreadsheet Software
+
+You can create CSV files using common spreadsheet applications:
+
+#### Microsoft Excel
+
+1. Enter your data in a spreadsheet
+2. Go to File > Save As
+3. Choose CSV (Comma delimited) (*.csv) as the file type
+4. Click Save
+
+#### Google Sheets
+
+1. Enter your data in a spreadsheet
+2. Go to File > Download > Comma-separated values (.csv)
+3. The CSV file will download automatically
+
+#### LibreOffice Calc
+
+1. Enter your data in a spreadsheet
+2. Go to File > Save As
+3. Choose Text CSV (.csv) as the file type
+4. In the Export Text File dialog, select:
+   - Character set: Unicode (UTF-8)
+   - Field delimiter: , (comma)
+   - Text delimiter: " (double quote)
+5. Click Save
+
+### Using Programming Languages
+
+You can also generate CSV files programmatically:
+
+#### JavaScript
+
+```javascript
+// Sample data
+const participants = [
+  { name: "John Smith", email: "john@example.com", weight: 1 },
+  { name: "Jane Doe", email: "jane@example.com", weight: 2 },
+  { name: "Alex Johnson", email: "alex@example.com", weight: 1 }
+];
+
+// Convert to CSV
+const headers = Object.keys(participants[0]);
+const csvRows = [
+  headers.join(','), // Header row
+  ...participants.map(p => 
+    headers.map(header => 
+      // Handle special characters with quotes
+      typeof p[header] === 'string' && p[header].includes(',') 
+        ? `"${p[header]}"` 
+        : p[header]
+    ).join(',')
+  )
+];
+
+const csvContent = csvRows.join('\n');
+
+// In a browser: Create and download CSV file
+const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+const url = URL.createObjectURL(blob);
+const link = document.createElement("a");
+link.setAttribute("href", url);
+link.setAttribute("download", "participants.csv");
+link.style.visibility = 'hidden';
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+```
+
+#### Python
+
+```python
+import csv
+
+# Sample data
+participants = [
+    {"name": "John Smith", "email": "john@example.com", "weight": 1},
+    {"name": "Jane Doe", "email": "jane@example.com", "weight": 2},
+    {"name": "Alex Johnson", "email": "alex@example.com", "weight": 1}
+]
+
+# Write to CSV
+with open('participants.csv', 'w', newline='', encoding='utf-8') as file:
+    writer = csv.DictWriter(file, fieldnames=participants[0].keys())
+    writer.writeheader()
+    writer.writerows(participants)
+```
+
+## Advanced Usage
+
+### Batch Processing
+
+For event organizers who need to process multiple participant lists, the Winner Spinner supports batch processing:
+
+1. Prepare multiple CSV files with participants for different spinners
+2. Use the batch import feature (available in the Chrome extension)
+3. Select multiple CSV files
+4. Match each file to a spinner
+5. Import all at once
+
+### Weight Distribution
+
+The Weight field can be used to control the probability of selecting each participant:
+
+- A weight of 1 is the default
+- A weight of 2 makes the participant twice as likely to be selected
+- A weight of 3 makes the participant three times as likely to be selected
+- And so on...
+
+This is useful for:
+- Giving certain participants more chances (e.g., "for each $10 donated, get an extra entry")
+- Prioritizing certain groups
+- Creating tiered raffle systems
+
+### Template Files
+
+Download our template files to get started quickly:
+
+- [Basic Template](/templates/basic-template.csv)
+- [Standard Template](/templates/standard-template.csv)
+- [Comprehensive Template](/templates/comprehensive-template.csv)
+
+## Troubleshooting
+
+### Common CSV Issues
+
+#### Import Errors
+
+- **"Invalid CSV format"**: Check that your file is properly formatted with commas as delimiters
+- **"No participants found"**: Ensure your CSV has a header row and at least one data row
+- **"Column mapping failed"**: Manually map columns if automatic detection fails
+- **"File too large"**: Split very large files into smaller ones (under 50,000 rows)
+
+#### Character Encoding Issues
+
+If you see strange characters or question marks in imported names:
+1. Ensure your CSV is saved with UTF-8 encoding
+2. Re-export from your spreadsheet software with UTF-8 encoding
+3. If problems persist, try adding a BOM (Byte Order Mark) to your CSV file
+
+#### Duplicate Handling
+
+By default, the importer allows duplicates. To avoid duplicates:
+1. Enable the "Skip duplicates" option during import
+2. Or use the "Find duplicates" feature after import to identify and manage them
+
+### CSV Validation
+
+Before importing, you can validate your CSV file:
+1. Go to the spinner page
+2. Click "Import" > "Validate CSV"
+3. Select your file
+4. The validator will check format, encoding, and data validity
+5. Review and fix any reported issues
+
+## Next Steps
+
+- [CSV Format Specification](/docs/csv/format) - Detailed CSV format documentation
+- [Programmatic CSV Integration](/docs/csv/api) - API for CSV operations
+- [Chrome Extension Documentation](/docs/extension) - Learn about the Chrome extension

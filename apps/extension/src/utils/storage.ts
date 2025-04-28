@@ -49,7 +49,7 @@ export interface StorageItems {
     /** Whether to clear data when extension is closed */
     clearDataOnClose?: boolean;
     /** Additional options (for future expansion) */
-    [key: string]: any;
+    [key: string]: unknown;
   };
   /** User account information */
   userData?: {
@@ -62,7 +62,7 @@ export interface StorageItems {
     /** Authentication token */
     token?: string;
     /** Additional user data (for future expansion) */
-    [key: string]: any;
+    [key: string]: unknown;
   };
   /** Spinner configuration settings */
   spinnerConfig?: {
@@ -85,7 +85,7 @@ export interface StorageItems {
     authToken?: string;
   };
   /** Additional storage items (for future expansion) */
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

@@ -1,0 +1,260 @@
+---
+title: Directus Data Schema
+description: Complete data schema used in the Winner Spinner Directus backend
+---
+
+# Directus Data Schema
+
+This document outlines the complete data schema used in the Winner Spinner Directus backend.
+
+## Overview
+
+The Winner Spinner data schema consists of several collections that work together to store spinner configurations, participant data, and results. This documentation provides a comprehensive reference for developers working with the data layer.
+
+## Collections
+
+### Spinners
+
+The `spinners` collection stores spinner configurations and settings.
+
+#### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Primary key |
+| `name` | String | Display name of the spinner |
+| `created_at` | DateTime | Creation timestamp |
+| `updated_at` | DateTime | Last update timestamp |
+| `created_by` | UUID | User who created the spinner |
+| `user_id` | UUID | Owner of the spinner |
+| `config` | JSON | Spinner configuration object |
+
+#### Config Object Structure
+
+```typescript
+interface SpinnerConfig {
+  colorScheme: {
+    primary: string;   // Primary color (hex)
+    secondary: string; // Secondary color (hex)
+    text: string;      // Text color (hex)
+    background?: string; // Optional background color (hex)
+  };
+  size: 'sm' | 'md' | 'lg';  // Spinner size
+  duration: number;          // Spin duration in milliseconds
+  initialRotation: number;   // Initial rotation in degrees
+  ariaLabel?: string;        // Accessibility label
+  autoSpin?: boolean;        // Whether to spin automatically on mount
+}
+```
+
+### Participants
+
+The `participants` collection stores information about raffle participants.
+
+#### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Primary key |
+| `spinner_id` | UUID | Foreign key to spinners collection |
+| `name` | String | Participant name |
+| `email` | String | Optional email address |
+| `weight` | Integer | Weight for weighted random selection (default: 1) |
+| `created_at` | DateTime | Creation timestamp |
+| `status` | String | Status enum: 'active', 'removed', 'winner' |
+| `metadata` | JSON | Additional custom data |
+
+#### Metadata Object Example
+
+```json
+{
+  "department": "Marketing",
+  "ticket_number": "A123",
+  "registration_date": "2023-05-10",
+  "notes": "VIP attendee"
+}
+```
+
+### Results
+
+The `results` collection stores spinner results and winners.
+
+#### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Primary key |
+| `spinner_id` | UUID | Foreign key to spinners collection |
+| `winner_id` | UUID | Foreign key to participants collection |
+| `timestamp` | DateTime | When the spin occurred |
+| `duration` | Integer | Actual spin duration in milliseconds |
+| `items` | JSON | Array of participant names in the spin |
+
+### Users
+
+The `directus_users` system collection manages user accounts with extensions.
+
+#### Custom Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `spinner_preferences` | JSON | User preferences for spinners |
+| `last_login` | DateTime | Last login timestamp |
+| `login_count` | Integer | Number of times logged in |
+
+#### Spinner Preferences Object
+
+```json
+{
+  "defaultColorScheme": {
+    "primary": "#3b82f6",
+    "secondary": "#10b981",
+    "text": "#ffffff"
+  },
+  "defaultDuration": 3000,
+  "defaultSize": "md",
+  "theme": "light"
+}
+```
+
+## Relationships
+
+### One-to-Many
+
+- `users` → `spinners`: One user can have many spinners
+- `spinners` → `participants`: One spinner can have many participants
+- `spinners` → `results`: One spinner can have many results
+
+### Many-to-One
+
+- `participants` → `spinners`: Many participants belong to one spinner
+- `results` → `spinners`: Many results belong to one spinner
+- `results` → `participants`: Many results can reference the same winner
+
+## Permissions
+
+The following permissions are set for each collection:
+
+### Public Access (no auth)
+
+- No access to any collections
+
+### Authenticated Users
+
+#### Spinners
+- Create: Own records only
+- Read: Own records only
+- Update: Own records only
+- Delete: Own records only
+
+#### Participants
+- Create: If related spinner is owned
+- Read: If related spinner is owned
+- Update: If related spinner is owned
+- Delete: If related spinner is owned
+
+#### Results
+- Create: If related spinner is owned
+- Read: If related spinner is owned
+- Update: None
+- Delete: None
+
+### Admin Users
+
+- Full access to all collections
+
+## Indexes
+
+The following indexes are created for performance optimization:
+
+| Collection | Field(s) | Type | Purpose |
+|------------|----------|------|---------|
+| `spinners` | `user_id` | BTree | Fast lookup by user |
+| `participants` | `spinner_id` | BTree | Fast lookup by spinner |
+| `participants` | `email` | BTree | Fast lookup by email |
+| `results` | `spinner_id` | BTree | Fast lookup by spinner |
+| `results` | `timestamp` | BTree | Fast sorting by time |
+
+## Hooks and Automations
+
+The following hooks and automations are configured in the Directus instance:
+
+### Before Create: Spinners
+
+- Set default values if not provided
+- Validate config structure
+
+### After Create: Results
+
+- Update participant status to 'winner' for the winner
+- Send notification of winner (if configured)
+
+### Before Update: Participants
+
+- Prevent modifications to participants used in results
+
+## Validation Rules
+
+The following validation rules are applied to the collections:
+
+### Spinners
+
+- `name`: Required, max 100 characters
+- `config`: Required, valid JSON structure
+
+### Participants
+
+- `name`: Required, max 100 characters
+- `email`: Optional, valid email format
+- `weight`: Min: 1, Max: 100
+
+### Results
+
+- `winner_id`: Must be a valid participant ID in the spinner
+- `duration`: Min: 500ms, Max: 10000ms
+
+## Example Queries
+
+### Get All Spinners with Participant Count
+
+```sql
+SELECT
+  s.id,
+  s.name,
+  COUNT(p.id) AS participant_count
+FROM spinners s
+LEFT JOIN participants p ON s.id = p.spinner_id
+WHERE s.user_id = :user_id
+GROUP BY s.id, s.name
+ORDER BY s.created_at DESC;
+```
+
+### Get Winners for a Spinner
+
+```sql
+SELECT
+  r.id AS result_id,
+  r.timestamp,
+  p.name AS winner_name,
+  p.email AS winner_email,
+  p.metadata
+FROM results r
+JOIN participants p ON r.winner_id = p.id
+WHERE r.spinner_id = :spinner_id
+ORDER BY r.timestamp DESC;
+```
+
+## Schema Evolution
+
+The schema supports the following future extensions:
+
+- Additional metadata fields for spinners and participants
+- Support for custom spinner visualizations
+- Integration with external services via webhooks
+- Extended analytics for spinner usage
+
+## Next Steps
+
+- [Directus Overview](/docs/directus) - General Directus integration
+- [Directus API](/docs/directus/api) - API reference documentation
+- [Integration Examples](/docs/directus/examples) - Example integration patterns

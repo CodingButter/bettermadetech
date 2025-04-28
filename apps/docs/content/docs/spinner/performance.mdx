@@ -1,0 +1,287 @@
+---
+title: Performance Optimization
+description: Guidelines for optimizing spinner performance
+---
+
+# Performance Optimization
+
+This guide provides strategies for optimizing the performance of the spinner component, ensuring smooth animations and efficient rendering across all devices and platforms.
+
+## Core Performance Principles
+
+The spinner package is designed with performance in mind, but there are several ways to further optimize based on your specific needs:
+
+1. **Minimize re-renders**: Prevent unnecessary component re-rendering
+2. **Optimize animations**: Use hardware acceleration and efficient animation techniques
+3. **Reduce bundle size**: Only import what you need
+4. **Improve memory management**: Clean up resources properly
+
+## Rendering Optimization
+
+### Memoize Components
+
+When using the spinner within other components, consider memoizing to prevent unnecessary re-renders:
+
+```tsx
+import { memo } from 'react';
+import { WebSpinnerClient } from '@repo/spinner';
+
+// Memoize the component to prevent re-renders when parent re-renders
+const MemoizedSpinner = memo(WebSpinnerClient);
+
+function MyComponent() {
+  return (
+    <MemoizedSpinner 
+      items={['Item 1', 'Item 2']}
+      // Other props...
+    />
+  );
+}
+```
+
+### Stable References
+
+Use stable references for callbacks and arrays to prevent re-renders:
+
+```tsx
+import { useCallback, useMemo } from 'react';
+import { WebSpinnerClient } from '@repo/spinner';
+
+function MyComponent() {
+  // Stable callback reference
+  const handleComplete = useCallback((winner) => {
+    console.log(`Winner: ${winner}`);
+  }, []);
+
+  // Stable items array reference
+  const items = useMemo(() => ['Item 1', 'Item 2', 'Item 3'], []);
+
+  return (
+    <WebSpinnerClient 
+      items={items}
+      onComplete={handleComplete}
+    />
+  );
+}
+```
+
+## Animation Optimization
+
+### Enable Hardware Acceleration
+
+The spinner uses CSS transforms with hardware acceleration by default. You can further optimize with:
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  useHardwareAcceleration={true}
+/>
+```
+
+### Optimize Animation Frames
+
+For smoother animations, especially on lower-end devices:
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  // Use requestAnimationFrame for smoother animation
+  useRequestAnimationFrame={true}
+  // Lower segment count for better performance
+  maxSegments={12}
+/>
+```
+
+### Adjust Animation Complexity
+
+On mobile or lower-powered devices, consider simplifying animations:
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  // Simpler animation style for better performance
+  animationStyle="simple"
+  // Disable unnecessary visual effects
+  disableEffects={true}
+/>
+```
+
+## Bundle Size Optimization
+
+### Import Only What You Need
+
+Instead of importing the entire package, import only the specific components you need:
+
+```tsx
+// Instead of
+import { Spinner } from '@repo/spinner';
+
+// Use specific imports
+import { WebSpinnerClient } from '@repo/spinner/web';
+```
+
+### Tree-Shaking Support
+
+The package supports tree-shaking. Ensure your bundler is configured to take advantage of this.
+
+## Memory Management
+
+### Proper Cleanup
+
+The spinner components handle cleanup automatically in most cases, but for custom implementations:
+
+```tsx
+import { useEffect, useRef } from 'react';
+import { createSpinner } from '@repo/spinner/core';
+
+function CustomSpinnerComponent() {
+  const spinnerRef = useRef(null);
+  
+  useEffect(() => {
+    const spinner = createSpinner({
+      // Configuration...
+    });
+    
+    spinnerRef.current = spinner;
+    
+    // Cleanup function
+    return () => {
+      spinner.dispose();
+    };
+  }, []);
+  
+  // Component JSX...
+}
+```
+
+### Optimize for Long-Running Applications
+
+For applications that run for extended periods:
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  // Periodically clean up resources
+  enablePeriodicCleanup={true}
+  // Disconnect observer when not visible
+  disconnectWhenHidden={true}
+/>
+```
+
+## Platform-Specific Optimizations
+
+### Chrome Extension
+
+For the extension environment:
+
+```tsx
+<ExtensionSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  // Use lightweight storage option
+  storage="memory"
+  // Optimize DOM updates
+  batchDomUpdates={true}
+/>
+```
+
+### Mobile Web
+
+For mobile browsers:
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  // Mobile-optimized rendering
+  mobileOptimized={true}
+  // Reduced animation complexity
+  reducedEffects={true}
+/>
+```
+
+## Performance Testing
+
+To validate performance improvements:
+
+1. **React DevTools Profiler**: Identify unnecessary renders
+2. **Chrome Performance Tab**: Analyze animation performance and frame rates
+3. **Lighthouse**: Run performance audits
+4. **Mobile Testing**: Test on actual mobile devices
+
+## Measuring Performance
+
+The spinner includes built-in performance measurement utilities:
+
+```tsx
+<WebSpinnerClient 
+  items={['Item 1', 'Item 2']}
+  // Enable performance measurement
+  measurePerformance={true}
+  // Get performance metrics
+  onPerformanceReport={(metrics) => {
+    console.log('Animation FPS:', metrics.fps);
+    console.log('Render time:', metrics.renderTime);
+  }}
+/>
+```
+
+## Common Performance Issues
+
+| Issue | Solution |
+|-------|----------|
+| Stuttering animation | Enable hardware acceleration and reduce segments |
+| High CPU usage | Simplify animation style and disable effects |
+| Slow initial render | Reduce items count or use dynamic loading |
+| Memory leaks | Ensure proper cleanup in custom implementations |
+
+## Best Practices Summary
+
+1. **Memoize components and callbacks** to prevent unnecessary re-renders
+2. **Use hardware acceleration** for smoother animations
+3. **Optimize for the target device** by adjusting animation complexity
+4. **Import only what you need** to reduce bundle size
+5. **Implement proper cleanup** to prevent memory leaks
+6. **Measure and test performance** on actual devices
+
+## Advanced Example
+
+Here's a performance-optimized spinner implementation:
+
+```tsx
+import { memo, useCallback, useMemo } from 'react';
+import { WebSpinnerClient } from '@repo/spinner/web';
+
+const PerformanceOptimizedSpinner = memo(function OptimizedSpinner({ 
+  onWinnerSelected,
+  isMobile
+}) {
+  // Stable items array
+  const items = useMemo(() => [
+    'Item 1', 'Item 2', 'Item 3', 'Item 4'
+  ], []);
+  
+  // Stable callback
+  const handleComplete = useCallback((winner) => {
+    onWinnerSelected(winner);
+  }, [onWinnerSelected]);
+  
+  // Optimize settings based on device
+  const animationStyle = isMobile ? 'simple' : 'smooth';
+  const maxSegments = isMobile ? 8 : 16;
+  
+  return (
+    <WebSpinnerClient 
+      items={items}
+      onComplete={handleComplete}
+      animationStyle={animationStyle}
+      maxSegments={maxSegments}
+      useHardwareAcceleration={true}
+      useRequestAnimationFrame={true}
+      disableEffects={isMobile}
+      disconnectWhenHidden={true}
+      batchDomUpdates={true}
+      measurePerformance={true}
+      onPerformanceReport={console.log}
+    />
+  );
+});
+```

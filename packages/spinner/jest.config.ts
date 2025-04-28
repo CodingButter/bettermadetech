@@ -8,8 +8,10 @@ const config: Config = {
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: 'tsconfig.json',
+      useESM: true,
     }],
   },
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testMatch: ['**/__tests__/**/*.test.(ts|tsx)'],
   moduleNameMapper: {

@@ -1,0 +1,676 @@
+---
+title: Chrome Extension API Reference
+description: Detailed API reference for the Winner Spinner Chrome extension
+---
+
+# Chrome Extension API Reference
+
+Detailed API reference for the Winner Spinner Chrome extension.
+
+## Overview
+
+This document provides comprehensive information about the APIs used in the Winner Spinner Chrome extension. It covers both the internal APIs created for the extension and the Chrome APIs used for extension functionality.
+
+## Extension Spinner Client
+
+The `ExtensionSpinnerClient` is the core class that provides spinner functionality specifically for the Chrome extension.
+
+### Import
+
+```typescript
+import { ExtensionSpinnerClient } from '@repo/spinner';
+```
+
+### Usage
+
+```typescript
+const spinner = new ExtensionSpinnerClient({
+  items: ['Item 1', 'Item 2', 'Item 3'],
+  duration: 3000,
+  storage: 'chrome',
+});
+
+// Trigger a spin
+const winner = await spinner.spin();
+console.log(`Winner: ${winner}`);
+```
+
+### Constructor Options
+
+| Option | Type | Description | Default |
+|--------|------|-------------|---------|
+| `items` | `string[]` | Array of items to display in the spinner | Required |
+| `duration` | `number` | Duration of spin in milliseconds | `3000` |
+| `colorScheme` | `ColorScheme` | Custom colors for the spinner | Default colors |
+| `size` | `'sm' \| 'md' \| 'lg'` | Size of the spinner | `'md'` |
+| `initialRotation` | `number` | Initial rotation in degrees | `0` |
+| `storage` | `'chrome' \| 'memory'` | Storage type for spinner data | `'chrome'` |
+| `persistResults` | `boolean` | Save results between sessions | `false` |
+| `storageKey` | `string` | Key for storing preferences | `'spinner_prefs'` |
+
+### Methods
+
+#### `spin()`
+
+Triggers a spin and returns the winner.
+
+```typescript
+const winner = await spinner.spin();
+```
+
+**Returns:** `Promise<string>` - The selected winner
+
+#### `reset()`
+
+Resets the spinner to its initial state.
+
+```typescript
+spinner.reset();
+```
+
+#### `setItems(items: string[])`
+
+Updates the spinner items.
+
+```typescript
+spinner.setItems(['New Item 1', 'New Item 2']);
+```
+
+#### `getResults()`
+
+Retrieves previous spin results.
+
+```typescript
+const results = await spinner.getResults();
+```
+
+**Returns:** `Promise<SpinnerResult[]>` - Array of previous results
+
+#### `clearResults()`
+
+Clears stored spin results.
+
+```typescript
+await spinner.clearResults();
+```
+
+#### `getConfig()`
+
+Returns the current spinner configuration.
+
+```typescript
+const config = spinner.getConfig();
+```
+
+**Returns:** `SpinnerConfig` - Current configuration
+
+#### `setConfig(config: Partial<SpinnerConfig>)`
+
+Updates the spinner configuration.
+
+```typescript
+spinner.setConfig({
+  colorScheme: {
+    primary: '#ff0000',
+    secondary: '#00ff00',
+    text: '#ffffff',
+  },
+});
+```
+
+### Events
+
+The `ExtensionSpinnerClient` emits the following events:
+
+| Event | Description | Payload |
+|-------|-------------|---------|
+| `spin-start` | Fired when a spin begins | None |
+| `spin-complete` | Fired when a spin completes | `{ winner: string }` |
+| `item-change` | Fired when items are updated | `{ items: string[] }` |
+| `config-change` | Fired when configuration changes | `{ config: SpinnerConfig }` |
+| `result-saved` | Fired when a result is saved | `{ result: SpinnerResult }` |
+
+## Chrome Storage API Wrapper
+
+The extension provides a wrapper around Chrome's storage API for easier usage with async/await patterns.
+
+### Import
+
+```typescript
+import { storage } from '../utils/storage';
+```
+
+### Methods
+
+#### `get(key: string)`
+
+Retrieves a value from Chrome storage.
+
+```typescript
+const value = await storage.get('myKey');
+```
+
+#### `set(key: string, value: any)`
+
+Stores a value in Chrome storage.
+
+```typescript
+await storage.set('myKey', { data: 'example' });
+```
+
+#### `remove(key: string)`
+
+Removes a value from Chrome storage.
+
+```typescript
+await storage.remove('myKey');
+```
+
+#### `clear()`
+
+Clears all values from Chrome storage.
+
+```typescript
+await storage.clear();
+```
+
+#### `getAll()`
+
+Retrieves all values from Chrome storage.
+
+```typescript
+const allValues = await storage.getAll();
+```
+
+#### `getBytesInUse(keys?: string | string[])`
+
+Gets the amount of storage space used.
+
+```typescript
+const bytes = await storage.getBytesInUse();
+```
+
+## Directus API Client
+
+The extension includes a dedicated client for interacting with the Directus backend.
+
+### Import
+
+```typescript
+import { DirectusClient } from '../utils/directus';
+```
+
+### Usage
+
+```typescript
+const client = new DirectusClient({
+  url: 'https://directus.example.com',
+});
+
+// Login
+await client.login({
+  email: 'user@example.com',
+  password: 'password',
+});
+
+// Get spinners
+const spinners = await client.getItems('spinners');
+```
+
+### Methods
+
+#### `login(credentials: { email: string, password: string })`
+
+Authenticates with the Directus server.
+
+```typescript
+await client.login({
+  email: 'user@example.com',
+  password: 'password',
+});
+```
+
+#### `refresh(refreshToken: string)`
+
+Refreshes an expired access token.
+
+```typescript
+await client.refresh(refreshToken);
+```
+
+#### `logout()`
+
+Logs out and clears authentication data.
+
+```typescript
+await client.logout();
+```
+
+#### `getItems(collection: string, options?: QueryOptions)`
+
+Retrieves items from a collection.
+
+```typescript
+const spinners = await client.getItems('spinners', {
+  filter: { user_id: { _eq: '$CURRENT_USER' } },
+  sort: ['-created_at'],
+  limit: 10,
+});
+```
+
+#### `getItem(collection: string, id: string, options?: QueryOptions)`
+
+Retrieves a single item by ID.
+
+```typescript
+const spinner = await client.getItem('spinners', spinnerId);
+```
+
+#### `createItem(collection: string, data: Record<string, any>)`
+
+Creates a new item in a collection.
+
+```typescript
+const newSpinner = await client.createItem('spinners', {
+  name: 'New Spinner',
+  config: { /* config object */ },
+});
+```
+
+#### `updateItem(collection: string, id: string, data: Record<string, any>)`
+
+Updates an existing item.
+
+```typescript
+await client.updateItem('spinners', spinnerId, {
+  name: 'Updated Spinner Name',
+});
+```
+
+#### `deleteItem(collection: string, id: string)`
+
+Deletes an item from a collection.
+
+```typescript
+await client.deleteItem('spinners', spinnerId);
+```
+
+## Chrome APIs Used
+
+The extension uses various Chrome APIs to provide its functionality.
+
+### Storage API
+
+Used for storing spinner configurations, participant data, and user preferences.
+
+```typescript
+// Save data
+await chrome.storage.local.set({ key: value });
+
+// Retrieve data
+const result = await chrome.storage.local.get('key');
+const value = result.key;
+```
+
+[Chrome Storage API Documentation](https://developer.chrome.com/docs/extensions/reference/storage)
+
+### Identity API
+
+Used for authentication flows.
+
+```typescript
+// Launch web auth flow
+const authResult = await chrome.identity.launchWebAuthFlow({
+  url: authURL,
+  interactive: true,
+});
+```
+
+[Chrome Identity API Documentation](https://developer.chrome.com/docs/extensions/reference/identity)
+
+### Tabs API
+
+Used to interact with browser tabs.
+
+```typescript
+// Create a new tab
+const tab = await chrome.tabs.create({
+  url: 'https://example.com',
+});
+
+// Get the current tab
+const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+```
+
+[Chrome Tabs API Documentation](https://developer.chrome.com/docs/extensions/reference/tabs)
+
+### Runtime API
+
+Used for communication between different parts of the extension.
+
+```typescript
+// Send a message
+await chrome.runtime.sendMessage({
+  action: 'spin',
+  data: { spinnerId: 'abc123' },
+});
+
+// Listen for messages
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'spin') {
+    // Handle spin action
+    sendResponse({ success: true });
+  }
+  return true; // Required for async sendResponse
+});
+```
+
+[Chrome Runtime API Documentation](https://developer.chrome.com/docs/extensions/reference/runtime)
+
+### Side Panel API
+
+Used to control the extension's side panel.
+
+```typescript
+// Open the side panel
+chrome.sidePanel.open();
+
+// Set side panel options
+chrome.sidePanel.setOptions({
+  path: 'sidepanel.html',
+  enabled: true,
+});
+```
+
+[Chrome Side Panel API Documentation](https://developer.chrome.com/docs/extensions/reference/sidePanel)
+
+### Context Menus API
+
+Used to add items to the browser's context menu.
+
+```typescript
+// Create a context menu item
+chrome.contextMenus.create({
+  id: 'add-to-spinner',
+  title: 'Add selection to Winner Spinner',
+  contexts: ['selection'],
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'add-to-spinner') {
+    // Handle the action
+  }
+});
+```
+
+[Chrome Context Menus API Documentation](https://developer.chrome.com/docs/extensions/reference/contextMenus)
+
+### Notifications API
+
+Used to display notifications to the user.
+
+```typescript
+// Create a notification
+chrome.notifications.create({
+  type: 'basic',
+  iconUrl: 'icons/icon128.png',
+  title: 'Winner Selected!',
+  message: `The winner is: ${winner}`,
+});
+
+// Listen for notification clicks
+chrome.notifications.onClicked.addListener((notificationId) => {
+  // Handle notification click
+});
+```
+
+[Chrome Notifications API Documentation](https://developer.chrome.com/docs/extensions/reference/notifications)
+
+## Message Passing
+
+The extension uses message passing for communication between different contexts.
+
+### Background to Popup/Side Panel
+
+```typescript
+// In background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'getSpinners') {
+    getSpinners()
+      .then(spinners => sendResponse({ success: true, data: spinners }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Keep the message channel open for async response
+  }
+});
+
+// In popup/side panel
+const getSpinners = async () => {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(
+      { action: 'getSpinners' },
+      response => {
+        if (response && response.success) {
+          resolve(response.data);
+        } else {
+          reject(new Error(response?.error || 'Failed to get spinners'));
+        }
+      }
+    );
+  });
+};
+```
+
+### Content Script to Background
+
+```typescript
+// In content script
+const addParticipant = async (name) => {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(
+      { action: 'addParticipant', data: { name } },
+      response => {
+        if (response && response.success) {
+          resolve(response.data);
+        } else {
+          reject(new Error(response?.error || 'Failed to add participant'));
+        }
+      }
+    );
+  });
+};
+
+// In background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'addParticipant') {
+    addParticipant(message.data.name)
+      .then(participant => sendResponse({ success: true, data: participant }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+});
+```
+
+## Types and Interfaces
+
+### Spinner Types
+
+```typescript
+interface SpinnerConfig {
+  colorScheme: ColorScheme;
+  size: 'sm' | 'md' | 'lg';
+  duration: number;
+  initialRotation: number;
+  ariaLabel?: string;
+  autoSpin?: boolean;
+}
+
+interface ColorScheme {
+  primary: string;
+  secondary: string;
+  text: string;
+  background?: string;
+}
+
+interface SpinnerResult {
+  winner: string;
+  timestamp: number;
+  duration: number;
+  items: string[];
+}
+
+interface SpinnerPreferences {
+  defaultColorScheme: ColorScheme;
+  defaultDuration: number;
+  defaultSize: 'sm' | 'md' | 'lg';
+  theme: 'light' | 'dark' | 'auto';
+}
+```
+
+### Directus Types
+
+```typescript
+interface DirectusAuthResponse {
+  access_token: string;
+  expires: number;
+  refresh_token: string;
+  user?: DirectusUser;
+}
+
+interface DirectusUser {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  avatar?: string;
+  role?: string;
+}
+
+interface QueryOptions {
+  filter?: Record<string, any>;
+  sort?: string[];
+  limit?: number;
+  page?: number;
+  fields?: string[];
+  meta?: string;
+}
+
+interface DirectusResponse<T> {
+  data: T;
+  meta?: {
+    filter_count?: number;
+    total_count?: number;
+  };
+}
+```
+
+### Message Types
+
+```typescript
+interface Message {
+  action: string;
+  data?: Record<string, any>;
+}
+
+interface MessageResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
+```
+
+## Error Handling
+
+The extension uses a standardized error handling approach:
+
+```typescript
+class ExtensionError extends Error {
+  code: string;
+  
+  constructor(message: string, code: string) {
+    super(message);
+    this.name = 'ExtensionError';
+    this.code = code;
+  }
+}
+
+// Usage
+try {
+  // Attempt an operation
+} catch (error) {
+  if (error instanceof ExtensionError) {
+    // Handle known error types
+    switch (error.code) {
+      case 'AUTH_FAILED':
+        // Handle auth failure
+        break;
+      case 'NETWORK_ERROR':
+        // Handle network error
+        break;
+      default:
+        // Handle other known errors
+    }
+  } else {
+    // Handle unexpected errors
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+### Common Error Codes
+
+| Error Code | Description |
+|------------|-------------|
+| `AUTH_FAILED` | Authentication failed |
+| `TOKEN_EXPIRED` | Access token has expired |
+| `NETWORK_ERROR` | Network connection failed |
+| `API_ERROR` | Directus API returned an error |
+| `STORAGE_ERROR` | Chrome storage operation failed |
+| `INVALID_INPUT` | Invalid input provided |
+| `NOT_FOUND` | Requested resource not found |
+| `PERMISSION_DENIED` | Permission denied for operation |
+
+## Security Considerations
+
+### Authentication
+
+- Tokens are stored in Chrome's secure storage
+- Refresh tokens are used to maintain sessions
+- OAuth flows are handled securely
+
+### Data Protection
+
+```typescript
+// Sensitive data is encrypted before storage
+const encryptData = (data: any, key: string): string => {
+  // Encryption implementation
+  return encryptedString;
+};
+
+const decryptData = (encryptedData: string, key: string): any => {
+  // Decryption implementation
+  return decryptedData;
+};
+
+// Usage
+const sensitive = { password: 'secret' };
+await storage.set('sensitive', encryptData(sensitive, encryptionKey));
+```
+
+### Content Security Policy
+
+The extension implements a strict Content Security Policy in the manifest:
+
+```json
+{
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline';"
+  }
+}
+```
+
+## Next Steps
+
+- [Chrome Extension Overview](/docs/extension) - General extension documentation
+- [Extension Configuration](/docs/extension/configuration) - Configuration options
+- [Extension Development Guide](/docs/extension/development) - Guide for extension developers

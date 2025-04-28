@@ -1,0 +1,170 @@
+---
+title: Accessibility
+description: Accessibility guidelines and best practices for the spinner component
+---
+
+# Spinner Accessibility
+
+This guide outlines how to ensure your spinner implementation is accessible to all users, including those with disabilities who may be using screen readers or other assistive technologies.
+
+## Key Accessibility Features
+
+The spinner package includes several built-in accessibility features:
+
+- **ARIA attributes**: Properly labeled components with appropriate ARIA roles and states
+- **Keyboard navigation**: Complete functionality available without requiring mouse interaction
+- **Screen reader announcements**: Important events like spin start and results are announced
+- **Reduced motion support**: Respects user preferences for reduced motion
+- **Focus management**: Proper focus handling during interactions
+- **High contrast support**: Works well in high contrast modes
+
+## Implementation Guidelines
+
+### ARIA Attributes
+
+The spinner components automatically apply appropriate ARIA attributes, but you should provide descriptive labels:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2']}
+  ariaLabel="Prize selection spinner"
+/>
+```
+
+### Keyboard Interaction
+
+Users can control the spinner with the following keyboard shortcuts:
+
+| Key | Action |
+|-----|--------|
+| `Space` or `Enter` | Start spinning (when focused) |
+| `Tab` | Navigate to spinner controls |
+| `Escape` | Stop spinning (if supported) |
+
+### Screen Reader Announcements
+
+The spinner announces important states to screen readers:
+
+1. When a spin starts: "Spinner started"
+2. When a spin completes: "Spinner result: [winner]"
+
+You can customize these announcements:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2']}
+  ariaAnnouncements={{
+    spinStart: "Drawing a winner...",
+    spinComplete: (winner) => `The winner is ${winner}!`
+  }}
+/>
+```
+
+### Motion and Animation Controls
+
+To support users who may be sensitive to motion or animations:
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2']}
+  // Respect system settings for reduced motion
+  respectReducedMotion={true}
+  // Provide option to skip animation
+  allowSkipAnimation={true}
+  // Control animation speed
+  animationSpeed="slow" // "slow", "medium", or "fast"
+/>
+```
+
+### Color and Contrast
+
+Ensure sufficient color contrast between:
+
+1. The spinner segments and their text
+2. The spinner and its background
+3. Any controls and their backgrounds
+
+```tsx
+<Spinner
+  items={['Item 1', 'Item 2']}
+  colorScheme={{
+    primary: '#3b82f6',    // Blue
+    secondary: '#10b981',  // Green
+    text: '#ffffff',       // White (contrast ratio > 4.5:1)
+    background: '#1f2937'  // Dark background
+  }}
+  // High contrast mode
+  highContrast={true}
+/>
+```
+
+## Testing Accessibility
+
+To verify your spinner implementation is accessible:
+
+1. **Keyboard testing**: Ensure you can operate all functions using only the keyboard
+2. **Screen reader testing**: Test with NVDA, JAWS, or VoiceOver
+3. **Reduced motion**: Test with "prefers-reduced-motion" media query
+4. **Color contrast**: Use tools like axe DevTools or Lighthouse to check contrast ratios
+
+## Common Accessibility Issues
+
+| Issue | Solution |
+|-------|----------|
+| Text not visible on spinner segments | Increase contrast between text and background |
+| Animation too fast for some users | Use the `animationSpeed` prop or respect reduced motion |
+| No keyboard control | Ensure focus is properly managed |
+| Missing announcements | Use appropriate ARIA labels and custom announcements |
+
+## Best Practices
+
+1. **Always provide text alternatives**: When using icons or visual elements, ensure they have text equivalents
+2. **Test with real assistive technologies**: Don't rely solely on automated checks
+3. **Consider diverse users**: Account for a range of abilities and preferences
+4. **Provide options**: Allow users to customize their experience
+5. **Include skip options**: Always provide a way to skip animations
+
+## Implementation Example
+
+Here's a fully accessible spinner implementation:
+
+```tsx
+<WebSpinnerClient
+  items={['Item 1', 'Item 2', 'Item 3']}
+  ariaLabel="Prize selection spinner"
+  ariaAnnouncements={{
+    spinStart: "The spinner is now selecting a winner",
+    spinComplete: (winner) => `The spinner has selected ${winner} as the winner`
+  }}
+  respectReducedMotion={true}
+  allowSkipAnimation={true}
+  animationSpeed="medium"
+  highContrast={false}
+  colorScheme={{
+    primary: '#3b82f6',
+    secondary: '#10b981',
+    text: '#ffffff',
+    background: '#1f2937'
+  }}
+  onComplete={(winner) => {
+    // Focus an element announcing the result
+    document.getElementById('result-announcement').focus();
+  }}
+/>
+
+{/* Element that receives focus after spin completes */}
+<div 
+  id="result-announcement"
+  tabIndex={-1}
+  role="status"
+  aria-live="polite"
+>
+  The winner has been selected
+</div>
+```
+
+## Resources
+
+- [Web Content Accessibility Guidelines (WCAG) 2.1](https://www.w3.org/TR/WCAG21/)
+- [WAI-ARIA Authoring Practices](https://www.w3.org/TR/wai-aria-practices-1.1/)
+- [MDN Accessibility Guide](https://developer.mozilla.org/en-US/docs/Web/Accessibility)

@@ -1,0 +1,1126 @@
+---
+title: Directus Integration Examples
+description: Practical examples of integrating the Directus backend with the Winner Spinner application
+---
+
+# Directus Integration Examples
+
+This document provides practical examples of integrating the Directus backend with the Winner Spinner application.
+
+## Basic Integration Patterns
+
+### Authentication Flow
+
+This example demonstrates a complete authentication flow:
+
+```typescript
+import { DirectusClient } from '@repo/env-config';
+
+// Initialize client
+const client = new DirectusClient({
+  url: process.env.DIRECTUS_URL || 'http://localhost:8055',
+});
+
+// Login function
+async function login(email: string, password: string) {
+  try {
+    const authData = await client.login({ email, password });
+    
+    // Store tokens securely
+    localStorage.setItem('access_token', authData.access_token);
+    localStorage.setItem('refresh_token', authData.refresh_token);
+    
+    return {
+      success: true,
+      user: authData.user,
+    };
+  } catch (error) {
+    console.error('Authentication failed:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+// Token refresh function
+async function refreshToken() {
+  try {
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+    
+    const authData = await client.refresh(refreshToken);
+    
+    // Update stored tokens
+    localStorage.setItem('access_token', authData.access_token);
+    localStorage.setItem('refresh_token', authData.refresh_token);
+    
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    
+    // Clear tokens on refresh failure
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+```
+
+### Token Management in React Component
+
+```typescript
+import React, { useEffect, useState } from 'react';
+import { DirectusClient } from '@repo/env-config';
+
+const SpinnerApp = () => {
+  const [client, setClient] = useState<DirectusClient | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Initialize client
+    const directusClient = new DirectusClient({
+      url: process.env.DIRECTUS_URL || 'http://localhost:8055',
+    });
+    
+    setClient(directusClient);
+    
+    // Check for existing token
+    const token = localStorage.getItem('access_token');
+    
+    if (token) {
+      directusClient.setToken(token);
+      setIsAuthenticated(true);
+      
+      // Verify token is still valid
+      directusClient.verifyToken()
+        .catch(async () => {
+          // Try to refresh token
+          try {
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (refreshToken) {
+              const authData = await directusClient.refresh(refreshToken);
+              localStorage.setItem('access_token', authData.access_token);
+              localStorage.setItem('refresh_token', authData.refresh_token);
+              directusClient.setToken(authData.access_token);
+              setIsAuthenticated(true);
+            } else {
+              setIsAuthenticated(false);
+              setError('Session expired. Please log in again.');
+            }
+          } catch (err) {
+            setIsAuthenticated(false);
+            setError('Session expired. Please log in again.');
+          }
+        });
+    }
+  }, []);
+  
+  // Login handler
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      if (!client) return;
+      
+      const authData = await client.login({ email, password });
+      
+      localStorage.setItem('access_token', authData.access_token);
+      localStorage.setItem('refresh_token', authData.refresh_token);
+      
+      setIsAuthenticated(true);
+      setError(null);
+    } catch (err) {
+      setError('Login failed. Please check your credentials.');
+    }
+  };
+  
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    setIsAuthenticated(false);
+  };
+  
+  return (
+    <div>
+      {isAuthenticated ? (
+        <div>
+          <h1>Winner Spinner App</h1>
+          <button onClick={handleLogout}>Logout</button>
+          {/* App content */}
+        </div>
+      ) : (
+        <LoginForm onLogin={handleLogin} error={error} />
+      )}
+    </div>
+  );
+};
+
+// Simple login form component
+const LoginForm = ({ onLogin, error }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onLogin(email, password);
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <h2>Login</h2>
+      {error && <div className="error">{error}</div>}
+      <div>
+        <label>Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <label>Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
+      <button type="submit">Login</button>
+    </form>
+  );
+};
+
+export default SpinnerApp;
+```
+
+## CRUD Operations
+
+### Creating and Managing Spinners
+
+```typescript
+import { DirectusClient, Spinner, SpinnerConfig } from '@repo/env-config';
+
+// Initialize client and authenticate (see authentication examples)
+const client = new DirectusClient({
+  url: process.env.DIRECTUS_URL || 'http://localhost:8055',
+});
+
+// Assuming authentication is already handled
+
+// Get all spinners for the current user
+const getMySpinners = async () => {
+  try {
+    const spinners = await client.getItems<Spinner>('spinners', {
+      filter: {
+        user_id: {
+          _eq: '$CURRENT_USER',
+        },
+      },
+      sort: ['-created_at'],
+    });
+    
+    return spinners;
+  } catch (error) {
+    console.error('Failed to fetch spinners:', error);
+    throw error;
+  }
+};
+
+// Create a new spinner
+const createSpinner = async (name: string, config: SpinnerConfig) => {
+  try {
+    const spinner = await client.createItem<Spinner>('spinners', {
+      name,
+      config,
+    });
+    
+    return spinner;
+  } catch (error) {
+    console.error('Failed to create spinner:', error);
+    throw error;
+  }
+};
+
+// Update an existing spinner
+const updateSpinner = async (id: string, updates: Partial<Spinner>) => {
+  try {
+    const spinner = await client.updateItem<Spinner>('spinners', id, updates);
+    
+    return spinner;
+  } catch (error) {
+    console.error(`Failed to update spinner ${id}:`, error);
+    throw error;
+  }
+};
+
+// Delete a spinner
+const deleteSpinner = async (id: string) => {
+  try {
+    await client.deleteItem('spinners', id);
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Failed to delete spinner ${id}:`, error);
+    throw error;
+  }
+};
+```
+
+### Managing Participants
+
+```typescript
+import { DirectusClient, Participant } from '@repo/env-config';
+
+// Initialize client and authenticate (see authentication examples)
+const client = new DirectusClient({
+  url: process.env.DIRECTUS_URL || 'http://localhost:8055',
+});
+
+// Get participants for a spinner
+const getParticipants = async (spinnerId: string) => {
+  try {
+    const participants = await client.getItems<Participant>('participants', {
+      filter: {
+        spinner_id: {
+          _eq: spinnerId,
+        },
+      },
+      sort: ['name'],
+    });
+    
+    return participants;
+  } catch (error) {
+    console.error(`Failed to fetch participants for spinner ${spinnerId}:`, error);
+    throw error;
+  }
+};
+
+// Add a single participant
+const addParticipant = async (spinnerId: string, name: string, email?: string, weight = 1) => {
+  try {
+    const participant = await client.createItem<Participant>('participants', {
+      spinner_id: spinnerId,
+      name,
+      email,
+      weight,
+      status: 'active',
+    });
+    
+    return participant;
+  } catch (error) {
+    console.error('Failed to add participant:', error);
+    throw error;
+  }
+};
+
+// Bulk import participants from CSV data
+const importParticipantsFromCSV = async (spinnerId: string, csvData: Array<{ name: string; email?: string; weight?: number }>) => {
+  try {
+    // Format the participants data
+    const participantsData = csvData.map(row => ({
+      spinner_id: spinnerId,
+      name: row.name,
+      email: row.email || null,
+      weight: row.weight || 1,
+      status: 'active',
+    }));
+    
+    // Use the items.create endpoint for bulk operations
+    const participants = await client.createItems<Participant>('participants', participantsData);
+    
+    return participants;
+  } catch (error) {
+    console.error('Failed to import participants:', error);
+    throw error;
+  }
+};
+
+// Update participant status
+const updateParticipantStatus = async (participantId: string, status: 'active' | 'removed' | 'winner') => {
+  try {
+    const participant = await client.updateItem<Participant>('participants', participantId, {
+      status,
+    });
+    
+    return participant;
+  } catch (error) {
+    console.error(`Failed to update participant ${participantId}:`, error);
+    throw error;
+  }
+};
+
+// Delete all participants for a spinner
+const clearAllParticipants = async (spinnerId: string) => {
+  try {
+    await client.deleteItems('participants', {
+      filter: {
+        spinner_id: {
+          _eq: spinnerId,
+        },
+      },
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Failed to clear participants for spinner ${spinnerId}:`, error);
+    throw error;
+  }
+};
+```
+
+### Recording Spin Results
+
+```typescript
+import { DirectusClient, SpinnerResult } from '@repo/env-config';
+
+// Initialize client and authenticate (see authentication examples)
+const client = new DirectusClient({
+  url: process.env.DIRECTUS_URL || 'http://localhost:8055',
+});
+
+// Record a new spin result
+const recordSpinResult = async (spinnerId: string, winnerId: string, items: string[], duration: number) => {
+  try {
+    // Create the result record
+    const result = await client.createItem<SpinnerResult>('results', {
+      spinner_id: spinnerId,
+      winner_id: winnerId,
+      items,
+      duration,
+    });
+    
+    // Update the winner's status
+    await client.updateItem('participants', winnerId, {
+      status: 'winner',
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Failed to record spin result:', error);
+    throw error;
+  }
+};
+
+// Get historical results for a spinner
+const getSpinnerResults = async (spinnerId: string) => {
+  try {
+    const results = await client.getItems<SpinnerResult>('results', {
+      filter: {
+        spinner_id: {
+          _eq: spinnerId,
+        },
+      },
+      sort: ['-timestamp'],
+    });
+    
+    return results;
+  } catch (error) {
+    console.error(`Failed to fetch results for spinner ${spinnerId}:`, error);
+    throw error;
+  }
+};
+
+// Get detailed results with winner information
+const getDetailedResults = async (spinnerId: string) => {
+  try {
+    const results = await client.getItems<SpinnerResult>('results', {
+      filter: {
+        spinner_id: {
+          _eq: spinnerId,
+        },
+      },
+      fields: ['*', 'winner.name', 'winner.email', 'winner.metadata'],
+      sort: ['-timestamp'],
+    });
+    
+    return results;
+  } catch (error) {
+    console.error(`Failed to fetch detailed results for spinner ${spinnerId}:`, error);
+    throw error;
+  }
+};
+```
+
+## Integration with React Components
+
+### Spinner Management Component
+
+```tsx
+import React, { useState, useEffect } from 'react';
+import { DirectusClient, Spinner } from '@repo/env-config';
+
+interface SpinnerManagementProps {
+  client: DirectusClient;
+}
+
+const SpinnerManagement: React.FC<SpinnerManagementProps> = ({ client }) => {
+  const [spinners, setSpinners] = useState<Spinner[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Load spinners on component mount
+  useEffect(() => {
+    const fetchSpinners = async () => {
+      try {
+        setLoading(true);
+        const data = await client.getItems<Spinner>('spinners', {
+          sort: ['-created_at'],
+        });
+        setSpinners(data);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load spinners. Please try again.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchSpinners();
+  }, [client]);
+  
+  // Create a new spinner
+  const handleCreateSpinner = async (name: string) => {
+    try {
+      const newSpinner = await client.createItem<Spinner>('spinners', {
+        name,
+        config: {
+          colorScheme: {
+            primary: '#3b82f6',
+            secondary: '#10b981',
+            text: '#ffffff',
+          },
+          size: 'md',
+          duration: 3000,
+          initialRotation: 0,
+        },
+      });
+      
+      setSpinners([newSpinner, ...spinners]);
+    } catch (err) {
+      setError('Failed to create spinner. Please try again.');
+      console.error(err);
+    }
+  };
+  
+  // Delete a spinner
+  const handleDeleteSpinner = async (id: string) => {
+    try {
+      await client.deleteItem('spinners', id);
+      setSpinners(spinners.filter(spinner => spinner.id !== id));
+    } catch (err) {
+      setError('Failed to delete spinner. Please try again.');
+      console.error(err);
+    }
+  };
+  
+  if (loading) {
+    return <div>Loading spinners...</div>;
+  }
+  
+  return (
+    <div className="spinner-management">
+      <h2>My Spinners</h2>
+      
+      {error && <div className="error">{error}</div>}
+      
+      <div className="create-spinner">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const nameInput = e.currentTarget.elements.namedItem('name') as HTMLInputElement;
+          handleCreateSpinner(nameInput.value);
+          nameInput.value = '';
+        }}>
+          <input
+            type="text"
+            name="name"
+            placeholder="New Spinner Name"
+            required
+          />
+          <button type="submit">Create Spinner</button>
+        </form>
+      </div>
+      
+      <div className="spinner-list">
+        {spinners.length === 0 ? (
+          <p>No spinners yet. Create your first one above!</p>
+        ) : (
+          <ul>
+            {spinners.map(spinner => (
+              <li key={spinner.id} className="spinner-item">
+                <div className="spinner-info">
+                  <h3>{spinner.name}</h3>
+                  <p>Created: {new Date(spinner.created_at).toLocaleDateString()}</p>
+                </div>
+                <div className="spinner-actions">
+                  <button onClick={() => window.location.href = `/spinner/${spinner.id}`}>
+                    Open
+                  </button>
+                  <button onClick={() => handleDeleteSpinner(spinner.id)}>
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SpinnerManagement;
+```
+
+### CSV Import Component
+
+```tsx
+import React, { useState } from 'react';
+import { DirectusClient } from '@repo/env-config';
+
+interface CSVImportProps {
+  client: DirectusClient;
+  spinnerId: string;
+  onImportComplete: () => void;
+}
+
+const CSVImport: React.FC<CSVImportProps> = ({ client, spinnerId, onImportComplete }) => {
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<Array<{ name: string; email?: string; weight?: number }>>([]);
+  
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+    
+    setFile(selectedFile);
+    
+    // Parse CSV for preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const csv = event.target?.result as string;
+        const lines = csv.split('\n');
+        const headers = lines[0].split(',').map(header => header.trim());
+        
+        // Find relevant column indexes
+        const nameIndex = headers.findIndex(h => 
+          h.toLowerCase() === 'name' || h.toLowerCase() === 'participant');
+        const emailIndex = headers.findIndex(h => h.toLowerCase() === 'email');
+        const weightIndex = headers.findIndex(h => 
+          h.toLowerCase() === 'weight' || h.toLowerCase() === 'points');
+        
+        if (nameIndex === -1) {
+          setError('CSV must contain a "Name" or "Participant" column');
+          setPreview([]);
+          return;
+        }
+        
+        // Parse data rows (limit preview to 5 items)
+        const previewData = lines.slice(1, 6)
+          .filter(line => line.trim())
+          .map(line => {
+            const values = line.split(',').map(val => val.trim());
+            return {
+              name: values[nameIndex],
+              ...(emailIndex !== -1 && { email: values[emailIndex] }),
+              ...(weightIndex !== -1 && { weight: parseInt(values[weightIndex]) || 1 }),
+            };
+          });
+        
+        setPreview(previewData);
+        setError(null);
+      } catch (err) {
+        setError('Failed to parse CSV file. Please check the format.');
+        setPreview([]);
+      }
+    };
+    
+    reader.readAsText(selectedFile);
+  };
+  
+  // Handle import submission
+  const handleImport = async () => {
+    if (!file) return;
+    
+    setLoading(true);
+    
+    try {
+      const reader = new FileReader();
+      
+      reader.onload = async (event) => {
+        try {
+          const csv = event.target?.result as string;
+          const lines = csv.split('\n');
+          const headers = lines[0].split(',').map(header => header.trim());
+          
+          // Find relevant column indexes
+          const nameIndex = headers.findIndex(h => 
+            h.toLowerCase() === 'name' || h.toLowerCase() === 'participant');
+          const emailIndex = headers.findIndex(h => h.toLowerCase() === 'email');
+          const weightIndex = headers.findIndex(h => 
+            h.toLowerCase() === 'weight' || h.toLowerCase() === 'points');
+          
+          if (nameIndex === -1) {
+            setError('CSV must contain a "Name" or "Participant" column');
+            setLoading(false);
+            return;
+          }
+          
+          // Parse all data rows
+          const participantsData = lines.slice(1)
+            .filter(line => line.trim())
+            .map(line => {
+              const values = line.split(',').map(val => val.trim());
+              return {
+                spinner_id: spinnerId,
+                name: values[nameIndex],
+                ...(emailIndex !== -1 && { email: values[emailIndex] }),
+                ...(weightIndex !== -1 && { weight: parseInt(values[weightIndex]) || 1 }),
+                status: 'active',
+              };
+            });
+          
+          // Upload to Directus
+          await client.createItems('participants', participantsData);
+          
+          setError(null);
+          setFile(null);
+          onImportComplete();
+        } catch (err) {
+          setError('Failed to import participants. Please try again.');
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      reader.readAsText(file);
+    } catch (err) {
+      setError('Failed to read file. Please try again.');
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <div className="csv-import">
+      <h2>Import Participants from CSV</h2>
+      
+      {error && <div className="error">{error}</div>}
+      
+      <div className="file-upload">
+        <input
+          type="file"
+          accept=".csv"
+          onChange={handleFileChange}
+          disabled={loading}
+        />
+        <p className="help-text">
+          CSV should include columns for Name (required), Email (optional), and Weight (optional)
+        </p>
+      </div>
+      
+      {preview.length > 0 && (
+        <div className="preview">
+          <h3>Preview:</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Weight</th>
+              </tr>
+            </thead>
+            <tbody>
+              {preview.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.name}</td>
+                  <td>{item.email || '-'}</td>
+                  <td>{item.weight || 1}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="preview-note">Showing first {preview.length} entries</p>
+        </div>
+      )}
+      
+      <div className="actions">
+        <button
+          onClick={handleImport}
+          disabled={!file || loading}
+        >
+          {loading ? 'Importing...' : 'Import Participants'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CSVImport;
+```
+
+## Advanced Examples
+
+### Real-time Updates with WebSockets
+
+```typescript
+import { DirectusClient } from '@repo/env-config';
+
+// Initialize client and authenticate (see authentication examples)
+const client = new DirectusClient({
+  url: process.env.DIRECTUS_URL || 'http://localhost:8055',
+  ws: true, // Enable WebSocket support
+});
+
+// Subscribe to spinner updates
+const subscribeToSpinner = (spinnerId: string, callbacks: {
+  onUpdate?: (data: any) => void,
+  onDelete?: () => void,
+  onError?: (error: any) => void,
+}) => {
+  const subscription = client.subscribe('items/spinners/' + spinnerId, {
+    event: 'update',
+    callback: callbacks.onUpdate,
+  });
+  
+  const deleteSubscription = client.subscribe('items/spinners/' + spinnerId, {
+    event: 'delete',
+    callback: callbacks.onDelete,
+  });
+  
+  // Return unsubscribe function
+  return () => {
+    subscription.unsubscribe();
+    deleteSubscription.unsubscribe();
+  };
+};
+
+// Subscribe to participant changes for a spinner
+const subscribeToParticipants = (spinnerId: string, callback: (data: any) => void) => {
+  const subscription = client.subscribe('items/participants', {
+    event: '*', // all events: create, update, delete
+    query: {
+      filter: {
+        spinner_id: {
+          _eq: spinnerId,
+        },
+      },
+    },
+    callback,
+  });
+  
+  // Return unsubscribe function
+  return () => {
+    subscription.unsubscribe();
+  };
+};
+
+// Example usage in a React component:
+// 
+// useEffect(() => {
+//   // Subscribe to spinner updates
+//   const unsubscribeSpinner = subscribeToSpinner(spinnerId, {
+//     onUpdate: (data) => setSpinner(data),
+//     onDelete: () => navigate('/spinners'),
+//     onError: (error) => console.error(error),
+//   });
+//   
+//   // Subscribe to participant updates
+//   const unsubscribeParticipants = subscribeToParticipants(spinnerId, 
+//     (data) => fetchParticipants());
+//   
+//   return () => {
+//     unsubscribeSpinner();
+//     unsubscribeParticipants();
+//   };
+// }, [spinnerId]);
+```
+
+### Handling Large Datasets
+
+```typescript
+import { DirectusClient } from '@repo/env-config';
+
+// Initialize client and authenticate (see authentication examples)
+const client = new DirectusClient({
+  url: process.env.DIRECTUS_URL || 'http://localhost:8055',
+});
+
+// Paginated fetch of participants
+const fetchParticipantsWithPagination = async (spinnerId: string, options: {
+  page: number,
+  limit: number,
+  search?: string,
+}) => {
+  try {
+    const { page, limit, search } = options;
+    
+    let filter: any = {
+      spinner_id: {
+        _eq: spinnerId,
+      },
+    };
+    
+    // Add search filter if provided
+    if (search) {
+      filter = {
+        _and: [
+          filter,
+          {
+            name: {
+              _contains: search,
+            },
+          },
+        ],
+      };
+    }
+    
+    const response = await client.getItems('participants', {
+      filter,
+      sort: ['name'],
+      page,
+      limit,
+      meta: 'filter_count,total_count',
+    });
+    
+    return {
+      data: response.data,
+      meta: response.meta,
+    };
+  } catch (error) {
+    console.error(`Failed to fetch participants for spinner ${spinnerId}:`, error);
+    throw error;
+  }
+};
+
+// Fetch all results with chunked requests
+const fetchAllResults = async (spinnerId: string) => {
+  try {
+    const results = [];
+    let page = 1;
+    const limit = 100;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const response = await client.getItems('results', {
+        filter: {
+          spinner_id: {
+            _eq: spinnerId,
+          },
+        },
+        sort: ['-timestamp'],
+        page,
+        limit,
+        meta: 'filter_count',
+      });
+      
+      results.push(...response.data);
+      
+      // Check if we've retrieved all items
+      hasMore = response.data.length === limit;
+      page++;
+    }
+    
+    return results;
+  } catch (error) {
+    console.error(`Failed to fetch results for spinner ${spinnerId}:`, error);
+    throw error;
+  }
+};
+
+// Bulk update participants
+const bulkUpdateParticipants = async (participantIds: string[], updates: any) => {
+  try {
+    // Process in chunks of 100 to avoid request size limits
+    const chunkSize = 100;
+    for (let i = 0; i < participantIds.length; i += chunkSize) {
+      const chunk = participantIds.slice(i, i + chunkSize);
+      
+      await client.updateItems('participants', chunk, updates);
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to bulk update participants:', error);
+    throw error;
+  }
+};
+```
+
+### Error Handling and Retry Logic
+
+```typescript
+import { DirectusClient } from '@repo/env-config';
+
+// Initialize client
+const client = new DirectusClient({
+  url: process.env.DIRECTUS_URL || 'http://localhost:8055',
+});
+
+// Retry function with exponential backoff
+const retryOperation = async <T>(
+  operation: () => Promise<T>,
+  retries = 3,
+  delay = 1000,
+  backoff = 2
+): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error) {
+    // Don't retry on certain errors
+    if (
+      error.status === 401 || // Unauthorized
+      error.status === 403 || // Forbidden
+      error.status === 404 || // Not Found
+      retries <= 0
+    ) {
+      throw error;
+    }
+    
+    // Wait before retrying
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
+    // Retry with increased delay
+    return retryOperation(operation, retries - 1, delay * backoff, backoff);
+  }
+};
+
+// Example usage with retry
+const fetchSpinnerWithRetry = async (spinnerId: string) => {
+  return retryOperation(
+    async () => {
+      const spinner = await client.getItem('spinners', spinnerId);
+      
+      if (!spinner) {
+        throw new Error(`Spinner with ID ${spinnerId} not found`);
+      }
+      
+      return spinner;
+    },
+    3,    // 3 retries
+    1000, // Starting with 1 second delay
+    2     // Doubling delay each time
+  );
+};
+
+// Comprehensive error handler
+const handleApiError = (error: any) => {
+  // Check for network errors
+  if (!error.status) {
+    return {
+      type: 'network',
+      message: 'Network error. Please check your connection.',
+      retry: true,
+    };
+  }
+  
+  // Handle specific status codes
+  switch (error.status) {
+    case 401:
+      return {
+        type: 'auth',
+        message: 'Your session has expired. Please log in again.',
+        retry: false,
+      };
+    
+    case 403:
+      return {
+        type: 'permission',
+        message: 'You do not have permission to perform this action.',
+        retry: false,
+      };
+    
+    case 404:
+      return {
+        type: 'not_found',
+        message: 'The requested resource was not found.',
+        retry: false,
+      };
+    
+    case 429:
+      const retryAfter = error.headers?.['retry-after'] || 60;
+      return {
+        type: 'rate_limit',
+        message: `Rate limit exceeded. Please try again in ${retryAfter} seconds.`,
+        retry: true,
+        retryAfter: retryAfter * 1000,
+      };
+    
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return {
+        type: 'server',
+        message: 'Server error. Please try again later.',
+        retry: true,
+      };
+    
+    default:
+      return {
+        type: 'unknown',
+        message: error.message || 'An unknown error occurred.',
+        retry: false,
+      };
+  }
+};
+
+// Example usage with comprehensive error handling
+const safeApiCall = async <T>(apiCall: () => Promise<T>, options = { retries: 3 }): Promise<T> => {
+  try {
+    return await retryOperation(apiCall, options.retries);
+  } catch (error) {
+    const errorInfo = handleApiError(error);
+    
+    // Log the error
+    console.error(`API Error: ${errorInfo.type}`, error);
+    
+    // You could also send to an error tracking service here
+    
+    // Rethrow with additional context
+    throw {
+      ...errorInfo,
+      originalError: error,
+    };
+  }
+};
+
+// Usage example
+const getSpinnerSafely = async (id: string) => {
+  try {
+    return await safeApiCall(() => client.getItem('spinners', id));
+  } catch (error) {
+    // Handle the error in the UI
+    if (error.type === 'auth') {
+      // Redirect to login
+      window.location.href = '/login';
+    } else {
+      // Show error message to user
+      alert(error.message);
+    }
+    
+    return null;
+  }
+};
+```
+
+## Next Steps
+
+- [Directus Overview](/docs/directus) - General Directus integration
+- [Directus API](/docs/directus/api) - API reference documentation
+- [Data Schema](/docs/directus/schema) - Complete data schema documentation

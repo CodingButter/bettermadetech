@@ -7,7 +7,12 @@
 import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
 import { SpinnerProps, SpinnerSegment } from './types';
 import { useSpinner } from './spinner-context';
-import { measurePerformance } from './utils';
+import { 
+  measurePerformance, 
+  getHardwareAccelerationStyles, 
+  safeRequestAnimationFrame, 
+  safeCancelAnimationFrame 
+} from './utils';
 import { isDevelopment } from './environment';
 
 /**
@@ -45,7 +50,7 @@ export const Spinner3D = memo(function Spinner3D({
         clearTimeout(animationRef.current.timeoutId);
       }
       if (animationRef.current.animationFrameId) {
-        cancelAnimationFrame(animationRef.current.animationFrameId);
+        safeCancelAnimationFrame(animationRef.current.animationFrameId);
       }
     };
   }, []);
@@ -82,7 +87,7 @@ export const Spinner3D = memo(function Spinner3D({
       const animateSpinner = (timestamp: number) => {
         if (timestamp >= endTime) {
           // Animation complete, announce winner
-          requestAnimationFrame(() => {
+          safeRequestAnimationFrame(() => {
             if (winningSegment) {
               setWinner(winningSegment);
               setIsAnimating(false);
@@ -96,12 +101,16 @@ export const Spinner3D = memo(function Spinner3D({
           return;
         }
         
+        // Continue animation with optimized frame rate control
+        // Calculate progress for smooth animation
+        const progress = (timestamp - startTime) / (duration * 1000);
+        
         // Continue animation
-        animationRef.current.animationFrameId = requestAnimationFrame(animateSpinner);
+        animationRef.current.animationFrameId = safeRequestAnimationFrame(animateSpinner);
       };
       
       // Start animation
-      animationRef.current.animationFrameId = requestAnimationFrame(animateSpinner);
+      animationRef.current.animationFrameId = safeRequestAnimationFrame(animateSpinner);
     };
     
     // Wrap with performance measurement in development
@@ -114,7 +123,7 @@ export const Spinner3D = memo(function Spinner3D({
     // Clean up function
     return () => {
       if (animationRef.current.animationFrameId) {
-        cancelAnimationFrame(animationRef.current.animationFrameId);
+        safeCancelAnimationFrame(animationRef.current.animationFrameId);
       }
       animationRef.current.isActive = false;
     };
@@ -138,10 +147,8 @@ export const Spinner3D = memo(function Spinner3D({
           <div 
             className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-white mb-4"
             style={{ 
-              willChange: 'transform',
-              backfaceVisibility: 'hidden',
-              transformStyle: 'preserve-3d',
-              perspective: 1000
+              ...getHardwareAccelerationStyles(),
+              transformStyle: 'preserve-3d'
             }}
           ></div>
           <p className="font-bold">Spinning...</p>
@@ -186,11 +193,8 @@ export const Spinner3D = memo(function Spinner3D({
         style={{
           backgroundColor: primaryColor,
           borderColor: secondaryColor,
-          willChange: 'transform, opacity',
-          backfaceVisibility: 'hidden',
           transformStyle: 'preserve-3d',
-          perspective: 1000,
-          transform: 'translateZ(0)'
+          ...getHardwareAccelerationStyles()
         }}
         role="img"
         aria-label={`3D Spinner wheel with ${segments.length} options`}

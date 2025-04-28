@@ -1,0 +1,336 @@
+---
+title: Extension Configuration
+description: Comprehensive guide to configuring the Winner Spinner Chrome extension
+---
+
+# Extension Configuration
+
+Comprehensive guide to configuring the Winner Spinner Chrome extension.
+
+## Overview
+
+The Winner Spinner extension offers numerous configuration options to customize its behavior and appearance. This document provides detailed information about available settings and how to configure them.
+
+## Configuration Levels
+
+Configuration can be set at three levels:
+
+1. **Extension-wide**: Settings that apply to the entire extension
+2. **User-specific**: Settings tied to the current user's preferences
+3. **Spinner-specific**: Settings for individual spinner instances
+
+## Extension Options
+
+The extension-wide options can be accessed through the options page:
+
+1. Click the Winner Spinner icon in the Chrome toolbar
+2. Click the gear icon or "Options"
+3. Or navigate to `chrome://extensions/`, find Winner Spinner, and click "Extension options"
+
+### General Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Theme | The visual theme for the extension | `'system'` |
+| Language | Interface language | `'en'` (English) |
+| Notifications | Enable/disable notifications | `true` |
+| Sound Effects | Enable/disable sound effects | `true` |
+| Analytics | Enable/disable usage analytics | `true` |
+
+### Directus Integration
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Directus URL | URL of the Directus server | `'https://directus.example.com'` |
+| API Timeout | Timeout for API requests (ms) | `30000` |
+| Auto Sync | Automatically sync data | `true` |
+| Sync Interval | How often to sync data (minutes) | `15` |
+| Auth Persistence | Keep user logged in | `true` |
+
+### Default Spinner Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Color Scheme | Default colors for new spinners | See below |
+| Size | Default spinner size | `'md'` |
+| Duration | Default spin duration (ms) | `3000` |
+| Animation Style | Default animation style | `'smooth'` |
+| Auto Result Save | Automatically save results | `true` |
+
+#### Default Color Scheme
+
+```json
+{
+  "primary": "#3b82f6",   // Blue
+  "secondary": "#10b981", // Green
+  "text": "#ffffff",      // White
+  "background": "transparent"
+}
+```
+
+### Storage and Data
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Storage Type | Where to store spinner data | `'chrome'` |
+| Max Results | Maximum number of results to store | `100` |
+| CSV Column Mapping | Default CSV column mappings | See below |
+| Export Format | Default export format | `'csv'` |
+
+#### Default CSV Column Mapping
+
+```json
+{
+  "name": ["name", "participant", "participant name"],
+  "email": ["email", "e-mail", "participant email"],
+  "weight": ["weight", "points", "score", "value"]
+}
+```
+
+## Configuration File
+
+You can also configure the extension via a JSON file that can be imported/exported in the options page.
+
+### Example Configuration File
+
+```json
+{
+  "general": {
+    "theme": "dark",
+    "language": "en",
+    "notifications": true,
+    "soundEffects": false,
+    "analytics": false
+  },
+  "directus": {
+    "url": "https://directus.example.com",
+    "apiTimeout": 30000,
+    "autoSync": true,
+    "syncInterval": 15,
+    "authPersistence": true
+  },
+  "spinner": {
+    "colorScheme": {
+      "primary": "#3b82f6",
+      "secondary": "#10b981",
+      "text": "#ffffff",
+      "background": "transparent"
+    },
+    "size": "md",
+    "duration": 3000,
+    "animationStyle": "smooth",
+    "autoResultSave": true
+  },
+  "storage": {
+    "storageType": "chrome",
+    "maxResults": 100,
+    "csvColumnMapping": {
+      "name": ["name", "participant", "participant name"],
+      "email": ["email", "e-mail", "participant email"],
+      "weight": ["weight", "points", "score", "value"]
+    },
+    "exportFormat": "csv"
+  }
+}
+```
+
+### Importing Configuration
+
+1. Go to the Options page
+2. Scroll to the "Import/Export Settings" section
+3. Click "Import Settings"
+4. Select your JSON configuration file
+5. Click "Apply"
+
+### Exporting Configuration
+
+1. Go to the Options page
+2. Scroll to the "Import/Export Settings" section
+3. Click "Export Settings"
+4. The configuration will be downloaded as a JSON file
+
+## User Preferences
+
+User-specific preferences are stored and associated with your Directus account. These settings will follow you across different devices where you use the Winner Spinner extension.
+
+### Accessing User Preferences
+
+1. Log in to your Directus account through the extension
+2. Click the Winner Spinner icon in the Chrome toolbar
+3. Click your profile icon
+4. Select "User Settings"
+
+### Available User Preferences
+
+| Preference | Description | Default |
+|------------|-------------|---------|
+| Default Color Scheme | Your preferred color scheme | Standard scheme |
+| Default Size | Your preferred spinner size | `'md'` |
+| Default Duration | Your preferred spin duration | `3000` |
+| Recent Spinners | Number of recent spinners to show | `5` |
+| Favorite Spinners | Your bookmarked spinners | `[]` |
+| Notification Style | How notifications are displayed | `'popup'` |
+
+## Spinner Configuration
+
+Each spinner instance can have its own specific configuration.
+
+### Creating a New Spinner
+
+1. Click the Winner Spinner icon in the Chrome toolbar
+2. Click "New Spinner" or open the side panel and click "+"
+3. Enter a name for your spinner
+4. Configure the spinner settings
+5. Click "Create"
+
+### Spinner Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Name | Display name for the spinner | `''` |
+| Items | Array of items to display | `[]` |
+| Color Scheme | Colors for this spinner | User default |
+| Size | Size of this spinner | User default |
+| Duration | Spin duration for this spinner | User default |
+| Initial Rotation | Starting rotation in degrees | `0` |
+| Accessibility Label | Screen reader label | `'Spinner'` |
+| Auto Spin | Automatically spin on mount | `false` |
+
+### Updating Spinner Settings
+
+1. Open the spinner from the popup or side panel
+2. Click the gear icon or "Settings"
+3. Update the settings as desired
+4. Click "Save"
+
+### Spinner-specific Participant Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Weight Distribution | How weights are applied | `'equal'` |
+| Winner Selection | How winners are determined | `'random'` |
+| Allow Duplicates | Allow same participant to win multiple times | `true` |
+| Winner List Size | Number of winners to select | `1` |
+
+## Advanced Configuration
+
+### Programmatic Configuration
+
+You can configure the extension programmatically through the Chrome storage API:
+
+```javascript
+// Set configuration
+chrome.storage.local.set({
+  'winner_spinner_config': {
+    // Configuration object
+  }
+});
+
+// Get configuration
+chrome.storage.local.get('winner_spinner_config', (result) => {
+  const config = result.winner_spinner_config;
+  // Use configuration
+});
+```
+
+### Chrome Enterprise Deployment
+
+For enterprise deployment, you can create a policy using Chrome's managed storage:
+
+1. Create a policy JSON file:
+
+```json
+{
+  "winner_spinner_config": {
+    "general": {
+      "theme": "light",
+      "notifications": true
+    },
+    "directus": {
+      "url": "https://enterprise-directus.example.com",
+      "authPersistence": true
+    },
+    "spinner": {
+      "colorScheme": {
+        "primary": "#0f172a",
+        "secondary": "#475569",
+        "text": "#ffffff"
+      }
+    }
+  }
+}
+```
+
+2. Deploy this policy through your enterprise management system
+3. The extension will automatically use these managed settings
+
+### Custom Scripts
+
+You can create custom scripts to extend the functionality of the Winner Spinner extension. Scripts can be enabled in the options page under "Advanced" → "Custom Scripts".
+
+```javascript
+// Example custom script for automatic participant import
+winner_spinner.registerScript({
+  name: 'Auto Import Participants',
+  description: 'Automatically imports participants from page content',
+  version: '1.0',
+  trigger: 'page_load',
+  matches: ['https://example.com/participants/*'],
+  action: async function(context) {
+    // Extract participants from the page
+    const participants = Array.from(
+      document.querySelectorAll('.participant-name')
+    ).map(el => el.textContent.trim());
+    
+    // Add to current spinner
+    if (participants.length > 0) {
+      await context.addParticipants(participants);
+      context.showNotification(`Imported ${participants.length} participants`);
+    }
+  }
+});
+```
+
+## Configuration Best Practices
+
+### Performance Optimization
+
+For best performance:
+
+- Set an appropriate `maxResults` value based on your usage
+- Enable `autoSync` only if you actively use multiple devices
+- Use `memory` storage type for temporary spinners
+- Disable animations on low-performance devices
+
+### Security Recommendations
+
+For maximum security:
+
+- Use HTTPS for your Directus URL
+- Set `authPersistence` to `false` on shared computers
+- Disable `analytics` if working with sensitive data
+- Review and limit custom scripts permissions
+
+### Large Participant Lists
+
+When working with large participant lists:
+
+- Increase `apiTimeout` to prevent timeouts during imports
+- Set `pageSize` to control chunking of large datasets
+- Use CSV imports rather than manual entry
+- Enable the `optimizeForLargeLists` setting
+
+### Enterprise Settings
+
+For enterprise environments:
+
+- Lock down the `directus.url` setting through policies
+- Customize the theme to match corporate branding
+- Disable features not needed in your environment
+- Create standardized configuration files for deployment
+
+## Next Steps
+
+- [Chrome Extension Overview](/docs/extension) - General extension documentation
+- [Extension API Reference](/docs/extension/api) - Detailed API documentation
+- [Extension Development Guide](/docs/extension/development) - Guide for extension developers
