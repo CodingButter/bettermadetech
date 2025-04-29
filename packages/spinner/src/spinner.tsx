@@ -84,13 +84,33 @@ export const Spinner = memo(function Spinner({
     const primaryAccessible = getAccessibleColors(primaryColor, highContrast);
     const secondaryAccessible = getAccessibleColors(secondaryColor, highContrast);
     
+    if (highContrast) {
+      // Use the same color scheme for both primary and secondary in high contrast mode
+      // This ensures consistent appearance and better readability
+      return {
+        primary: primaryAccessible.background,
+        secondary: primaryAccessible.accent || secondaryAccessible.background,
+        primaryText: primaryAccessible.foreground,
+        secondaryText: primaryAccessible.foreground, // Use same text color for consistency
+        textColor: primaryAccessible.foreground,
+        background: colorScheme?.background || undefined,
+        border: primaryAccessible.border || '#ffffff',
+        accent: primaryAccessible.accent || '#ffff00',
+        // Add segment divider color for better visibility in high contrast mode
+        segmentDivider: primaryAccessible.border || '#ffffff'
+      };
+    }
+    
     return {
-      primary: highContrast ? '#000000' : primaryColor,
-      secondary: highContrast ? '#ffffff' : secondaryColor,
+      primary: primaryColor,
+      secondary: secondaryColor,
       primaryText: primaryAccessible.foreground,
       secondaryText: secondaryAccessible.foreground,
-      textColor: colorScheme?.text || (highContrast ? '#ffffff' : undefined),
+      textColor: colorScheme?.text || undefined,
       background: colorScheme?.background || undefined,
+      border: undefined,
+      accent: undefined,
+      segmentDivider: undefined
     };
   }, [primaryColor, secondaryColor, highContrast, colorScheme]);
   
@@ -363,9 +383,11 @@ export const Spinner = memo(function Spinner({
     return segments.map((segment, index) => {
       const startAngle = index * segmentAngle;
       const isEvenSegment = index % 2 === 0;
+      
+      // In high contrast mode, use the same text color for all segments for consistency
       const textColor = highContrast ? 
-        (isEvenSegment ? accessibleColors.primaryText : accessibleColors.secondaryText) :
-        accessibleColors.textColor;
+        accessibleColors.primaryText :
+        (isEvenSegment ? accessibleColors.primaryText : accessibleColors.secondaryText);
       
       return (
         <SpinnerSegmentComponent
@@ -377,6 +399,8 @@ export const Spinner = memo(function Spinner({
           primaryColor={accessibleColors.primary}
           secondaryColor={accessibleColors.secondary}
           textColor={textColor}
+          highContrast={highContrast}
+          segmentDivider={accessibleColors.segmentDivider}
         />
       );
     });
@@ -395,12 +419,15 @@ export const Spinner = memo(function Spinner({
       {/* The main wheel container with hardware acceleration */}
       <div
         ref={wheelRef}
-        className="relative w-full aspect-square rounded-full overflow-hidden border-4 will-change-transform"
+        className="relative w-full aspect-square rounded-full overflow-hidden will-change-transform"
         style={{
           transform: `rotate(${rotation}deg) translateZ(0)`,
           transition: isAnimating ? `transform ${effectiveDuration}s cubic-bezier(0.1, 0.7, 0.1, 1)` : 'none',
           backgroundColor: accessibleColors.primary,
-          borderColor: accessibleColors.secondary,
+          border: highContrast ? 
+            `6px solid ${accessibleColors.border || accessibleColors.secondary}` : 
+            `4px solid ${accessibleColors.secondary}`,
+          boxShadow: highContrast ? '0 0 0 2px rgba(0,0,0,0.5)' : 'none',
           ...getHardwareAccelerationStyles(), // Comprehensive GPU acceleration
         }}
         role="img"
@@ -502,6 +529,18 @@ interface SpinnerSegmentProps {
   textColor?: string;
 }
 
+interface SpinnerSegmentProps {
+  segment: SpinnerSegment;
+  startAngle: number;
+  segmentAngle: number;
+  isEvenSegment: boolean;
+  primaryColor: string;
+  secondaryColor: string;
+  textColor?: string;
+  highContrast?: boolean;
+  segmentDivider?: string;
+}
+
 const SpinnerSegmentComponent = memo(function SpinnerSegmentComponent({
   segment,
   startAngle,
@@ -509,7 +548,9 @@ const SpinnerSegmentComponent = memo(function SpinnerSegmentComponent({
   isEvenSegment,
   primaryColor,
   secondaryColor,
-  textColor
+  textColor,
+  highContrast = false,
+  segmentDivider
 }: SpinnerSegmentProps) {
   // Pre-compute segment styles for better performance
   const segmentStyle = useMemo(() => ({
@@ -519,8 +560,10 @@ const SpinnerSegmentComponent = memo(function SpinnerSegmentComponent({
     willChange: 'transform',
     // Additional hardware acceleration
     backfaceVisibility: 'hidden' as const,
-    transformZ: 0,  
-  }), [startAngle, segment.color, isEvenSegment, primaryColor, secondaryColor]);
+    transformZ: 0,
+    // Add border in high contrast mode for better boundary visibility
+    border: highContrast ? `1px solid ${segmentDivider || '#ffffff'}` : 'none',
+  }), [startAngle, segment.color, isEvenSegment, primaryColor, secondaryColor, highContrast, segmentDivider]);
 
   // Pre-compute label styles
   const labelStyle = useMemo(() => ({
@@ -532,13 +575,28 @@ const SpinnerSegmentComponent = memo(function SpinnerSegmentComponent({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap' as const,
     color: textColor || 'white', // Default to white if no textColor provided
-  }), [segmentAngle, textColor]);
+    // Enhanced label styling for high contrast mode
+    fontWeight: highContrast ? 'bold' : 'medium',
+    textShadow: highContrast ? '1px 1px 2px #000000' : 'none',
+    padding: highContrast ? '2px 4px' : '0',
+    backgroundColor: highContrast ? 'rgba(0,0,0,0.5)' : 'transparent',
+    borderRadius: highContrast ? '2px' : '0',
+  }), [segmentAngle, textColor, highContrast]);
 
   return (
     <div
       className="absolute top-0 left-0 w-full h-full flex justify-center"
       style={segmentStyle}
     >
+      {/* Segment divider for high contrast mode */}
+      {highContrast && segmentDivider && (
+        <div
+          className="absolute h-1/2 w-1 top-0 left-1/2 -ml-0.5"
+          style={{ backgroundColor: segmentDivider }}
+          aria-hidden="true"
+        />
+      )}
+      
       {/* Segment label positioned in the middle of each segment */}
       <div 
         className="absolute transform -translate-x-1/2 text-sm font-medium"

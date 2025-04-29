@@ -24,11 +24,15 @@ export function prefersReducedMotion(): boolean {
 export function getAccessibleColors(baseColor: string, isHighContrast: boolean = false): {
   foreground: string;
   background: string;
+  border?: string;
+  accent?: string;
 } {
   // Default colors with good contrast
   const defaults = {
     foreground: '#ffffff', // White
     background: '#000000', // Black
+    border: '#ffffff',     // White border
+    accent: '#ffff00'      // Yellow accent (highly visible)
   };
   
   if (!baseColor || typeof baseColor !== 'string') {
@@ -36,12 +40,37 @@ export function getAccessibleColors(baseColor: string, isHighContrast: boolean =
   }
   
   try {
-    // For high contrast mode, just use black/white
+    // For high contrast mode, use optimal color combinations that meet WCAG AAA standards
     if (isHighContrast) {
-      return {
-        foreground: '#ffffff',
-        background: '#000000',
-      };
+      // Choose from several high-contrast schemes
+      const highContrastSchemes = [
+        {
+          // Black background, white text, yellow accents - highest contrast
+          foreground: '#ffffff', // White
+          background: '#000000', // Black
+          border: '#ffffff',     // White
+          accent: '#ffff00'      // Yellow
+        },
+        {
+          // White background, black text, blue accents
+          foreground: '#000000', // Black
+          background: '#ffffff', // White
+          border: '#000000',     // Black
+          accent: '#0000ff'      // Blue
+        },
+        {
+          // Dark blue background, yellow text - high contrast for color blindness
+          foreground: '#ffff00', // Yellow
+          background: '#00008b', // Dark blue
+          border: '#ffffff',     // White
+          accent: '#ff6600'      // Orange
+        }
+      ];
+      
+      // Select scheme based on baseColor characteristics
+      // For simplicity, use the first scheme for dark colors, second for light
+      const isLight = isLightColor(baseColor);
+      return highContrastSchemes[isLight ? 1 : 0];
     }
     
     // Simple algorithm to determine if a color is light or dark
@@ -51,6 +80,8 @@ export function getAccessibleColors(baseColor: string, isHighContrast: boolean =
     return {
       foreground: isLight ? '#000000' : '#ffffff',
       background: baseColor,
+      border: isLight ? '#000000' : '#ffffff',
+      accent: isLight ? '#0000ff' : '#ffff00'
     };
   } catch (error) {
     console.error('Error calculating accessible colors:', error);
