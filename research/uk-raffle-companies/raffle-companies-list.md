@@ -11,33 +11,33 @@ This document contains a curated list of UK raffle companies to contact for the 
    - **Website**: https://raffall.com
    - **Type**: Online raffle platform
    - **Description**: One of the UK's largest online raffle platforms, connecting people running raffles with participants
-   - **Key Contact**: [Research needed]
-   - **Contact Method**: [Email/LinkedIn/Contact form]
-   - **Status**: Not contacted
+   - **Key Contact**: Stelios Kounou, Founder & CEO
+   - **Contact Method**: LinkedIn (https://uk.linkedin.com/in/stelioskounou) / Contact form (https://raffall.com/contact-us)
+   - **Status**: Research completed
 
 2. **Raffolux**
    - **Website**: https://www.raffolux.com
    - **Type**: Premium raffle platform
    - **Description**: UK-based platform focusing on luxury prizes and experiences
-   - **Key Contact**: [Research needed]
-   - **Contact Method**: [Email/LinkedIn/Contact form]
-   - **Status**: Not contacted
+   - **Key Contact**: Gerasimos Elias Lianos, Director/Founder
+   - **Contact Method**: Email (support@raffolux.com) / Phone (01270 906643)
+   - **Status**: Research completed
 
 3. **RaffleHouse**
    - **Website**: https://rafflehouse.com
    - **Type**: Property raffle platform
    - **Description**: Specializes in property and high-value prize raffles
-   - **Key Contact**: [Research needed]
-   - **Contact Method**: [Email/LinkedIn/Contact form]
-   - **Status**: Not contacted
+   - **Key Contact**: Team contact
+   - **Contact Method**: Email (info@rafflehouse.com) / WhatsApp (07459071066)
+   - **Status**: Research completed
 
 4. **Raffle Player**
    - **Website**: https://raffleplayer.com
    - **Type**: Raffle management platform
    - **Description**: Platform helping charities and organizations run online raffles
-   - **Key Contact**: [Research needed]
-   - **Contact Method**: [Email/LinkedIn/Contact form]
-   - **Status**: Not contacted
+   - **Key Contact**: Team contact (Chairman: Jason Haigh-Ellery)
+   - **Contact Method**: Email (info@raffleplayer.com) / Phone (01628 828283)
+   - **Status**: Research completed
 
 5. **WinThis**
    - **Website**: https://winthis.live
@@ -154,10 +154,11 @@ For each company, the following information should be gathered:
 ## Progress Tracking
 
 - Total Companies Identified: 15
-- Research Completed: 0/15
-- Initial Contact Made: 0/15
+- Research Completed: 4/15
+- Initial Contact Made: 1/15
 - Responses Received: 0/15
 - Demos Scheduled: 0/15
 - Feedback Collected: 0/15
+- Outreach Emails Prepared: 4/4 (for researched companies)
 
-*Last Updated: [Current Date]*
+*Last Updated: April 29, 2025*
