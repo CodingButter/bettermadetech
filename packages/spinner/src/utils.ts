@@ -1,7 +1,92 @@
 /**
- * Performance utility functions for the spinner component
+ * Performance and accessibility utility functions for the spinner component
  */
 import { isDevelopment } from './environment';
+
+/**
+ * Checks if the user prefers reduced motion based on the media query
+ * @returns boolean indicating whether reduced motion is preferred
+ */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return false;
+  }
+  
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/**
+ * Gets contrast-friendly colors based on WCAG guidelines
+ * @param baseColor The base color to adjust for contrast
+ * @param isHighContrast Whether to apply high contrast mode
+ * @returns An object with foreground and background colors with sufficient contrast
+ */
+export function getAccessibleColors(baseColor: string, isHighContrast: boolean = false): {
+  foreground: string;
+  background: string;
+} {
+  // Default colors with good contrast
+  const defaults = {
+    foreground: '#ffffff', // White
+    background: '#000000', // Black
+  };
+  
+  if (!baseColor || typeof baseColor !== 'string') {
+    return defaults;
+  }
+  
+  try {
+    // For high contrast mode, just use black/white
+    if (isHighContrast) {
+      return {
+        foreground: '#ffffff',
+        background: '#000000',
+      };
+    }
+    
+    // Simple algorithm to determine if a color is light or dark
+    // and return contrasting colors
+    const isLight = isLightColor(baseColor);
+    
+    return {
+      foreground: isLight ? '#000000' : '#ffffff',
+      background: baseColor,
+    };
+  } catch (error) {
+    console.error('Error calculating accessible colors:', error);
+    return defaults;
+  }
+}
+
+/**
+ * Determines if a color is light or dark (simple RGB calculation)
+ * @param color The color to check
+ * @returns boolean indicating whether the color is light
+ */
+function isLightColor(color: string): boolean {
+  // Convert hex to RGB
+  let r = 0, g = 0, b = 0;
+  
+  if (color.startsWith('#')) {
+    const hex = color.substring(1);
+    
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6) {
+      r = parseInt(hex.substring(0, 2), 16);
+      g = parseInt(hex.substring(2, 4), 16);
+      b = parseInt(hex.substring(4, 6), 16);
+    }
+  }
+  
+  // Calculate perceived brightness
+  // Using YIQ formula (perceived brightness)
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  
+  return yiq >= 128; // 128 is the threshold for "light" colors
+}
 
 /**
  * Measures the performance of a function
