@@ -14,7 +14,14 @@ const spinnerClient = new ExtensionSpinnerClient();
  * Spinner panel component that uses the spinner context
  */
 const SpinnerPanel: React.FC = () => {
-  const { auth, spinnerSettings, activeSpinnerId, isAuthLoading, isLoadingSettings } = useSpinner();
+  const { 
+    auth, 
+    spinnerSettings, 
+    activeSpinnerId, 
+    isAuthLoading, 
+    isLoadingSettings,
+    highContrastMode
+  } = useSpinner();
   const [isSpinning, setIsSpinning] = useState(false);
   const [winner, setWinner] = useState<SpinnerSegment | null>(null);
   
@@ -114,6 +121,11 @@ const SpinnerPanel: React.FC = () => {
           isSpinning={isSpinning}
           onSpinEnd={handleComplete}
           showWinner={!!winner}
+          highContrast={highContrastMode}
+          accessibilityEnabled={true}
+          respectReducedMotion={true}
+          allowSkipAnimation={true}
+          enableKeyboardControl={true}
           aria-label={`${activeSpinner.name} spinner with ${activeSpinner.segments.length} segments`}
         />
       </div>
@@ -299,6 +311,81 @@ const CSVPanel: React.FC = () => {
 };
 
 /**
+ * Accessibility panel component that uses the spinner context
+ */
+const AccessibilityPanel: React.FC = () => {
+  const { 
+    auth, 
+    highContrastMode, 
+    toggleHighContrastMode 
+  } = useSpinner();
+  
+  // Show login prompt if not authenticated
+  if (!auth?.isAuthenticated) {
+    return (
+      <div className="p-6 text-center" role="tabpanel" aria-labelledby="accessibility-tab">
+        <h3 className="text-xl font-medium mb-4">Sign in to configure accessibility</h3>
+        <p className="text-muted-foreground mb-6">
+          You need to sign in to your account to use the accessibility features.
+        </p>
+        <Button 
+          onClick={() => chrome.runtime.openOptionsPage()} 
+          size="lg"
+          aria-label="Go to sign in page"
+        >
+          Sign In
+        </Button>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="p-6" role="tabpanel" aria-labelledby="accessibility-tab">
+      <h3 className="text-xl font-bold mb-6">Accessibility Options</h3>
+      
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="text-lg font-medium">High Contrast Mode</h4>
+            <p className="text-sm text-muted-foreground mt-1">
+              Enhances visibility with stronger colors and improved contrast
+            </p>
+          </div>
+          <Button 
+            variant={highContrastMode ? "default" : "outline"}
+            onClick={toggleHighContrastMode}
+            aria-pressed={highContrastMode}
+            className="min-w-24"
+          >
+            {highContrastMode ? "Enabled" : "Disabled"}
+          </Button>
+        </div>
+        
+        <div className="border-t pt-6">
+          <h4 className="text-lg font-medium mb-2">Additional Features</h4>
+          <ul className="list-disc pl-5 space-y-2 text-sm">
+            <li>Keyboard control is enabled (Tab to focus, Enter/Space to spin)</li>
+            <li>Skip animation with Escape key while spinning</li>
+            <li>Screen reader announcements for spin events</li>
+            <li>Respects system motion reduction preferences</li>
+            <li>Compatible with Windows High Contrast mode</li>
+          </ul>
+        </div>
+        
+        <div className="rounded-lg bg-muted p-4 mt-4">
+          <h4 className="font-medium mb-2 text-sm">About High Contrast Mode</h4>
+          <p className="text-xs text-muted-foreground">
+            High contrast mode improves visibility for users with low vision or color 
+            perception difficulties. This setting is automatically enabled if your 
+            system has high contrast mode enabled, but you can override it here.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
  * Main side panel component that provides spinner context
  */
 const SidePanel: React.FC = () => {
@@ -307,7 +394,7 @@ const SidePanel: React.FC = () => {
   // Handle keyboard navigation for tabs
   const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, tabName: string) => {
     // Current tab index
-    const tabs = ['spinner', 'settings', 'csv'];
+    const tabs = ['spinner', 'settings', 'csv', 'accessibility'];
     const currentIndex = tabs.indexOf(tabName);
     
     switch (event.key) {
@@ -386,12 +473,27 @@ const SidePanel: React.FC = () => {
             >
               CSV
             </Button>
+            <Button 
+              variant={activeTab === 'accessibility' ? 'default' : 'ghost'}
+              className="flex-1 rounded-none py-3"
+              onClick={() => setActiveTab('accessibility')}
+              onKeyDown={(e) => handleTabKeyDown(e, 'accessibility')}
+              aria-label="Accessibility tab"
+              role="tab"
+              id="accessibility-tab"
+              aria-controls="accessibility-panel"
+              aria-selected={activeTab === 'accessibility'}
+              tabIndex={activeTab === 'accessibility' ? 0 : -1}
+            >
+              A11y
+            </Button>
           </nav>
           
           <main className="sidepanel-content overflow-y-auto">
             {activeTab === 'spinner' && <SpinnerPanel />}
             {activeTab === 'settings' && <SettingsPanel />}
             {activeTab === 'csv' && <CSVPanel />}
+            {activeTab === 'accessibility' && <AccessibilityPanel />}
           </main>
           
           <footer className="sidepanel-footer p-3 text-center text-sm text-muted-foreground border-t">

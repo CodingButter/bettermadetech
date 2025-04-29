@@ -477,7 +477,11 @@ export const Spinner = memo(function Spinner({
  */
 export const ContextSpinner = memo(function ContextSpinner() {
   // Get spinner data from context
-  const { spinnerSettings, activeSpinnerId } = useSpinner();
+  const { 
+    spinnerSettings, 
+    activeSpinnerId, 
+    highContrastMode 
+  } = useSpinner();
   
   // Find the active spinner settings with useMemo for better performance
   const activeSetting = useMemo(() => {
@@ -504,12 +508,18 @@ export const ContextSpinner = memo(function ContextSpinner() {
     duration: activeSetting.duration,
     primaryColor: activeSetting.primaryColor,
     secondaryColor: activeSetting.secondaryColor,
-    showWinner: true
+    showWinner: true,
+    highContrast: highContrastMode,
+    accessibilityEnabled: true,
+    respectReducedMotion: true,
+    allowSkipAnimation: true,
+    enableKeyboardControl: true
   }), [
     activeSetting.segments,
     activeSetting.duration,
     activeSetting.primaryColor,
-    activeSetting.secondaryColor
+    activeSetting.secondaryColor,
+    highContrastMode
   ]);
   
   // Render the optimized spinner
