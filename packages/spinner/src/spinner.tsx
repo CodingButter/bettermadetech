@@ -7,14 +7,16 @@
  * 
  * @component
  */
-import { useState, useRef, useEffect, memo, useCallback, useMemo } from 'react';
-import { SpinnerProps, SpinnerSegment } from './types';
+import { useState, useRef, useEffect, memo, useCallback, useMemo, KeyboardEvent } from 'react';
+import { SpinnerProps, SpinnerSegment, AriaAnnouncements } from './types';
 import { useSpinner } from './spinner-context';
 import { 
   cubicBezier, 
   getHardwareAccelerationStyles, 
   safeRequestAnimationFrame, 
-  safeCancelAnimationFrame 
+  safeCancelAnimationFrame,
+  prefersReducedMotion,
+  getAccessibleColors
 } from './utils';
 
 /**
@@ -33,12 +35,26 @@ export const Spinner = memo(function Spinner({
   onSpinEnd,
   className,
   showWinner = false,
+  id,
+  highContrast = false,
+  accessibilityEnabled = true,
+  ariaLabel,
+  animationSpeed = 1,
+  ariaAnnouncements,
+  respectReducedMotion = true,
+  allowSkipAnimation = false,
+  colorScheme,
+  enableKeyboardControl = false,
+  onSkipAnimation,
 }: SpinnerProps) {
   const wheelRef = useRef<HTMLDivElement>(null);
+  const skipButtonRef = useRef<HTMLButtonElement>(null);
+  
   // Use React.useState for better performance
   const [rotation, setRotation] = useState(0);
   const [winner, setWinner] = useState<SpinnerSegment | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [skipRequested, setSkipRequested] = useState(false);
   
   // Use a ref for values that don't need to trigger re-renders
   const animationRef = useRef({
@@ -46,6 +62,64 @@ export const Spinner = memo(function Spinner({
     timeoutId: 0,
     isActive: false
   });
+  
+  // Check if reduced motion is preferred
+  const shouldReduceMotion = useMemo(() => 
+    respectReducedMotion && prefersReducedMotion(), 
+    [respectReducedMotion]
+  );
+  
+  // Calculate effective duration based on animation speed and reduced motion settings
+  const effectiveDuration = useMemo(() => {
+    let finalDuration = duration / (animationSpeed || 1);
+    if (shouldReduceMotion) {
+      // Reduce duration by 75% if reduced motion is preferred
+      finalDuration = Math.min(finalDuration * 0.25, 1);
+    }
+    return finalDuration;
+  }, [duration, animationSpeed, shouldReduceMotion]);
+  
+  // Get accessible colors for high contrast mode
+  const accessibleColors = useMemo(() => {
+    const primaryAccessible = getAccessibleColors(primaryColor, highContrast);
+    const secondaryAccessible = getAccessibleColors(secondaryColor, highContrast);
+    
+    if (highContrast) {
+      // Use the same color scheme for both primary and secondary in high contrast mode
+      // This ensures consistent appearance and better readability
+      return {
+        primary: primaryAccessible.background,
+        secondary: primaryAccessible.accent || secondaryAccessible.background,
+        primaryText: primaryAccessible.foreground,
+        secondaryText: primaryAccessible.foreground, // Use same text color for consistency
+        textColor: primaryAccessible.foreground,
+        background: colorScheme?.background || undefined,
+        border: primaryAccessible.border || '#ffffff',
+        accent: primaryAccessible.accent || '#ffff00',
+        // Add segment divider color for better visibility in high contrast mode
+        segmentDivider: primaryAccessible.border || '#ffffff'
+      };
+    }
+    
+    return {
+      primary: primaryColor,
+      secondary: secondaryColor,
+      primaryText: primaryAccessible.foreground,
+      secondaryText: secondaryAccessible.foreground,
+      textColor: colorScheme?.text || undefined,
+      background: colorScheme?.background || undefined,
+      border: undefined,
+      accent: undefined,
+      segmentDivider: undefined
+    };
+  }, [primaryColor, secondaryColor, highContrast, colorScheme]);
+  
+  // Set up default ARIA announcements
+  const defaultAriaAnnouncements: AriaAnnouncements = useMemo(() => ({
+    spinStart: 'Spinner is now spinning',
+    spinComplete: (winner) => `Winner selected: ${winner.label}`,
+    spinReady: 'Spinner ready to spin',
+  }), []);
 
   // Calculate the rotation angle for each segment - memoize this calculation
   const segmentAngle = useCallback(() => 360 / segments.length, [segments.length])();
@@ -70,8 +144,43 @@ export const Spinner = memo(function Spinner({
    * with appropriate timing functions.
    * Optimized with requestAnimationFrame and useCallback.
    */
+  // Handle skip animation request
+  const handleSkipAnimation = useCallback(() => {
+    if (!isAnimating || !animationRef.current.isActive) return;
+    
+    // Mark that skip was requested
+    setSkipRequested(true);
+    
+    // Notify parent component if callback provided
+    if (onSkipAnimation) {
+      onSkipAnimation();
+    }
+  }, [isAnimating, onSkipAnimation]);
+
+  // Handle keyboard events for accessibility
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
+    if (!enableKeyboardControl) return;
+    
+    if (e.key === 'Enter' || e.key === ' ') {
+      // Start spin on Enter or Space when focused
+      if (!isAnimating && !animationRef.current.isActive) {
+        e.preventDefault();
+        spin();
+      }
+    } else if (e.key === 'Escape') {
+      // Skip animation on Escape
+      if (isAnimating && allowSkipAnimation) {
+        e.preventDefault();
+        handleSkipAnimation();
+      }
+    }
+  }, [enableKeyboardControl, isAnimating, allowSkipAnimation, handleSkipAnimation]);
+  
   const spin = useCallback(() => {
     if (isAnimating || animationRef.current.isActive) return;
+    
+    // Reset skip request state
+    setSkipRequested(false);
     
     // Mark as active in the ref to prevent multiple calls
     animationRef.current.isActive = true;
@@ -81,20 +190,24 @@ export const Spinner = memo(function Spinner({
     // Calculate random rotations:
     // 1. Select a random segment as winner
     // 2. Calculate angle to that segment
-    // 3. Add 3-10 full rotations for dramatic effect
+    // 3. Add 3-10 full rotations for dramatic effect (fewer for reduced motion)
     const randomSegment = Math.floor(Math.random() * segments.length);
     const segmentRotation = 360 - (randomSegment * segmentAngle);
-    const fullRotations = 3 + Math.floor(Math.random() * 7) * 360;
+    
+    // Reduce rotations for reduced motion preference
+    const minRotations = shouldReduceMotion ? 1 : 3;
+    const maxRandomRotations = shouldReduceMotion ? 1 : 7;
+    const fullRotations = minRotations + Math.floor(Math.random() * maxRandomRotations) * 360;
     const targetRotation = rotation + fullRotations + segmentRotation;
     
     // Set start time for animation
     const startTime = performance.now();
-    const endTime = startTime + (duration * 1000);
+    const endTime = startTime + (effectiveDuration * 1000);
     
     // Use safeRequestAnimationFrame for smoother animation with fallback
     const animateWheelSpin = (timestamp: number) => {
-      // Animation complete
-      if (timestamp >= endTime) {
+      // Animation complete or skip requested
+      if (timestamp >= endTime || skipRequested) {
         // Set final position
         setRotation(targetRotation);
         
@@ -105,6 +218,12 @@ export const Spinner = memo(function Spinner({
             setWinner(winningSegment);
             setIsAnimating(false);
             animationRef.current.isActive = false;
+            
+            // Focus the skip button when animation completes for better screen reader access
+            if (skipButtonRef.current && accessibilityEnabled) {
+              skipButtonRef.current.focus();
+            }
+            
             if (onSpinEnd) {
               onSpinEnd(winningSegment);
             }
@@ -114,7 +233,7 @@ export const Spinner = memo(function Spinner({
       }
       
       // Calculate current progress (0 to 1)
-      const progress = (timestamp - startTime) / (duration * 1000);
+      const progress = (timestamp - startTime) / (effectiveDuration * 1000);
       // Apply easing function for more realistic wheel spin (cubic bezier approximation)
       const easedProgress = cubicBezier(0.1, 0.7, 0.1, 1, progress);
       // Calculate current rotation
@@ -130,17 +249,50 @@ export const Spinner = memo(function Spinner({
       animationRef.current.animationFrameId = safeRequestAnimationFrame(animateWheelSpin);
     };
     
-    // Start animation with initial frame
-    animationRef.current.animationFrameId = safeRequestAnimationFrame(animateWheelSpin);
+    // For reduced motion preference, we might want to skip animation entirely
+    if (shouldReduceMotion && effectiveDuration < 0.5) {
+      // Skip animation entirely, just set the final position and announce winner
+      setRotation(targetRotation);
+      
+      // Brief timeout to ensure state updates properly
+      animationRef.current.timeoutId = setTimeout(() => {
+        const winningSegment = segments[randomSegment];
+        if (winningSegment) {
+          setWinner(winningSegment);
+          setIsAnimating(false);
+          animationRef.current.isActive = false;
+          
+          if (onSpinEnd) {
+            onSpinEnd(winningSegment);
+          }
+        }
+      }, 50) as unknown as number;
+    } else {
+      // Start animation with initial frame
+      animationRef.current.animationFrameId = safeRequestAnimationFrame(animateWheelSpin);
+    }
     
     // Clean up function to handle component unmounting during animation
     return () => {
       if (animationRef.current.animationFrameId) {
         safeCancelAnimationFrame(animationRef.current.animationFrameId);
       }
+      if (animationRef.current.timeoutId) {
+        clearTimeout(animationRef.current.timeoutId);
+      }
       animationRef.current.isActive = false;
     };
-  }, [segments, segmentAngle, rotation, duration, isAnimating, onSpinEnd]);
+  }, [
+    segments, 
+    segmentAngle, 
+    rotation, 
+    effectiveDuration, 
+    isAnimating, 
+    onSpinEnd, 
+    shouldReduceMotion, 
+    skipRequested, 
+    accessibilityEnabled
+  ]);
 
   // Reset animation state when isSpinning becomes false
   useEffect(() => {
@@ -207,49 +359,110 @@ export const Spinner = memo(function Spinner({
     );
   }, [winner, showWinner, isAnimating]);
 
+  // Get appropriate ARIA announcements (custom or default)
+  const announcements = useMemo(() => ({
+    ...defaultAriaAnnouncements,
+    ...ariaAnnouncements
+  }), [defaultAriaAnnouncements, ariaAnnouncements]);
+  
   // Determine current state for accessibility
-  // const spinnerStatus = isAnimating ? 'spinning' : (winner ? 'complete' : 'ready');
-  const spinnerStatusText = isAnimating 
-    ? 'Spinner is currently spinning' 
-    : (winner ? `Winner selected: ${winner.label}` : 'Spinner ready to spin');
+  const spinnerStatusText = useMemo(() => {
+    if (isAnimating) {
+      return announcements.spinStart || 'Spinner is currently spinning';
+    } else if (winner) {
+      return announcements.spinComplete ? 
+        announcements.spinComplete(winner) : 
+        `Winner selected: ${winner.label}`;
+    } else {
+      return announcements.spinReady || 'Spinner ready to spin';
+    }
+  }, [isAnimating, winner, announcements]);
+
+  // Render the spinner segments with high contrast if needed
+  const renderedSegmentsWithAccessibility = useMemo(() => {
+    return segments.map((segment, index) => {
+      const startAngle = index * segmentAngle;
+      const isEvenSegment = index % 2 === 0;
+      
+      // In high contrast mode, use the same text color for all segments for consistency
+      const textColor = highContrast ? 
+        accessibleColors.primaryText :
+        (isEvenSegment ? accessibleColors.primaryText : accessibleColors.secondaryText);
+      
+      return (
+        <SpinnerSegmentComponent
+          key={segment.id}
+          segment={segment}
+          startAngle={startAngle}
+          segmentAngle={segmentAngle}
+          isEvenSegment={isEvenSegment}
+          primaryColor={accessibleColors.primary}
+          secondaryColor={accessibleColors.secondary}
+          textColor={textColor}
+          highContrast={highContrast}
+          segmentDivider={accessibleColors.segmentDivider}
+        />
+      );
+    });
+  }, [segments, segmentAngle, highContrast, accessibleColors]);
 
   return (
     <div 
+      id={id}
       className={className ? `relative ${className}` : 'relative'}
       role="region"
-      aria-label="Spinner wheel"
+      aria-label={ariaLabel || "Spinner wheel"}
       aria-live={isAnimating ? 'assertive' : 'polite'}
+      onKeyDown={handleKeyDown}
+      tabIndex={enableKeyboardControl ? 0 : undefined}
     >
       {/* The main wheel container with hardware acceleration */}
       <div
         ref={wheelRef}
-        className="relative w-full aspect-square rounded-full overflow-hidden border-4 will-change-transform"
+        className="relative w-full aspect-square rounded-full overflow-hidden will-change-transform"
         style={{
           transform: `rotate(${rotation}deg) translateZ(0)`,
-          transition: isAnimating ? `transform ${duration}s cubic-bezier(0.1, 0.7, 0.1, 1)` : 'none',
-          backgroundColor: primaryColor,
-          borderColor: secondaryColor,
+          transition: isAnimating ? `transform ${effectiveDuration}s cubic-bezier(0.1, 0.7, 0.1, 1)` : 'none',
+          backgroundColor: accessibleColors.primary,
+          border: highContrast ? 
+            `6px solid ${accessibleColors.border || accessibleColors.secondary}` : 
+            `4px solid ${accessibleColors.secondary}`,
+          boxShadow: highContrast ? '0 0 0 2px rgba(0,0,0,0.5)' : 'none',
           ...getHardwareAccelerationStyles(), // Comprehensive GPU acceleration
         }}
         role="img"
         aria-label={`Spinner wheel with ${segments.length} options`}
-        aria-hidden={isAnimating} // Hide from screen readers during animation
+        aria-hidden={isAnimating || !accessibilityEnabled} // Hide from screen readers during animation
       >
-        {/* Render pre-computed segments */}
-        {renderedSegments()}
+        {/* Render pre-computed segments with accessibility enhancements */}
+        {highContrast || colorScheme ? renderedSegmentsWithAccessibility : renderedSegments()}
       </div>
       
       {/* The center point/indicator arrow */}
       <div 
         className="absolute top-1/2 left-1/2 w-4 h-4 transform -translate-x-1/2 -translate-y-1/2 rotate-45 z-10"
-        style={{ backgroundColor: secondaryColor }}
+        style={{ backgroundColor: accessibleColors.secondary }}
         aria-hidden="true" // Hide from screen readers
       />
       
       {/* Visually hidden text for screen readers */}
-      <div className="sr-only" aria-live="assertive">
-        {spinnerStatusText}
-      </div>
+      {accessibilityEnabled && (
+        <div className="sr-only" aria-live="assertive">
+          {spinnerStatusText}
+        </div>
+      )}
+      
+      {/* Skip animation button for accessibility */}
+      {allowSkipAnimation && isAnimating && accessibilityEnabled && (
+        <button
+          ref={skipButtonRef}
+          onClick={handleSkipAnimation}
+          className="sr-only focus:not-sr-only focus:absolute focus:p-2 focus:bg-white focus:text-black focus:border focus:border-black focus:z-50"
+          aria-label="Skip animation"
+        >
+          Skip animation
+        </button>
+      )}
       
       {/* Pre-computed winner overlay */}
       {winnerOverlay}
@@ -264,7 +477,11 @@ export const Spinner = memo(function Spinner({
  */
 export const ContextSpinner = memo(function ContextSpinner() {
   // Get spinner data from context
-  const { spinnerSettings, activeSpinnerId } = useSpinner();
+  const { 
+    spinnerSettings, 
+    activeSpinnerId, 
+    highContrastMode 
+  } = useSpinner();
   
   // Find the active spinner settings with useMemo for better performance
   const activeSetting = useMemo(() => {
@@ -291,12 +508,18 @@ export const ContextSpinner = memo(function ContextSpinner() {
     duration: activeSetting.duration,
     primaryColor: activeSetting.primaryColor,
     secondaryColor: activeSetting.secondaryColor,
-    showWinner: true
+    showWinner: true,
+    highContrast: highContrastMode,
+    accessibilityEnabled: true,
+    respectReducedMotion: true,
+    allowSkipAnimation: true,
+    enableKeyboardControl: true
   }), [
     activeSetting.segments,
     activeSetting.duration,
     activeSetting.primaryColor,
-    activeSetting.secondaryColor
+    activeSetting.secondaryColor,
+    highContrastMode
   ]);
   
   // Render the optimized spinner
@@ -313,6 +536,19 @@ interface SpinnerSegmentProps {
   isEvenSegment: boolean;
   primaryColor: string;
   secondaryColor: string;
+  textColor?: string;
+}
+
+interface SpinnerSegmentProps {
+  segment: SpinnerSegment;
+  startAngle: number;
+  segmentAngle: number;
+  isEvenSegment: boolean;
+  primaryColor: string;
+  secondaryColor: string;
+  textColor?: string;
+  highContrast?: boolean;
+  segmentDivider?: string;
 }
 
 const SpinnerSegmentComponent = memo(function SpinnerSegmentComponent({
@@ -321,7 +557,10 @@ const SpinnerSegmentComponent = memo(function SpinnerSegmentComponent({
   segmentAngle,
   isEvenSegment,
   primaryColor,
-  secondaryColor
+  secondaryColor,
+  textColor,
+  highContrast = false,
+  segmentDivider
 }: SpinnerSegmentProps) {
   // Pre-compute segment styles for better performance
   const segmentStyle = useMemo(() => ({
@@ -331,8 +570,10 @@ const SpinnerSegmentComponent = memo(function SpinnerSegmentComponent({
     willChange: 'transform',
     // Additional hardware acceleration
     backfaceVisibility: 'hidden' as const,
-    transformZ: 0,  
-  }), [startAngle, segment.color, isEvenSegment, primaryColor, secondaryColor]);
+    transformZ: 0,
+    // Add border in high contrast mode for better boundary visibility
+    border: highContrast ? `1px solid ${segmentDivider || '#ffffff'}` : 'none',
+  }), [startAngle, segment.color, isEvenSegment, primaryColor, secondaryColor, highContrast, segmentDivider]);
 
   // Pre-compute label styles
   const labelStyle = useMemo(() => ({
@@ -343,13 +584,29 @@ const SpinnerSegmentComponent = memo(function SpinnerSegmentComponent({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap' as const,
-  }), [segmentAngle]);
+    color: textColor || 'white', // Default to white if no textColor provided
+    // Enhanced label styling for high contrast mode
+    fontWeight: highContrast ? 'bold' : 'medium',
+    textShadow: highContrast ? '1px 1px 2px #000000' : 'none',
+    padding: highContrast ? '2px 4px' : '0',
+    backgroundColor: highContrast ? 'rgba(0,0,0,0.5)' : 'transparent',
+    borderRadius: highContrast ? '2px' : '0',
+  }), [segmentAngle, textColor, highContrast]);
 
   return (
     <div
-      className="absolute top-0 left-0 w-full h-full text-white flex justify-center"
+      className="absolute top-0 left-0 w-full h-full flex justify-center"
       style={segmentStyle}
     >
+      {/* Segment divider for high contrast mode */}
+      {highContrast && segmentDivider && (
+        <div
+          className="absolute h-1/2 w-1 top-0 left-1/2 -ml-0.5"
+          style={{ backgroundColor: segmentDivider }}
+          aria-hidden="true"
+        />
+      )}
+      
       {/* Segment label positioned in the middle of each segment */}
       <div 
         className="absolute transform -translate-x-1/2 text-sm font-medium"
@@ -369,6 +626,7 @@ const SpinnerSegmentComponent = memo(function SpinnerSegmentComponent({
     prevProps.segmentAngle === nextProps.segmentAngle &&
     prevProps.isEvenSegment === nextProps.isEvenSegment &&
     prevProps.primaryColor === nextProps.primaryColor &&
-    prevProps.secondaryColor === nextProps.secondaryColor
+    prevProps.secondaryColor === nextProps.secondaryColor &&
+    prevProps.textColor === nextProps.textColor
   );
 });

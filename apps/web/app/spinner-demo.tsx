@@ -77,12 +77,21 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isLoggingIn, error }) =>
  * Spinner demo content component
  */
 const SpinnerDemoContent: React.FC = () => {
-  const { auth, client, spinnerSettings, activeSpinnerId, isAuthLoading, isLoadingSettings } = useSpinner();
+  const { 
+    auth, 
+    client, 
+    spinnerSettings, 
+    activeSpinnerId, 
+    isAuthLoading, 
+    isLoadingSettings,
+    highContrastMode,
+    toggleHighContrastMode
+  } = useSpinner();
   const [isSpinning, setIsSpinning] = useState(false);
   const [winner, setWinner] = useState<any>(null);
   const [loginError, setLoginError] = useState<string>();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [activeTab, setActiveTab] = useState<'spinner' | 'settings'>('spinner');
+  const [activeTab, setActiveTab] = useState<'spinner' | 'settings' | 'accessibility'>('spinner');
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -119,7 +128,7 @@ const SpinnerDemoContent: React.FC = () => {
     setIsSpinning(true);
   };
 
-  const handleSpinEnd = (winner: any) => {
+  const handleComplete = (winner: any) => {
     setWinner(winner);
     setIsSpinning(false);
   };
@@ -172,6 +181,13 @@ const SpinnerDemoContent: React.FC = () => {
         >
           Settings
         </Button>
+        <Button
+          variant={activeTab === 'accessibility' ? 'default' : 'ghost'}
+          className="rounded-none py-2 px-4"
+          onClick={() => setActiveTab('accessibility')}
+        >
+          Accessibility
+        </Button>
       </div>
 
       {activeTab === 'spinner' && (
@@ -196,8 +212,13 @@ const SpinnerDemoContent: React.FC = () => {
                         secondaryColor={activeSpinner.secondaryColor}
                         duration={activeSpinner.duration}
                         isSpinning={isSpinning}
-                        onSpinEnd={handleSpinEnd}
+                        onSpinEnd={handleComplete}
                         showWinner={!!winner}
+                        highContrast={highContrastMode}
+                        accessibilityEnabled={true}
+                        respectReducedMotion={true}
+                        allowSkipAnimation={true}
+                        enableKeyboardControl={true}
                       />
                     </div>
                     <Button 
@@ -234,6 +255,7 @@ const SpinnerDemoContent: React.FC = () => {
                         <li>Wait for the spinner to stop</li>
                         <li>The winner will be displayed here</li>
                         <li>You can change spinners in the Settings tab</li>
+                        <li>Accessibility options are available in the Accessibility tab</li>
                       </ol>
                     </CardContent>
                   </Card>
@@ -247,6 +269,54 @@ const SpinnerDemoContent: React.FC = () => {
       {activeTab === 'settings' && (
         <div>
           <SpinnerSettingsManager />
+        </div>
+      )}
+
+      {activeTab === 'accessibility' && (
+        <div className="mb-8">
+          <Card className="p-6">
+            <CardTitle>Accessibility Options</CardTitle>
+            <CardContent className="pt-6">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium">High Contrast Mode</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Enhances visibility with stronger colors and improved contrast
+                    </p>
+                  </div>
+                  <Button 
+                    variant={highContrastMode ? "default" : "outline"}
+                    onClick={toggleHighContrastMode}
+                    aria-pressed={highContrastMode}
+                    className="min-w-24"
+                  >
+                    {highContrastMode ? "Enabled" : "Disabled"}
+                  </Button>
+                </div>
+                
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium mb-2">Additional Features</h3>
+                  <ul className="list-disc pl-5 space-y-2 text-sm">
+                    <li>Keyboard control is enabled (Tab to focus, Enter/Space to spin)</li>
+                    <li>Skip animation with Escape key while spinning</li>
+                    <li>Screen reader announcements for spin events</li>
+                    <li>Respects system motion reduction preferences</li>
+                    <li>Compatible with Windows High Contrast mode</li>
+                  </ul>
+                </div>
+                
+                <div className="rounded-lg bg-muted p-4 mt-4">
+                  <h4 className="font-medium mb-2 text-sm">About High Contrast Mode</h4>
+                  <p className="text-xs text-muted-foreground">
+                    High contrast mode improves visibility for users with low vision or color 
+                    perception difficulties. This setting is automatically enabled if your 
+                    system has high contrast mode enabled, but you can override it here.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

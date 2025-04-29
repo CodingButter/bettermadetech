@@ -22,6 +22,18 @@ export interface SpinnerSegment {
 /**
  * Props for the Spinner component.
  */
+/**
+ * Custom announcements for screen readers
+ */
+export interface AriaAnnouncements {
+  /** Announcement when spinning starts */
+  spinStart?: string;
+  /** Announcement when spinning stops and a winner is selected */
+  spinComplete?: (winner: SpinnerSegment) => string;
+  /** Announcement when spinner is ready */
+  spinReady?: string;
+}
+
 export interface SpinnerProps {
   /** Array of segments to display on the spinner */
   segments: SpinnerSegment[];
@@ -49,6 +61,25 @@ export interface SpinnerProps {
   ariaLabel?: string;
   /** Animation speed control - 1 is normal, lower value is slower */
   animationSpeed?: number;
+  /** Custom screen reader announcements */
+  ariaAnnouncements?: AriaAnnouncements;
+  /** Whether to respect the prefers-reduced-motion media query */
+  respectReducedMotion?: boolean;
+  /** Allow users to skip animation and show result immediately */
+  allowSkipAnimation?: boolean;
+  /** Additional custom CSS colors for better contrast */
+  colorScheme?: {
+    /** Color for text labels */
+    text?: string;
+    /** Background color for segments */
+    background?: string;
+  };
+  /** Optional ID for the spinner element (for accessibility/focus management) */
+  id?: string;
+  /** Allow keyboard control directly on spinner element */
+  enableKeyboardControl?: boolean;
+  /** Callback when user requests to skip animation */
+  onSkipAnimation?: () => void;
 }
 
 /**

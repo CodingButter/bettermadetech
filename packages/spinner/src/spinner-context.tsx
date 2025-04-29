@@ -5,9 +5,12 @@
  * to components throughout the application.
  */
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { SpinnerBase } from './spinner-base';
 import { SpinnerSettings, AuthInfo } from './types';
+
+// Local storage key for high contrast mode preference
+const HIGH_CONTRAST_MODE_KEY = 'spinner_high_contrast_mode';
 
 /**
  * Spinner context state interface
@@ -27,6 +30,10 @@ interface SpinnerContextType {
   activeSpinnerId: string | null;
   /** Whether the active spinner is being set */
   isSettingActive: boolean;
+  /** Whether high contrast mode is enabled */
+  highContrastMode: boolean;
+  /** Toggle high contrast mode */
+  toggleHighContrastMode: () => void;  
   /** Refresh spinner settings */
   refreshSettings: () => Promise<void>;
   /** Set active spinner */
@@ -42,6 +49,8 @@ const SpinnerContext = createContext<SpinnerContextType>({
   isLoadingSettings: false,
   activeSpinnerId: null,
   isSettingActive: false,
+  highContrastMode: false,
+  toggleHighContrastMode: () => {},
   refreshSettings: async () => {},
   setActiveSpinner: async () => {},
 });
@@ -54,18 +63,77 @@ interface SpinnerProviderProps {
   client: SpinnerBase;
   /** Child components */
   children: ReactNode;
+  /** Optional initial high contrast mode state */
+  initialHighContrast?: boolean;
 }
 
 /**
  * Provider component for spinner context
  */
-export function SpinnerProvider({ client, children }: SpinnerProviderProps) {
+export function SpinnerProvider({ 
+  client, 
+  children, 
+  initialHighContrast 
+}: SpinnerProviderProps) {
   const [auth, setAuth] = useState<AuthInfo | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [spinnerSettings, setSpinnerSettings] = useState<SpinnerSettings[] | null>(null);
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
   const [activeSpinnerId, setActiveSpinnerId] = useState<string | null>(null);
   const [isSettingActive, setIsSettingActive] = useState(false);
+  const [highContrastMode, setHighContrastMode] = useState<boolean>(() => {
+    // Use initialHighContrast if provided, otherwise check localStorage or system preference
+    if (initialHighContrast !== undefined) return initialHighContrast;
+    
+    // Check local storage first
+    if (typeof window !== 'undefined') {
+      const storedPreference = localStorage.getItem(HIGH_CONTRAST_MODE_KEY);
+      if (storedPreference !== null) {
+        return storedPreference === 'true';
+      }
+      
+      // If not in local storage, check system preference for high contrast
+      return window.matchMedia('(prefers-contrast: more)').matches;
+    }
+    
+    return false;
+  });
+
+  // Toggle high contrast mode
+  const toggleHighContrastMode = useCallback(() => {
+    setHighContrastMode(prevMode => {
+      const newMode = !prevMode;
+      
+      // Save preference to local storage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(HIGH_CONTRAST_MODE_KEY, String(newMode));
+      }
+      
+      return newMode;
+    });
+  }, []);
+
+  // Listen for system high contrast mode changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-contrast: more)');
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      // Only update if user hasn't explicitly set a preference
+      if (localStorage.getItem(HIGH_CONTRAST_MODE_KEY) === null) {
+        setHighContrastMode(e.matches);
+      }
+    };
+    
+    // Some older browsers use addListener/removeListener
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    } else if ('addListener' in mediaQuery) {
+      // TypeScript doesn't recognize these deprecated methods, using type assertion
+      (mediaQuery as any).addListener(handleChange);
+      return () => (mediaQuery as any).removeListener(handleChange);
+    }
+  }, []);
 
   // Load authentication status on mount
   useEffect(() => {
@@ -150,6 +218,8 @@ export function SpinnerProvider({ client, children }: SpinnerProviderProps) {
     isLoadingSettings,
     activeSpinnerId,
     isSettingActive,
+    highContrastMode,
+    toggleHighContrastMode,
     refreshSettings,
     setActiveSpinner: handleSetActiveSpinner,
   };
